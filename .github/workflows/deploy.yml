@@ -1,0 +1,77 @@
+name: Build, Push to ECR, and Deploy to EC2
+
+on:
+  push:
+    branches:
+      - deploy  # deploy 브랜치 푸시 시 실행
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Log in to Amazon ECR (for GitHub Actions)
+        run: |
+          aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com
+
+      - name: Build Docker Image
+        run: |
+          docker build -t molly-backend .
+
+      - name: Tag Docker Image
+        run: |
+          docker tag molly-backend:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com/molly-backend:latest
+
+      - name: Push Docker Image to ECR
+        run: |
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com/molly-backend:latest
+
+      - name: Set up SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy and Run Docker Container on EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
+          echo "🚀 Deploying latest Docker container from ECR..."
+
+          # 기존 컨테이너 중지 및 삭제
+          echo "🛑 Stopping existing container..."
+          docker stop molly-backend || true
+          docker rm molly-backend || true
+
+          # 모든 중지된 컨테이너 삭제 (Dangling 포함)
+          echo "🗑 Removing all stopped containers..."
+          docker rm $(docker ps -aq) || true
+
+          # 사용되지 않는 Docker 이미지 삭제
+          echo "🗑 Removing unused Docker images..."
+          docker image prune -af || true
+
+          # AWS ECR 로그인 (for EC2)
+          echo "🔑 Logging in to AWS ECR..."
+          aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com
+
+          # 최신 Docker 이미지 가져오기
+          echo "📥 Pulling latest Docker image..."
+          docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com/molly-backend:latest
+
+          # 컨테이너 실행
+          echo "🚀 Running new container..."
+          docker run -d --name molly-backend -p 80:5000 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-northeast-2.amazonaws.com/molly-backend:latest
+
+          echo "✅ Deployment complete!"
+          EOF
