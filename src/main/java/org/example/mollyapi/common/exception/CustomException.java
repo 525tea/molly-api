@@ -1,10 +1,12 @@
 package org.example.mollyapi.common.exception;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.example.mollyapi.common.exception.error.CustomError;
 import org.springframework.http.HttpStatus;
 
 @Getter
+@AllArgsConstructor
 public class CustomException extends RuntimeException{
 
     private HttpStatus httpStatus;
@@ -13,7 +15,7 @@ public class CustomException extends RuntimeException{
     public CustomException(CustomError customError) {
         super(customError.getMessage());
         this.message = customError.getMessage();
-        this.httpStatus = customError.getHttpStatus();
+        this.httpStatus = customError.getStatus();
 
     }
 }
