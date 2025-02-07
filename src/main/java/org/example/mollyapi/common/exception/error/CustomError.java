@@ -6,6 +6,6 @@ public interface CustomError {
 
     String getMessage();
 
-    HttpStatus getHttpStatus();
+    HttpStatus getStatus();
 }
 
