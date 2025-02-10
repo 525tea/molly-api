@@ -51,7 +51,9 @@ public record SignUpReqDto(
          * Dto -> User 전환
          * @return User
          */
-        public User toUser(){
+
+        public User toUser(Auth auth){
+
                 return User.builder()
                         .nickname(nickname)
                         .cellPhone(cellPhone)
@@ -59,22 +61,22 @@ public record SignUpReqDto(
                         .name(name)
                         .flag(false)
                         .point(0)
-                        .profile_image("Default Profile Image")
+                        .profileImage("Default Profile Image")
                         .sex(sex)
+                        .auth(auth)
                         .build();
         }
 
         /***
          * Dto -> Auth 전환
-         * @param user auth fk
          * @param password 암호화된 비밀번호
          * @return Auth
          */
-        public Auth toAuth(User user, Password password){
+        public Auth toAuth( Password password){
+
                 return Auth.builder()
                         .email(email)
                         .role(isSeller ? List.of(Role.BUY, Role.SELL) : List.of(Role.BUY))
-                        .user(user)
                         .password(password)
                         .build();
         }

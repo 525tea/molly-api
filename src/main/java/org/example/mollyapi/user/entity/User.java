@@ -3,6 +3,7 @@ package org.example.mollyapi.user.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.mollyapi.common.entity.Base;
+import org.example.mollyapi.user.auth.entity.Auth;
 import org.example.mollyapi.user.type.Sex;
 
 import java.time.LocalDate;
@@ -32,7 +33,7 @@ public class User extends Base {
     @Column(nullable = false)
     private Boolean flag;
 
-    private String profile_image;
+    private String profileImage;
 
     private LocalDate birth;
 
@@ -40,5 +41,8 @@ public class User extends Base {
 
     private String name;
 
+    @OneToOne
+    @JoinColumn(name = "auth_id", nullable = false, foreignKey = @ForeignKey(name = "FK_USER_AUTH"))
+    private Auth auth;
 
 }
