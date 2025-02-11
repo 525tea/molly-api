@@ -42,9 +42,7 @@ public class User extends Base {
 
     private String name;
 
-    @OneToOne
-    @JoinColumn(name = "auth_id", nullable = false, foreignKey = @ForeignKey(name = "FK_USER_AUTH"))
-    private Auth auth;
+
 
 
     public boolean updateUser(UpdateUserReqDto updateUserReqDto){

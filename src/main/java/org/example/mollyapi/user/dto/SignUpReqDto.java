@@ -44,7 +44,7 @@ public record SignUpReqDto(
                 message = "비밀번호는 영어 소문자, 숫자, 특수 문자를 모두 포함하고 8자 이상이어야 합니다.")
         String password,
 
-        @Schema(description = "seller = true,  buyer = false", example = "true, false")
+        @Schema(description = "seller = true,  buyer = false", example = "true")
         Boolean isSeller
 ) {
         /***
@@ -52,7 +52,7 @@ public record SignUpReqDto(
          * @return User
          */
 
-        public User toUser(Auth auth){
+        public User toUser(){
 
                 return User.builder()
                         .nickname(nickname)
@@ -63,7 +63,6 @@ public record SignUpReqDto(
                         .point(0)
                         .profileImage("Default Profile Image")
                         .sex(sex)
-                        .auth(auth)
                         .build();
         }
 
@@ -72,12 +71,13 @@ public record SignUpReqDto(
          * @param password 암호화된 비밀번호
          * @return Auth
          */
-        public Auth toAuth( Password password){
+        public Auth toAuth( Password password, User user){
 
                 return Auth.builder()
                         .email(email)
                         .role(isSeller ? List.of(Role.BUY, Role.SELL) : List.of(Role.BUY))
                         .password(password)
+                        .user(user)
                         .build();
         }
 }

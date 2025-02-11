@@ -39,8 +39,8 @@ public class UserController {
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
     })
     public ResponseEntity<GetUserInfoResDto> getUserInfo(HttpServletRequest request) {
-        Long authId = (Long) request.getAttribute("authId");
-        return ResponseEntity.ok(userService.getUserInfo(authId));
+        Long userId = (Long) request.getAttribute("userId");
+        return ResponseEntity.ok(userService.getUserInfo(userId));
     }
 
     @Auth
@@ -55,8 +55,8 @@ public class UserController {
     public ResponseEntity<?> updateUserInfo(
             @Valid @RequestBody UpdateUserReqDto updateUserReqDto,
             HttpServletRequest request) {
-        Long authId = (Long) request.getAttribute("authId");
-        return userService.updateUserInfo(updateUserReqDto, authId);
+        Long userId = (Long) request.getAttribute("userId");
+        return userService.updateUserInfo(updateUserReqDto, userId);
     }
 
     @Auth
@@ -73,11 +73,11 @@ public class UserController {
             @RequestParam(name = "include-point")
             boolean includePoint,
             HttpServletRequest request) {
-        Long authId = (Long) request.getAttribute("authId");
+        Long userId = (Long) request.getAttribute("userId");
 
         var result = includePoint
-                ? userService.getUserSummaryWithPoint(authId)
-                : userService.getUserSummaryInfo(authId);
+                ? userService.getUserSummaryWithPoint(userId)
+                : userService.getUserSummaryInfo(userId);
 
         return ResponseEntity.ok(result);
     }
@@ -88,8 +88,8 @@ public class UserController {
     @DeleteMapping("")
     @ApiResponse(responseCode = "204", description = "성공")
     public ResponseEntity<?> deleteUserInfo(HttpServletRequest request){
-        Long authId = (Long) request.getAttribute("authId");
-        userService.deleteUserInfo(authId);
+        Long userId = (Long) request.getAttribute("userId");
+        userService.deleteUserInfo(userId);
         return ResponseEntity.status(HttpStatusCode.valueOf(204)).build();
     }
 }
