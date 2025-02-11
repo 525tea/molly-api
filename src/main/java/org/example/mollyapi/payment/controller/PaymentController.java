@@ -48,6 +48,8 @@ public class PaymentController {
                 paymentConfirmReqDto.paymentKey(),
                 paymentConfirmReqDto.tossOrderId(),
                 paymentConfirmReqDto.amount(),
+                paymentConfirmReqDto.point(),
+                paymentConfirmReqDto.deliveryId(),
                 paymentConfirmReqDto.paymentType()
         );
 

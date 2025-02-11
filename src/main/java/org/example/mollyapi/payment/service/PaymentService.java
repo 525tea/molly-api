@@ -5,11 +5,11 @@ import org.example.mollyapi.payment.entity.Payment;
 
 public interface PaymentService {
 
-    public Payment processPayment(Long userId, String paymentKey, String tossOrderId, Integer amount, String paymentType);
+    public Payment processPayment(Long userId, String paymentKey, String tossOrderId, Integer amount, Integer point, Long deliveryId, String paymentType);
 
     public void cancelPayment();
 
-    public void successPayment(Payment payment, String tossOrderId);
+    public void successPayment(Payment payment, String tossOrderId,Integer point);
 
     public void failPayment(Payment payment, String tossOrderId, String failureReason);
 

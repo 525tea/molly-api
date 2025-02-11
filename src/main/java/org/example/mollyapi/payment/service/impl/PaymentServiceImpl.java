@@ -38,7 +38,7 @@ public class PaymentServiceImpl implements PaymentService {
         결제 로직
      */
     @Transactional
-    public Payment processPayment(Long userId, String paymentKey, String tossOrderId, Integer amount, String paymentType) {
+    public Payment processPayment(Long userId, String paymentKey, String tossOrderId, Integer amount, Integer point, Long deliveryId, String paymentType) {
         /* 1. find order with tossOrderId
          2. validate amount
          3. success/failure logic
@@ -51,7 +51,11 @@ public class PaymentServiceImpl implements PaymentService {
         // order findByTossOrderId
         Order order = orderService.findOrderByTossOrderId(tossOrderId);
         Integer orderAmount = order.getAmount();
-        validateAmount(orderAmount,amount);
+
+        // 포인트 검증
+
+        // 결제정보 검증
+        validateAmount(orderAmount, amount);
 
         // create payment -> 도메인 로직 ready 로 refactor
         Payment payment = Payment.from(userId, order.getId(), tossOrderId, paymentKey, paymentType, amount, "결제대기");
@@ -68,9 +72,9 @@ public class PaymentServiceImpl implements PaymentService {
 
         // 결제 성공 및 실패 로직
         if (res) {
-            successPayment(payment, tossOrderId);}
-        else {
-            failPayment(payment, tossOrderId,"실패");
+            successPayment(payment, tossOrderId, point);
+        } else {
+            failPayment(payment, tossOrderId, "실패");
         }
         paymentRepository.save(payment);
         return payment;
@@ -86,11 +90,12 @@ public class PaymentServiceImpl implements PaymentService {
     /*
         결제 성공
      */
-    public void successPayment(Payment payment, String tossOrderId) {
+    public void successPayment(Payment payment, String tossOrderId, Integer point) {
         //payment status change
-        payment.successPayment();
+        payment.successPayment(point);
         //order status change
-        orderService.successOrder(tossOrderId);
+        orderService.successOrder(tossOrderId, point);
+        // 포인트 차감 및 적립 로직
     }
 
     /*
@@ -134,30 +139,4 @@ public class PaymentServiceImpl implements PaymentService {
             throw new CustomException(PaymentError.PAYMENT_AMOUNT_MISMATCH);
         }
     }
-
-
-//    private void validatePayment(ResponseEntity<TossPaymentResDto> response, Payment payment) {
-//        if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
-//            failPayment(payment.getId(), payment.getTossOrderId(), "결제 검증 실패: 금액 불일치");
-//            throw new CustomException(PaymentError.PAYMENT_NOT_FOUND);
-//        }
-//
-//        TossPaymentResDto tossResDto = response.getBody();
-//
-//        // 결제된 금액과 주문 금액 비교
-//        if (!Objects.equals(tossResDto.totalAmount(), payment.getAmount())) {
-//            failPayment(payment.getId(), payment.getTossOrderId(), "결제 검증 실패: 금액 불일치");
-//            throw new CustomException(PaymentError.PAYMENT_AMOUNT_MISMATCH);
-//        }
-//    }
-
-//    private Boolean handleResponse(ResponseEntity<TossConfirmResDto> response) {
-//        HttpStatusCode statusCode = response.getStatusCode();
-//        return statusCode.is2xxSuccessful();
-//    }
-
-//    private void updatePaymentStatus(Payment payment, PaymentStatus status) {
-//        payment.updateStatus(status);
-//        paymentRepository.save(payment);
-//    }
 }

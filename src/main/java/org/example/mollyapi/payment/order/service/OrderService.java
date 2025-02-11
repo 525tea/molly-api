@@ -22,9 +22,9 @@ public class OrderService {
         log.info("change order status to " + status);
     }
 
-    public void successOrder(String tossOrderId) {
+    public void successOrder(String tossOrderId, Integer point) {
         changeOrderStatus("approved");
-        log.info("success order " + tossOrderId);
+        log.info("success order " + tossOrderId + "\nused point: " + point);
     }
     public void failOrder(String tossOrderId) {
         changeOrderStatus("rejected");
@@ -42,5 +42,19 @@ public class OrderService {
     public Order findOrderByTossOrderId(String tossOrderId) {
         return orderRepository.findByTossOrderId(tossOrderId)
                 .orElseThrow(() -> new CustomException(PaymentError.ORDER_NOT_FOUND));
+    }
+
+    public void suceessOrder() {
+        /*
+            1. find order with tossOrderId
+            2. field update (point, amount, delivery, status)
+            3. 재고 검증
+            4.
+        */
+    }
+    public void failOrder() {
+    }
+
+    public void deleteOrder() {
     }
 }
