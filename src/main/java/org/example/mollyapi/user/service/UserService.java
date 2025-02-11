@@ -35,29 +35,29 @@ public class UserService {
 
     /***
      * 사용자 이메일, 포인트, 이름 조회
-     * @param authId 인증 PK
+     * @param userId 인증 PK
      * @return GetUserSummaryInfoWithPointResDto
      */
-    public GetUserSummaryInfoWithPointResDto getUserSummaryWithPoint(Long authId) {
-        validUser(authId);
+    public GetUserSummaryInfoWithPointResDto getUserSummaryWithPoint(Long userId) {
+        validUser(userId);
 
-        return userRepository.getUserSummaryInfo(authId);
+        return userRepository.getUserSummaryInfo(userId);
     }
 
-    public GetUserSummaryInfoResDto getUserSummaryInfo(Long authId) {
-        validUser(authId);
+    public GetUserSummaryInfoResDto getUserSummaryInfo(Long userId) {
+        validUser(userId);
 
         GetUserSummaryInfoWithPointResDto userSummaryInfo
-                = userRepository.getUserSummaryInfo(authId);
+                = userRepository.getUserSummaryInfo(userId);
         return new GetUserSummaryInfoResDto(userSummaryInfo.name(), userSummaryInfo.email());
     }
 
     /***
      * 사용자 유효성 검증
-     * @param authId 인증 PK
+     * @param userId 사용자 PK
      */
-    private void validUser(Long authId) {
-        boolean exists = userRepository.existsByAuth_AuthId(authId);
+    private void validUser(Long userId) {
+        boolean exists = userRepository.existsById(userId);
 
         if (!exists) throw new CustomException(NOT_EXISTS_USER);
     }
@@ -65,12 +65,12 @@ public class UserService {
     /***
      * 사용자 정보 수정
      * @param updateUserReqDto 수정할려는 데이터
-     * @param authId 인증 권한 확인
+     * @param userId 사용자 PK
      * @return ResponseEntity 반환
      */
     @Transactional
-    public ResponseEntity<?> updateUserInfo(UpdateUserReqDto updateUserReqDto, Long authId) {
-        User user = userRepository.findByAuth_AuthId(authId)
+    public ResponseEntity<?> updateUserInfo(UpdateUserReqDto updateUserReqDto, Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(NOT_EXISTS_USER));
 
         boolean isUpdate = user.updateUser(updateUserReqDto);
@@ -92,10 +92,10 @@ public class UserService {
 
     /**
      * 사용자 정보 삭제 요청
-     * @param authId 사용자 PK
+     * @param userId 사용자 PK
      */
-    public void deleteUserInfo(Long authId) {
-        User user = userRepository.findByAuth_AuthId(authId)
+    public void deleteUserInfo(Long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(NOT_EXISTS_USER));
 
         user.updateFlag();

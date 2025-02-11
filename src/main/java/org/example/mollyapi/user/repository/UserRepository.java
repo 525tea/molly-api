@@ -9,9 +9,4 @@ public interface UserRepository extends JpaRepository<User, Long>, UserCustomRep
 
     boolean existsByNickname(String nickName);
 
-    boolean existsByAuth_AuthId(Long authId);
-
-    Optional<User> findByAuth_AuthId(Long authId);
-
-
 }
