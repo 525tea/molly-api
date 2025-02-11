@@ -41,6 +41,9 @@ public class Payment extends Base {
     private String failureReason;
 
     @Column
+    private Integer point;
+
+    @Column
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
@@ -78,10 +81,11 @@ public class Payment extends Base {
 
 
     // 결제 성공 시 필드 추가 도메인 로직
-    public void successPayment() {
+    public void successPayment(Integer point) {
         if (this.paymentStatus != PaymentStatus.PENDING) {
             throw new CustomException(PaymentError.PAYMENT_ALREADY_PROCESSED);
         }
+        this.point = point;
         this.paymentStatus = PaymentStatus.APPROVED;
         this.paymentDate = LocalDateTime.now();
     }
