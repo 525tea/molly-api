@@ -17,6 +17,7 @@ import org.example.mollyapi.user.dto.GetUserSummaryInfoWithPointResDto;
 import org.example.mollyapi.user.dto.UpdateUserReqDto;
 import org.example.mollyapi.user.dto.UpdateUserResDto;
 import org.example.mollyapi.user.service.UserService;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,6 +49,7 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "성공",
                     content = @Content(schema = @Schema(implementation = UpdateUserResDto.class))),
+            @ApiResponse(responseCode = "204", description = "성공"),
             @ApiResponse(responseCode = "400", description = "실패",
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))})
     public ResponseEntity<?> updateUserInfo(
@@ -63,7 +65,6 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공",
                     content = @Content(schema = @Schema(implementation = GetUserSummaryInfoWithPointResDto.class))),
-            @ApiResponse(responseCode = "204", description = "성공"),
             @ApiResponse(responseCode = "400", description = "실패",
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
     })
@@ -79,5 +80,16 @@ public class UserController {
                 : userService.getUserSummaryInfo(authId);
 
         return ResponseEntity.ok(result);
+    }
+
+
+    @Auth
+    @Operation(summary = "사용자 정보 삭제", description = "사용자 정보 삭제 controller")
+    @DeleteMapping("")
+    @ApiResponse(responseCode = "204", description = "성공")
+    public ResponseEntity<?> deleteUserInfo(HttpServletRequest request){
+        Long authId = (Long) request.getAttribute("authId");
+        userService.deleteUserInfo(authId);
+        return ResponseEntity.status(HttpStatusCode.valueOf(204)).build();
     }
 }
