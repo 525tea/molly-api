@@ -8,11 +8,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.mollyapi.common.exception.CustomErrorResponse;
 import org.example.mollyapi.user.auth.annotation.Auth;
 import org.example.mollyapi.user.dto.GetUserInfoResDto;
 import org.example.mollyapi.user.dto.GetUserSummaryInfoWithPointResDto;
+import org.example.mollyapi.user.dto.UpdateUserReqDto;
+import org.example.mollyapi.user.dto.UpdateUserResDto;
 import org.example.mollyapi.user.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,16 +43,34 @@ public class UserController {
     }
 
     @Auth
+    @PutMapping()
+    @Operation(summary = "사용자 정보 수정", description = "변경된 값이 없으면, 204 반환, 있으면 201 반환")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "성공",
+                    content = @Content(schema = @Schema(implementation = UpdateUserResDto.class))),
+            @ApiResponse(responseCode = "400", description = "실패",
+                    content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))})
+    public ResponseEntity<?> updateUserInfo(
+            @Valid @RequestBody UpdateUserReqDto updateUserReqDto,
+            HttpServletRequest request) {
+        Long authId = (Long) request.getAttribute("authId");
+        return userService.updateUserInfo(updateUserReqDto, authId);
+    }
+
+    @Auth
     @GetMapping("/info/summary")
     @Operation(summary = "유저 요약 프로필 데이터 조회", description = "유저 요약 프로필 데이터 조회 with 포인트")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공",
                     content = @Content(schema = @Schema(implementation = GetUserSummaryInfoWithPointResDto.class))),
+            @ApiResponse(responseCode = "204", description = "성공"),
             @ApiResponse(responseCode = "400", description = "실패",
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
     })
     public ResponseEntity<?> getUserSummaryInfoWithOptionalPoint(
-            @Parameter(description = "true = 포인트 같이 전달, false = 포인트 제외", required = true) @RequestParam(name = "include-point") boolean includePoint,
+            @Parameter(description = "true = 포인트 같이 전달, false = 포인트 제외", required = true)
+            @RequestParam(name = "include-point")
+            boolean includePoint,
             HttpServletRequest request) {
         Long authId = (Long) request.getAttribute("authId");
 

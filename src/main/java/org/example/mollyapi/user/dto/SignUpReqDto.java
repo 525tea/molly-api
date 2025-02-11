@@ -20,7 +20,7 @@ public record SignUpReqDto(
         @NotBlank(message = "적당한 닉네임이 생각나지 않으면, 하늘을나는 고양이는 어때요?")
         String nickname,
 
-        @Schema( description = "'-'를 제외하고 보내주세요, 10~11자리 숫자만 가능합니다", example = "cats@cats.com")
+        @Schema( description = "'-'를 제외하고 보내주세요, 10~11자리 숫자만 가능합니다", example = "01011112222")
         @Pattern(regexp = "^\\d{10,11}$", message = "전화번호는 10~11자리 숫자만 가능합니다.")
         String cellPhone,
 
