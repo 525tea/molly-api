@@ -10,6 +10,7 @@ import org.example.mollyapi.user.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import static org.example.mollyapi.common.exception.error.impl.UserError.*;
@@ -61,6 +62,12 @@ public class UserService {
         if (!exists) throw new CustomException(NOT_EXISTS_USER);
     }
 
+    /***
+     * 사용자 정보 수정
+     * @param updateUserReqDto 수정할려는 데이터
+     * @param authId 인증 권한 확인
+     * @return ResponseEntity 반환
+     */
     @Transactional
     public ResponseEntity<?> updateUserInfo(UpdateUserReqDto updateUserReqDto, Long authId) {
         User user = userRepository.findByAuth_AuthId(authId)
@@ -82,4 +89,25 @@ public class UserService {
 
         return ResponseEntity.status(HttpStatusCode.valueOf(204)).build();
     }
+
+    /**
+     * 사용자 정보 삭제 요청
+     * @param authId 사용자 PK
+     */
+    public void deleteUserInfo(Long authId) {
+        User user = userRepository.findByAuth_AuthId(authId)
+                .orElseThrow(() -> new CustomException(NOT_EXISTS_USER));
+
+        user.updateFlag();
+    }
+
+    /**
+     * 자정마다 Flag = true인 유저 정보가 삭제됨
+     */
+    @Scheduled(cron = "0 0 0 * * ?")
+    @Transactional
+    public void deleteFlaggedUser(){
+        userRepository.deleteByFlagTrue();
+    }
+
 }

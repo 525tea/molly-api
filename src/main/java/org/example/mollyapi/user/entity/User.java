@@ -80,4 +80,8 @@ public class User extends Base {
         return isUpdate;
     }
 
+    public void updateFlag(){
+        this.flag = true;
+    }
+
 }

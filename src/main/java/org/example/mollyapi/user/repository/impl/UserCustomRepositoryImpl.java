@@ -43,4 +43,14 @@ public class UserCustomRepositoryImpl implements UserCustomRepository {
                 .fetchOne();
 
     }
+
+    @Override
+    public void deleteByFlagTrue() {
+
+//        jpaQueryFactory
+//                .delete(user)
+//                .where(user.flag.eq(true))
+//                .execute();
+
+    }
 }
