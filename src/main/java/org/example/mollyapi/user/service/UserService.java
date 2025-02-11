@@ -94,6 +94,7 @@ public class UserService {
      * 사용자 정보 삭제 요청
      * @param userId 사용자 PK
      */
+    @Transactional
     public void deleteUserInfo(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(NOT_EXISTS_USER));
