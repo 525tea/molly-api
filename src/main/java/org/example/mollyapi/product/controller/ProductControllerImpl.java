@@ -1,0 +1,121 @@
+package org.example.mollyapi.product.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+import lombok.extern.slf4j.Slf4j;
+import org.example.mollyapi.common.exception.CustomErrorResponse;
+import org.example.mollyapi.product.dto.response.ProductResListDto;
+import org.example.mollyapi.product.entity.Product;
+import org.example.mollyapi.product.service.ProductService;
+import org.example.mollyapi.product.dto.request.ProductRegisterReqDto;
+import org.example.mollyapi.product.dto.response.ProductResDto;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+
+@Tag(name = "Product Controller", description = "상품 관련 엔드포인트")
+@Slf4j
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/product")
+public class ProductControllerImpl {
+
+    private final ProductService productService;
+
+    @GetMapping
+    @Operation(summary = "상품 정보 목록", description = "상품 정보와 옵션별 상품 아이템 데이터 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공",
+                    content = @Content(schema = @Schema(implementation = ProductResListDto.class))),
+            @ApiResponse(responseCode = "204", description = "조회 데이터 없음", content = @Content(schema = @Schema(type = "string", example = ""))),
+            @ApiResponse(responseCode = "400", description = "실패",
+                    content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
+    })
+    public ResponseEntity<ProductResListDto> getAllProducts() {
+        List<Product> allProducts = productService.getAllProducts();
+
+        if (allProducts.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok().body(ProductResListDto.from(allProducts));
+    }
+
+    @GetMapping("/{productId}")
+    @Operation(summary = "상품 정보 및 상품아이템 목록", description = "상품 정보와 옵션별 상품 아이템 데이터 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공",
+                    content = @Content(schema = @Schema(implementation = ProductResDto.class))),
+            @ApiResponse(responseCode = "204", description = "조회 데이터 없음", content = @Content(schema = @Schema(type = "string", example = ""))),
+            @ApiResponse(responseCode = "400", description = "실패",
+                    content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
+    })
+    public ResponseEntity<ProductResDto> getProduct(@PathVariable Long productId) {
+        Product product = productService.getProductById(productId).orElse(null);
+        if (product == null) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok().body(ProductResDto.from(product));
+    }
+
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "상품 정보 및 상품아이템 등록", description = "상품 정보와 옵션별 상품 아이템 등록")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공",
+                    content = @Content(schema = @Schema(implementation = ProductResDto.class))),
+            @ApiResponse(responseCode = "400", description = "실패",
+                    content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
+    })
+    public ResponseEntity<ProductResDto> registerProduct(
+            @Valid @RequestPart("product") ProductRegisterReqDto productRegisterReqDto,
+            @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail,
+            @RequestPart(value = "productImages", required = false) List<MultipartFile> productImages,
+            @RequestPart(value = "productDescriptionImages", required = false) List<MultipartFile> productDescriptionImages
+    )  {
+
+        Product product = productService.registerProduct(productRegisterReqDto, thumbnail, productImages, productDescriptionImages);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(ProductResDto.from(product));
+    }
+
+
+    @PutMapping(value = "/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "상품 정보 및 상품아이템 수정", description = "상품 정보와 옵션별 상품 아이템 데이터 수정")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공",
+                    content = @Content(schema = @Schema(implementation = ProductResDto.class))),
+            @ApiResponse(responseCode = "400", description = "실패",
+                    content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
+    })
+    public ResponseEntity<ProductResDto> updateProduct(@PathVariable Long productId, @RequestPart("product") ProductRegisterReqDto productRegisterReqDto) {
+        //Todo : 이미지 수정 [이미지 추가, 순서 재배치, 부분 교체]
+        Product product = productService.updateProduct(productId, productRegisterReqDto);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(ProductResDto.from(product));
+    }
+
+
+    @DeleteMapping("/{productId}")
+    @Operation(summary = "상품 정보 및 상품아이템 전체", description = "상품 정보와 옵션별 상품 아이템 데이터 전체 삭제")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "조회 데이터 없음"),
+            @ApiResponse(responseCode = "400", description = "실패",
+                    content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
+    })
+    public ResponseEntity<?> deleteProduct(@PathVariable Long productId) {
+        productService.deleteProduct(productId);
+        return ResponseEntity.noContent().build();
+    }
+}
