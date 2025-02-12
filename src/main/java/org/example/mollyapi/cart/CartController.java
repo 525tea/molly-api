@@ -1,0 +1,44 @@
+package org.example.mollyapi.cart;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.example.mollyapi.cart.dto.AddCartReqDto;
+import org.example.mollyapi.cart.service.CartService;
+import org.example.mollyapi.common.dto.CommonResDto;
+import org.example.mollyapi.common.exception.CustomErrorResponse;
+import org.example.mollyapi.user.auth.annotation.Auth;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@Tag(name = "Cart Controller", description = "장바구니 기능을 담당")
+@RestController
+@RequestMapping("/cart")
+@RequiredArgsConstructor
+public class CartController {
+    private final CartService cartService;
+
+    @Auth
+    @PostMapping("/add")
+    @Operation(summary = "장바구니에 상품 추가", description = "장바구니에 상품을 추가 할 수 있습니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "장바구니 담기 성공",
+                    content = @Content(schema = @Schema(implementation = CommonResDto.class))),
+            @ApiResponse(responseCode = "400", description = "1. 존재하지 않는 사용자 \t\n 2. 존재하지 않는 상품 \t\n 3. 상품 품절 \t\n 4. 재고 수량 부족 \t\n 5. 장바구니 최대 수량 초과",
+                    content = @Content(schema = @Schema(implementation = CustomErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "장바구니 등록 실패",
+                    content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
+    })
+    public ResponseEntity<?> addCart(
+            @Valid @RequestBody AddCartReqDto addCartReqDto,
+            HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return cartService.addCart(addCartReqDto, userId);
+    }
+}
