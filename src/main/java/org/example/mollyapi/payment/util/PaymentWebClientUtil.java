@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.example.mollyapi.common.config.WebClientUtil;
 import org.example.mollyapi.common.exception.CustomException;
+import org.example.mollyapi.payment.dto.request.TossCancelReqDto;
 import org.example.mollyapi.payment.dto.request.TossConfirmReqDto;
-import org.example.mollyapi.payment.dto.response.TossPaymentResDto;
+import org.example.mollyapi.payment.dto.response.TossCancelResDto;
+import org.example.mollyapi.payment.dto.response.TossConfirmResDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -23,25 +25,48 @@ public class PaymentWebClientUtil {
     private final WebClientUtil webClientUtil;
     @Value("${secret.confirm-url}")
     private String confirmUrl;
+    @Value("${secret.toss-url}")
+    private String tossUrl;
     public PaymentWebClientUtil(WebClientUtil webClientUtil) {
         this.webClientUtil = webClientUtil;
     }
 
-    public TossPaymentResDto confirmPayment(TossConfirmReqDto request, String apiKey) {
+    public TossConfirmResDto confirmPayment(TossConfirmReqDto request, String apiKey) {
         Map<String, String> headers = new HashMap<>();
         headers.put("Authorization", "Basic " + Base64.getEncoder().encodeToString((apiKey + ":").getBytes()));
         headers.put("Content-Type", "application/json");
 
         try {
-            ResponseEntity<TossPaymentResDto> response = webClientUtil.post(
+            ResponseEntity<TossConfirmResDto> response = webClientUtil.post(
                     confirmUrl,
                     request,
-                    TossPaymentResDto.class,
+                    TossConfirmResDto.class,
                     headers
             );
 
             return response.getBody();
         } catch (WebClientResponseException e) {
+            handlePaymentError(e);
+            throw e;
+        }
+    }
+
+    public TossCancelResDto cancelPayment(TossCancelReqDto request, String apiKey, String paymentKey) {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Authorization", "Basic " + Base64.getEncoder().encodeToString((apiKey + ":").getBytes()));
+        headers.put("Content-Type", "application/json");
+
+        String url = tossUrl + paymentKey + "/cancel";
+
+        try {
+            ResponseEntity<TossCancelResDto> response = webClientUtil.post(
+                    url,
+                    request,
+                    TossCancelResDto.class,
+                    headers
+            );
+            return response.getBody();
+        }   catch (WebClientResponseException e) {
             handlePaymentError(e);
             throw e;
         }

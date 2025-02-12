@@ -99,6 +99,13 @@ public class Payment extends Base {
         this.failureReason = failureReason;
     }
 
+    public void cancelPayment() {
+        if (this.paymentStatus != PaymentStatus.APPROVED) {
+            throw new CustomException(PaymentError.PAYMENT_ALREADY_CANCELED);
+        }
+        this.paymentStatus = PaymentStatus.CANCELED;
+    }
+
 
 
 
