@@ -15,11 +15,11 @@ import java.util.stream.Collectors;
 @Getter
 public class OrderResponseDto {
     private String orderId;
+    private String orderNumber;
     private Long userId;
     private Long totalAmount;
     private OrderStatus status;
     private CancelStatus cancelStatus;
-
     private String orderedAt;
     private List<OrderDetailDto> orderDetails;
 
@@ -27,6 +27,7 @@ public class OrderResponseDto {
 
     public OrderResponseDto(Order order, List<OrderDetail> orderDetailList) {
         this.orderId = "ORD-" + order.getId();
+        this.orderNumber = order.getOrderNumber();
         this.userId = order.getUser().getUserId();
         this.totalAmount = orderDetailList.stream()
                 .mapToLong(detail -> detail.getPrice() * detail.getQuantity())
@@ -46,6 +47,7 @@ public class OrderResponseDto {
         private Long productId;
         private Long itemId;
         private String productName;
+        private String size;
         private Long price;
         private Long quantity;
 
@@ -53,6 +55,7 @@ public class OrderResponseDto {
             this.productId = orderDetail.getProductItem().getProduct().getId();
             this.itemId = orderDetail.getProductItem().getId();
             this.productName = orderDetail.getProductItem().getProduct().getProductName();
+            this.size = orderDetail.getProductItem().getSize();
             this.price = orderDetail.getPrice();
             this.quantity = orderDetail.getQuantity();
         }

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
     private final OrderService orderService;
 
-    @PostMapping(value = "/create", produces = "application/json")
+    @PostMapping(produces = "application/json")
     public ResponseEntity<OrderResponseDto> createOrder(@RequestBody OrderCreateRequestDto request) {
         OrderResponseDto response = orderService.createOrder(request.getUserId(), request.getOrderRequests());
         return ResponseEntity.ok(response);
