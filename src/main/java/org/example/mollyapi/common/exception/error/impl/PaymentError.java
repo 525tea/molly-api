@@ -21,6 +21,11 @@ public enum PaymentError implements CustomError {
     PAYMENT_AMOUNT_MISMATCH("결제 금액이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
 
     ORDER_NOT_FOUND("주문 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+
+
+    // 결제 취소 에러
+    PAYMENT_ALREADY_CANCELED("이미 취소된 결제입니다.", HttpStatus.CONFLICT),
+
     ;
 
     private final String message;
