@@ -30,6 +30,9 @@ public class Category {
 
     Long level;
 
+    @OneToMany(mappedBy = "category")
+    List<Product> products = new ArrayList<>();
+
     @Builder
     public  Category(
             String categoryName,
