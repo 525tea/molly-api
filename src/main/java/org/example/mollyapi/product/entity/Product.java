@@ -4,9 +4,9 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.mollyapi.common.entity.Base;
 import org.example.mollyapi.product.dto.UploadFile;
 import org.example.mollyapi.user.entity.User;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +14,7 @@ import java.util.List;
 @Getter
 @Entity
 @NoArgsConstructor
-public class Product {
+public class Product extends Base {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,11 +29,11 @@ public class Product {
     Long price;
     String description;
 
-    @OneToMany(mappedBy = "product")
-    List<ProductImage> images;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    List<ProductImage> images = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product")
-    List<ProductItem> items;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    List<ProductItem> items = new ArrayList<>();
 
     @OneToOne
     @JoinColumn(name = "user_id")
@@ -46,14 +46,10 @@ public class Product {
             String productName,
             Long price,
             String description,
-            UploadFile thumbnail,
-            List<UploadFile> productImages,
-            List<UploadFile> descriptionImages,
             List<ProductItem> items,
+            List<ProductImage> images,
             User user
     ) {
-        ArrayList<ProductImage> images = createImages(thumbnail, productImages, descriptionImages);
-
         this.category = category;
         this.brandName = brandName;
         this.productName = productName;
@@ -62,6 +58,14 @@ public class Product {
         this.items = items;
         this.images = images;
         this.user = user;
+
+        for (ProductImage image : images) {
+            image.setProduct(this);
+        }
+
+        for (ProductItem item : items) {
+            item.setProduct(this);
+        }
     }
 
     public UploadFile getThumbnail() {
@@ -87,37 +91,30 @@ public class Product {
                 .toList();
     }
 
-    private static ArrayList<ProductImage> createImages(UploadFile thumbnail, List<UploadFile> productImages, List<UploadFile> descriptionImages) {
-        ArrayList<ProductImage> images = new ArrayList<>();
-        images.add(createProductImage(thumbnail, false, true, false, 0));
-
-        for (int idx = 0; idx < productImages.size(); idx++) {
-            UploadFile img = productImages.get(idx);
-            ProductImage productImage = createProductImage(img, true, false, false, idx + 1);
-            images.add(productImage);  // 생성된 ProductImage 객체를 리스트에 추가
-        }
-
-        for (int idx = 0; idx < productImages.size(); idx++) {
-            UploadFile img = descriptionImages.get(idx);
-            ProductImage descriptionImage = createProductImage(img, false, false, true, idx);
-            images.add(descriptionImage);  // 생성된 ProductImage 객체를 리스트에 추가
-        }
-        return images;
-    }
-
-    private static ProductImage createProductImage(
-            UploadFile thumbnail,
-            boolean isProductImage,
-            boolean isRepresentative,
-            boolean isDescriptionImage,
-            long idx
+    public Product update(
+            Category category,
+            String brandName,
+            String productName,
+            Long price,
+            String description,
+            List<ProductItem> items,
+            List<ProductImage> images
     ) {
-        return ProductImage.builder()
-                .uploadFile(thumbnail)
-                .isProductImage(isProductImage)
-                .isRepresentative(isRepresentative)
-                .isDescriptionImage(isDescriptionImage)
-                .imageIndex(idx)
-                .build();
+        this.category = category;
+        this.brandName = brandName;
+        this.productName = productName;
+        this.price = price;
+        this.description = description;
+        
+        // 아이템에서 변경된 재고 반영
+        for (ProductItem updateItem : items) {
+            for (ProductItem thisItem : this.items) {
+                if (updateItem.getId().equals(thisItem.getId())) {
+                    thisItem.updateQuantity(updateItem.quantity);
+                }
+            }
+        }
+
+        return this;
     }
 }
