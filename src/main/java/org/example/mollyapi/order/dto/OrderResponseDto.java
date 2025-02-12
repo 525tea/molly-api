@@ -1,0 +1,53 @@
+package org.example.mollyapi.order.dto;
+
+import lombok.Getter;
+import org.example.mollyapi.order.entity.Order;
+import org.example.mollyapi.order.entity.OrderDetail;
+import org.example.mollyapi.order.type.CancelStatus;
+import org.example.mollyapi.order.type.OrderStatus;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Getter
+public class OrderResponseDto {
+    private String orderId;
+    private Long userId;
+    private Long totalAmount;
+    private OrderStatus status;
+    private CancelStatus cancelStatus;
+    private LocalDateTime orderedAt;
+    private List<OrderDetailDto> orderDetails;
+
+    public OrderResponseDto(Order order, List<OrderDetail> orderDetailList) {
+        this.orderId = "ORD-" + order.getId();
+        this.userId = order.getUser().getUserId();
+        this.totalAmount = orderDetailList.stream()
+                .mapToLong(detail -> detail.getPrice() * detail.getQuantity())
+                .sum();
+        this.status = order.getStatus();
+        this.cancelStatus = order.getCancelStatus();
+        this.orderedAt = order.getOrderedAt();
+        this.orderDetails = orderDetailList.stream()
+                .map(OrderDetailDto::new)
+                .collect(Collectors.toList());
+    }
+
+    @Getter
+    public static class OrderDetailDto {
+        private Long productId;
+        private Long itemId;
+        private String productName;
+        private Long price;
+        private Long quantity;
+
+        public OrderDetailDto(OrderDetail orderDetail) {
+            this.productId = orderDetail.getProductItem().getProduct().getId();
+            this.itemId = orderDetail.getProductItem().getId();
+            this.productName = orderDetail.getProductItem().getProduct().getProductName();
+            this.price = orderDetail.getPrice();
+            this.quantity = orderDetail.getQuantity();
+        }
+    }
+}
