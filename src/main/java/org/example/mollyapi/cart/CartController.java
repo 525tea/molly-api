@@ -38,10 +38,7 @@ public class CartController {
     public ResponseEntity<?> addCart(
             @Valid @RequestBody AddCartReqDto addCartReqDto,
             HttpServletRequest request) {
-        System.out.println("AAAAA");
         Long userId = (Long) request.getAttribute("userId");
-        System.out.println("userId: " + userId);
         return cartService.addCart(addCartReqDto, userId);
     }
-
 }
