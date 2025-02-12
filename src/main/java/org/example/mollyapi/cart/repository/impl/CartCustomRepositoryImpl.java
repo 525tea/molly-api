@@ -25,6 +25,7 @@ public class CartCustomRepositoryImpl implements CartCustomRepository {
 
         return jpaQueryFactory.select(
                         Projections.constructor(CartInfoResDto.class,
+                                cart.cartId,
                                 item.id,
                                 item.color,
                                 item.size,

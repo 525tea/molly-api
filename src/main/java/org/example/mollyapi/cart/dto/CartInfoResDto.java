@@ -1,6 +1,7 @@
 package org.example.mollyapi.cart.dto;
 
 public record CartInfoResDto(
+        Long cartId, //장바구니 PK
         Long itemId, //아이템 PK
         String color, //색상
         String size, //사이즈
