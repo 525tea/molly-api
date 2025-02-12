@@ -21,8 +21,8 @@ public class Order {
     @Column(name = "order_id")
     private Long id; // pk
 
-    @Column(unique = true, length = 30)
-    private String orderNumber; // 결제용 주문 id
+    @Column(name = "toss_order_id",unique = true, length = 30)
+    private String tossOrderId; // 결제용 주문 id
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -52,6 +52,10 @@ public class Order {
     protected void onCreate() {
         this.orderedAt = LocalDateTime.now();
         this.expirationTime = this.orderedAt.plusMinutes(10);
+    }
+
+    public void updateOrderedAt(LocalDateTime paymentTime) { // 결제 후 주문 일시 업데이트
+        this.orderedAt = paymentTime;
     }
 
     public void markAsFailed() {
