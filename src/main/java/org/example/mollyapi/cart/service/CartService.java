@@ -9,6 +9,7 @@ import org.example.mollyapi.product.entity.ProductItem;
 import org.example.mollyapi.product.repository.ProductItemRepository;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,7 +57,7 @@ public class CartService {
         // 6-1. 수량 업데이트
         try {
             cart.updateQuantity(totalQuantity);
-            return ResponseEntity.ok().body("장바구니 상품 등록 성공");
+            return new ResponseEntity<>(HttpStatus.OK);
         } catch (CustomException e) {
             throw new CustomException(FAIL_UPDATE); // 수량 업데이트 실패
         }
