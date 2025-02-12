@@ -17,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -35,10 +37,13 @@ public class OrderService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다. userId=" + userId));
 
+        // 주문번호 생성
+        String orderId = generateOrderId();
+
         // 새로운 주문 생성 (초기 상태는 PENDING)
         Order order = Order.builder()
                 .user(user)
-                .paymentAmount(0L)  // 초기값 0원
+                .paymentAmount(0L)
                 .status(OrderStatus.PENDING)
                 .build();
         orderRepository.save(order);
@@ -59,7 +64,7 @@ public class OrderService {
             }
 
             // 재고 감소
-            productItem.decreaseStock(req.getQuantity());
+            productItem.decreaseStock(Math.toIntExact(req.getQuantity()));
             productItemRepository.save(productItem);  // 감소한 재고 저장
 
             return OrderDetail.builder()
@@ -75,7 +80,7 @@ public class OrderService {
         // 주문 상세(OrderDetail) 저장
         orderDetailRepository.saveAll(orderDetails);
 
-        // 총 결제 금액 계산 후 Order에 반영(생각좀)
+        // 총 결제 금액 계산 후 Order에 반영(수정중)
         long totalAmount = orderDetails.stream()
                 .mapToLong(d -> d.getPrice() * d.getQuantity())
                 .sum();
@@ -83,6 +88,18 @@ public class OrderService {
         orderRepository.save(order);
 
         return new OrderResponseDto(order, orderDetails);
+    }
+
+//    // 주문번호 생성 메서드 (UUID)
+//    private String generateOrderId() {
+//        return "ORD-" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
+//    }
+
+    // 주문번호 생성 메서드 (날짜 + 랜덤값)
+    private String generateOrderId() {
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        int randomNum = new Random().nextInt(9000) + 1000;
+        return "ORD-" + timestamp + "-" + randomNum;
     }
 
 }
