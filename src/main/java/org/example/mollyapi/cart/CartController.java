@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.mollyapi.cart.dto.AddCartReqDto;
+import org.example.mollyapi.cart.dto.CartInfoResDto;
 import org.example.mollyapi.cart.service.CartService;
 import org.example.mollyapi.common.dto.CommonResDto;
 import org.example.mollyapi.common.exception.CustomErrorResponse;
@@ -40,5 +41,21 @@ public class CartController {
             HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         return cartService.addCart(addCartReqDto, userId);
+    }
+
+    @Auth
+    @GetMapping()
+    @Operation(summary = "장바구니 상품 조회", description = "장바구니에 담긴 상품을 조회할 수 있습니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "장바구니 내역 조회 성공",
+                    content = @Content(schema = @Schema(implementation = CartInfoResDto.class))),
+            @ApiResponse(responseCode = "204", description = "빈 장바구니",
+                    content = @Content(schema = @Schema(implementation = CustomErrorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "가입 되지 않은 사용자",
+                    content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
+    })
+    public ResponseEntity<?> getCartDetail(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return cartService.getCartDetail(userId);
     }
 }
