@@ -1,13 +1,11 @@
 package org.example.mollyapi.order.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.example.mollyapi.order.dto.OrderRequestDto;
+import org.example.mollyapi.order.dto.OrderCreateRequestDto;
 import org.example.mollyapi.order.dto.OrderResponseDto;
 import org.example.mollyapi.order.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/orders")
@@ -15,9 +13,9 @@ import java.util.List;
 public class OrderController {
     private final OrderService orderService;
 
-    @PostMapping("/create")
-    public ResponseEntity<OrderResponseDto> createOrder(@RequestParam Long userId, @RequestBody List<OrderRequestDto> orderRequests) {
-        OrderResponseDto response = orderService.createOrder(userId, orderRequests);
+    @PostMapping(value = "/create", produces = "application/json")
+    public ResponseEntity<OrderResponseDto> createOrder(@RequestBody OrderCreateRequestDto request) {
+        OrderResponseDto response = orderService.createOrder(request.getUserId(), request.getOrderRequests());
         return ResponseEntity.ok(response);
     }
 }
