@@ -30,7 +30,7 @@ public class CartController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "장바구니 담기 성공",
                     content = @Content(schema = @Schema(implementation = CommonResDto.class))),
-            @ApiResponse(responseCode = "400", description = "1. 존재하지 않는 사용자 \t\n 2. 존재하지 않는 상품 \t\n 3.상품 품절 \t\n 4. 재고 수량 부족 \t\n 장바구니 최대 수량 초과"),
+            @ApiResponse(responseCode = "400", description = "1. 존재하지 않는 사용자 \t\n 2. 존재하지 않는 상품 \t\n 3. 상품 품절 \t\n 4. 재고 수량 부족 \t\n 5. 장바구니 최대 수량 초과"),
             @ApiResponse(responseCode = "500", description = "장바구니 등록 실패",
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
     })
