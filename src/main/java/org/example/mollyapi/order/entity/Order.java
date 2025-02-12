@@ -32,7 +32,10 @@ public class Order {
     private List<OrderDetail> orderDetails;
 
     @Column(nullable = false)
-    private Long paymentAmount;
+    private Long totalAmount; // 포인트 적용 전
+
+    @Column(nullable = true)
+    private Long paymentAmount; // 결제 예정 금액
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -67,8 +70,8 @@ public class Order {
         this.cancelStatus = CancelStatus.REQUESTED;
     }
 
-    public void setPaymentAmount(long totalAmount) {
-        this.paymentAmount = totalAmount;
+    public void setTotalAmount(long totalAmount) {
+        this.totalAmount = totalAmount;
     }
 
 //    public void setOrderNumber(String orderNumber) {

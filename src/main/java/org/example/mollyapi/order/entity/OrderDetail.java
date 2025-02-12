@@ -24,6 +24,9 @@ public class OrderDetail {
     @JoinColumn(name = "item_id", nullable = false)
     private ProductItem productItem;
 
+    @Column(nullable = true)
+    private String size;
+
     @Column(nullable = false)
     private Long price;
 
@@ -35,9 +38,10 @@ public class OrderDetail {
     private String productName;
 
     @Builder
-    public OrderDetail(Order order, ProductItem productItem, Long price, Long quantity,String brandName, String productName) {
+    public OrderDetail(Order order, ProductItem productItem, String size, Long price, Long quantity,String brandName, String productName) {
         this.order = order;
         this.productItem = productItem;
+        this.size = size;
         this.price = price;
         this.quantity = quantity;
         this.brandName =brandName;

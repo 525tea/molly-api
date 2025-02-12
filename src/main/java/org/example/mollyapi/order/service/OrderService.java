@@ -44,7 +44,7 @@ public class OrderService {
         Order order = Order.builder()
                 .user(user)
                 .tossOrderId(tossOrderId)
-                .paymentAmount(0L)
+                .totalAmount(0L)
                 .status(OrderStatus.PENDING)
                 .cancelStatus(CancelStatus.NONE)
                 .expirationTime(LocalDateTime.now().plusMinutes(10))
@@ -73,6 +73,7 @@ public class OrderService {
             return OrderDetail.builder()
                     .order(order)
                     .productItem(productItem)
+                    .size(productItem.getSize())
                     .price(product.getPrice())
                     .quantity(req.getQuantity())
                     .brandName(product.getBrandName())
@@ -87,7 +88,7 @@ public class OrderService {
         long totalAmount = orderDetails.stream()
                 .mapToLong(d -> d.getPrice() * d.getQuantity())
                 .sum();
-        order.setPaymentAmount(totalAmount);
+        order.setTotalAmount(totalAmount);
         orderRepository.save(order);
 
         return new OrderResponseDto(order, orderDetails);
