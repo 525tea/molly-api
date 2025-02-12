@@ -21,7 +21,7 @@ public class Product {
     @Column(name = "product_id")
     Long id;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "category_id")
     Category category;
     String brandName;
