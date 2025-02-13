@@ -10,4 +10,5 @@ public interface CartRepository extends JpaRepository<Cart, Long>, CartCustomRep
     Optional<Cart> findByProductItemIdAndUserUserId(Long itemId, Long userId);
     int countByUserUserId(Long userId);
     void deleteByCartIdAndUserUserId(Long cartId, Long userId);
+    Optional<Cart> findByCartIdAndUserUserId(Long cartId, Long userId);
 }
