@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 import org.example.mollyapi.common.entity.Base;
 import org.example.mollyapi.common.exception.CustomException;
 import org.example.mollyapi.common.exception.error.impl.PaymentError;
+import org.example.mollyapi.order.entity.Order;
 import org.example.mollyapi.payment.type.PaymentStatus;
+import org.example.mollyapi.user.entity.User;
 
 import java.time.LocalDateTime;
 
@@ -26,7 +28,7 @@ public class Payment extends Base {
     private String paymentType;
 
     @Column
-    private Integer amount;
+    private Long amount;
 
     @Column
     private String paymentKey;
@@ -47,18 +49,20 @@ public class Payment extends Base {
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
-    @Column(name = "order_id")
-    private Long orderId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id")
+    private Order order;
 
-    @Column(name = "user_id")
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 
 
     // 생성자 팩토리 메서드
-    public static Payment from(Long userId, Long orderId, String tossOrderId, String paymentKey, String paymentType, Integer amount, String paymentStatus) {
+    public static Payment from(User user, Order order, String tossOrderId, String paymentKey, String paymentType, Long amount, String paymentStatus) {
         return Payment.builder()
-                .userId(userId)
-                .orderId(orderId)
+                .user(user)
+                .order(order)
                 .tossOrderId(tossOrderId)
                 .paymentKey(paymentKey)
                 .paymentType(paymentType)
@@ -67,14 +71,14 @@ public class Payment extends Base {
                 .build();
     }
 
-    public static Payment ready(Long userId,String tossOrderId, Integer amount) {
-        return Payment.builder()
-                .userId(userId)
-                .tossOrderId(tossOrderId)
-                .amount(amount)
-                .paymentStatus(PaymentStatus.PENDING)
-                .build();
-    }
+//    public static Payment ready(Long userId,String tossOrderId, Integer amount) {
+//        return Payment.builder()
+//                .userId(userId)
+//                .tossOrderId(tossOrderId)
+//                .amount(amount)
+//                .paymentStatus(PaymentStatus.PENDING)
+//                .build();
+//    }
 
 
 

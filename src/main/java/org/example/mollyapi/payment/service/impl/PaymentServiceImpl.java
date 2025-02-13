@@ -6,11 +6,13 @@ import org.apache.coyote.Response;
 import org.example.mollyapi.common.config.WebClientUtil;
 import org.example.mollyapi.common.exception.CustomException;
 import org.example.mollyapi.common.exception.error.impl.PaymentError;
+import org.example.mollyapi.common.exception.error.impl.UserError;
 import org.example.mollyapi.order.entity.Order;
 import org.example.mollyapi.order.repository.OrderRepository;
 import org.example.mollyapi.order.service.OrderService;
 import org.example.mollyapi.payment.dto.request.PaymentCancelReqDto;
 import org.example.mollyapi.payment.dto.request.TossCancelReqDto;
+import org.example.mollyapi.payment.dto.response.PaymentResDto;
 import org.example.mollyapi.payment.dto.response.TossCancelResDto;
 import org.example.mollyapi.payment.dto.request.TossConfirmReqDto;
 import org.example.mollyapi.payment.dto.response.TossConfirmResDto;
@@ -20,6 +22,7 @@ import org.example.mollyapi.payment.service.PaymentService;
 import org.example.mollyapi.payment.util.PaymentWebClientUtil;
 import org.example.mollyapi.user.dto.GetUserSummaryInfoWithPointResDto;
 import org.example.mollyapi.user.entity.User;
+import org.example.mollyapi.user.repository.UserRepository;
 import org.example.mollyapi.user.service.UserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +32,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static java.lang.Math.toIntExact;
 
 @Service
 @Slf4j
@@ -37,9 +43,12 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final WebClientUtil webClientUtil;
     private final PaymentRepository paymentRepository;
+    private final OrderRepository orderRepository;
     private final OrderService orderService;
     private final PaymentWebClientUtil paymentWebClientUtil;
     private final UserService userService;
+    private final UserRepository userRepository;
+
 
     @Value("${secret.payment-api-key}")
     private String apiKey;
@@ -48,7 +57,7 @@ public class PaymentServiceImpl implements PaymentService {
         결제 로직
      */
     @Transactional
-    public Payment processPayment(Long userId, String paymentKey, String tossOrderId, Integer amount, Integer point, Long deliveryId, String paymentType) {
+    public Payment processPayment(Long userId, String paymentKey, String tossOrderId, Long amount, Integer point, Long deliveryId, String paymentType) {
         /* 1. find order with tossOrderId
          2. validate amount
          3. success/failure logic
@@ -58,9 +67,14 @@ public class PaymentServiceImpl implements PaymentService {
          6. success/failure logic
         */
 
+        // user find
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(UserError.NOT_EXISTS_USER));
+
         // order findByTossOrderId
-        Order order = orderService.findOrderByTossOrderId(tossOrderId);
-        Integer orderAmount = order.getAmount();
+        Order order = orderRepository.findByTossOrderId(tossOrderId)
+                .orElseThrow(()-> new CustomException(PaymentError.ORDER_NOT_FOUND));
+        Long orderAmount = order.getTotalAmount();
 
         // 유저 포인트 검증
         validateUserPoint(userId, point);
@@ -79,7 +93,7 @@ public class PaymentServiceImpl implements PaymentService {
         TossConfirmResDto tossResDto = response.getBody();
 
         // create pending payment
-        Payment payment = Payment.from(userId, order.getId(), tossOrderId, paymentKey, paymentType, amount, "결제대기");
+        Payment payment = Payment.from(user, order, tossOrderId, paymentKey, paymentType, amount, "결제대기");
 
         // 결제 성공 및 실패 로직
         if (res) {
@@ -130,9 +144,9 @@ public class PaymentServiceImpl implements PaymentService {
     public void successPayment(Payment payment, String tossOrderId, Integer point) {
         //payment status change
         payment.successPayment(point);
-        //order status change
-        orderService.successOrder(tossOrderId, point);
-        // 포인트 차감 및 적립 로직
+        //order success (field update, point usage)
+        orderService.successOrder(tossOrderId,payment.getPaymentKey(),payment.getPaymentType(),payment.getAmount(),point);
+
     }
 
     /*
@@ -140,7 +154,8 @@ public class PaymentServiceImpl implements PaymentService {
      */
     public void failPayment(Payment payment, String tossOrderId, String failureReason) {
         payment.failPayment(failureReason);
-        orderService.failOrder(tossOrderId);
+//        orderService.failOrder(tossOrderId);
+        throw new CustomException(PaymentError.PAYMENT_FAILED);
     }
 
 
@@ -179,8 +194,8 @@ public class PaymentServiceImpl implements PaymentService {
     /*
         결제 금액 검증
      */
-    private void validateAmount(Integer orderAmount, Integer amount) {
-        if (!Objects.equals(amount, orderAmount)) {
+    private void validateAmount(Long orderAmount, Long amount) {
+        if (!Objects.equals(amount,orderAmount)) {
             throw new CustomException(PaymentError.PAYMENT_AMOUNT_MISMATCH);
         }
     }
