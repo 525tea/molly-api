@@ -19,7 +19,7 @@ public enum PaymentError implements CustomError {
     PAYMENT_FAILED("결제 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
     PAYMENT_GATEWAY_ERROR("결제 게이트웨이 오류입니다.", HttpStatus.BAD_GATEWAY),
     PAYMENT_AMOUNT_MISMATCH("결제 금액이 올바르지 않습니다.", HttpStatus.BAD_REQUEST),
-
+    PAYMENT_POINT_INSUFFICIENT("보유한 포인트가 충분하지 않습니다.", HttpStatus.BAD_REQUEST),
     ORDER_NOT_FOUND("주문 정보를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
 
 
