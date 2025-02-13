@@ -54,6 +54,8 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     // netty for macOS
     implementation 'io.netty:netty-resolver-dns-native-macos:4.1.107.Final:osx-aarch_64' // M1/M2 Mac
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.3'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3'
 
 
 }
