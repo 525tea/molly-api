@@ -10,11 +10,12 @@ public interface ProductService {
     List<Product> getAllProducts();
     Optional<Product> getProductById(Long id);
     Product registerProduct(
+            Long userId,
             ProductRegisterReqDto productRegisterReqDto,
             MultipartFile thumbnailImage,
             List<MultipartFile> productImages,
             List<MultipartFile> descriptionImages
             );
-    Product updateProduct(Long id, ProductRegisterReqDto productRegisterReqDto);
-    void deleteProduct(Long id);
+    Product updateProduct(Long userId, Long id, ProductRegisterReqDto productRegisterReqDto);
+    void deleteProduct(Long userId, Long id);
 }
