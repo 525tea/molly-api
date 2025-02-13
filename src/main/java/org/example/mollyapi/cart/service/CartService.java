@@ -1,9 +1,9 @@
 package org.example.mollyapi.cart.service;
 
 import lombok.RequiredArgsConstructor;
-import org.example.mollyapi.cart.dto.CartInfoResDto;
-import org.example.mollyapi.cart.dto.AddCartReqDto;
-import org.example.mollyapi.cart.dto.UpdateCartReqDto;
+import org.example.mollyapi.cart.dto.Response.CartInfoResDto;
+import org.example.mollyapi.cart.dto.Request.AddCartReqDto;
+import org.example.mollyapi.cart.dto.Request.UpdateCartReqDto;
 import org.example.mollyapi.cart.entity.Cart;
 import org.example.mollyapi.cart.repository.CartRepository;
 import org.example.mollyapi.common.exception.CustomException;
@@ -136,7 +136,6 @@ public class CartService {
         if(item.getQuantity() < updateCartReqDto.quantity())
             throw new CustomException(OVER_QUANTITY);
     }
-
 
     /**
      * 장바구니 내역 삭제 기능

@@ -3,7 +3,7 @@ package org.example.mollyapi.cart.repository.impl;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.example.mollyapi.cart.dto.CartInfoResDto;
+import org.example.mollyapi.cart.dto.Response.CartInfoResDto;
 import org.example.mollyapi.cart.entity.QCart;
 import org.example.mollyapi.cart.repository.CartCustomRepository;
 import org.example.mollyapi.product.entity.QProduct;
