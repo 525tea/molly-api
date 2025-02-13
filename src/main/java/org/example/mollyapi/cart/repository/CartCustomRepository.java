@@ -1,6 +1,6 @@
 package org.example.mollyapi.cart.repository;
 
-import org.example.mollyapi.cart.dto.CartInfoResDto;
+import org.example.mollyapi.cart.dto.Response.CartInfoResDto;
 
 import java.util.List;
 
