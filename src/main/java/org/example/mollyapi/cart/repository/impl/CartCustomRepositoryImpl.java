@@ -3,7 +3,7 @@ package org.example.mollyapi.cart.repository.impl;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.example.mollyapi.cart.dto.Response.CartInfoResDto;
+import org.example.mollyapi.cart.dto.Response.CartInfoDto;
 import org.example.mollyapi.cart.entity.QCart;
 import org.example.mollyapi.cart.repository.CartCustomRepository;
 import org.example.mollyapi.product.entity.QProduct;
@@ -17,14 +17,14 @@ public class CartCustomRepositoryImpl implements CartCustomRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<CartInfoResDto> getCartInfo(Long userId) {
+    public List<CartInfoDto> getCartInfo(Long userId) {
         QCart cart = QCart.cart;
         QProduct product = QProduct.product;
         QProductItem item = QProductItem.productItem;
         QProductImage image = QProductImage.productImage;
 
         return jpaQueryFactory.select(
-                        Projections.constructor(CartInfoResDto.class,
+                        Projections.constructor(CartInfoDto.class,
                                 cart.cartId,
                                 item.id,
                                 item.color,
