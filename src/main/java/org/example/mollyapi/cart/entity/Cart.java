@@ -31,4 +31,19 @@ public class Cart extends Base {
     public void updateQuantity(Long totalQuantity) {
         this.quantity = totalQuantity;
     }
+
+    public boolean updateCart(ProductItem item, Long quantity) {
+        boolean flag = false;
+
+        if(!this.productItem.equals(item)) {
+            this.productItem = item;
+            flag = true;
+        }
+        if(!this.quantity.equals(quantity)) {
+            this.quantity = quantity;
+            flag = true;
+        }
+
+        return flag;
+    }
 }
