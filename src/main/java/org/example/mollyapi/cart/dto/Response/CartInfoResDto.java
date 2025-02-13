@@ -1,4 +1,4 @@
-package org.example.mollyapi.cart.dto;
+package org.example.mollyapi.cart.dto.Response;
 
 public record CartInfoResDto(
         Long cartId, //장바구니 PK
