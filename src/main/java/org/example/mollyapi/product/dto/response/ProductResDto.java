@@ -47,7 +47,7 @@ public record ProductResDto(
         String filename;
     }
 
-    static List<ColorDetail> groupItemByColor(List<ProductItem> items) {
+    public static List<ColorDetail> groupItemByColor(List<ProductItem> items) {
         return items.stream()
                 .collect(Collectors.groupingBy(
                         item -> item.getColor() + "_" + item.getColorCode(), // 그룹화 키 생성
