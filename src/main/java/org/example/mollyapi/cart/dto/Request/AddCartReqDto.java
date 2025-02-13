@@ -1,4 +1,4 @@
-package org.example.mollyapi.cart.dto;
+package org.example.mollyapi.cart.dto.Request;
 
 import jakarta.validation.constraints.NotNull;
 
