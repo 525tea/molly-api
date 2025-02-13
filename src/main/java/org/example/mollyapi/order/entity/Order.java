@@ -12,7 +12,7 @@ import java.util.List;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Builder(toBuilder = true) // ✅ 빌더 설정을 여기에 유지
+@Builder(toBuilder = true)
 @Table(name = "orders")
 public class Order {
 
@@ -22,7 +22,7 @@ public class Order {
     private Long id; // pk
 
     @Column(name = "toss_order_id",unique = true, length = 30)
-    private String tossOrderId; // 결제용 주문 id
+    private String tossOrderId; // 결제용 주문 ID
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -32,7 +32,19 @@ public class Order {
     private List<OrderDetail> orderDetails;
 
     @Column(nullable = false)
-    private Long paymentAmount;
+    private Long totalAmount; // 포인트 적용 전 금액
+
+    @Column(nullable = true)
+    private Long paymentAmount; // 결제된 금액
+
+    @Column(nullable = true)
+    private String paymentId; // 결제 ID
+
+    @Column(nullable = true)
+    private String paymentType; // 결제 수단
+
+    @Column(nullable = true)
+    private Integer pointUsage; // 사용한 포인트
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -54,6 +66,10 @@ public class Order {
         this.expirationTime = this.orderedAt.plusMinutes(10);
     }
 
+    public void setStatus(OrderStatus status) {
+        this.status = status;
+    }
+
     public void updateOrderedAt(LocalDateTime paymentTime) { // 결제 후 주문 일시 업데이트
         this.orderedAt = paymentTime;
     }
@@ -67,15 +83,14 @@ public class Order {
         this.cancelStatus = CancelStatus.REQUESTED;
     }
 
-    public void setPaymentAmount(long totalAmount) {
-        this.paymentAmount = totalAmount;
+    public void setTotalAmount(long totalAmount) {
+        this.totalAmount = totalAmount;
     }
 
-//    public void setOrderNumber(String orderNumber) {
-//        if (this.orderNumber == null) {
-//            this.orderNumber = orderNumber;
-//        } else {
-//            throw new IllegalStateException("주문번호는 한 번만 설정할 수 있습니다.");
-//        }
-//    }
+    public void updatePaymentInfo(String paymentId, String paymentType, Long paymentAmount, Integer pointUsage) {
+        this.paymentId = paymentId;
+        this.paymentType = paymentType;
+        this.paymentAmount = paymentAmount;
+        this.pointUsage = pointUsage;
+    }
 }
