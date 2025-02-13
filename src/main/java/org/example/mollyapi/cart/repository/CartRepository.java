@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
-public interface CartRepository extends JpaRepository<Cart, Long> {
+public interface CartRepository extends JpaRepository<Cart, Long>, CartCustomRepository{
     Optional<Cart> findByProductItemIdAndUserUserId(Long itemId, Long userId);
     int countByUserUserId(Long userId);
 }
