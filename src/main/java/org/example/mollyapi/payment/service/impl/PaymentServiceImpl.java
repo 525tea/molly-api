@@ -6,17 +6,21 @@ import org.apache.coyote.Response;
 import org.example.mollyapi.common.config.WebClientUtil;
 import org.example.mollyapi.common.exception.CustomException;
 import org.example.mollyapi.common.exception.error.impl.PaymentError;
+import org.example.mollyapi.order.entity.Order;
+import org.example.mollyapi.order.repository.OrderRepository;
+import org.example.mollyapi.order.service.OrderService;
 import org.example.mollyapi.payment.dto.request.PaymentCancelReqDto;
 import org.example.mollyapi.payment.dto.request.TossCancelReqDto;
 import org.example.mollyapi.payment.dto.response.TossCancelResDto;
-import org.example.mollyapi.payment.order.entity.Order;
-import org.example.mollyapi.payment.order.service.OrderService;
 import org.example.mollyapi.payment.dto.request.TossConfirmReqDto;
 import org.example.mollyapi.payment.dto.response.TossConfirmResDto;
 import org.example.mollyapi.payment.entity.Payment;
 import org.example.mollyapi.payment.repository.PaymentRepository;
 import org.example.mollyapi.payment.service.PaymentService;
 import org.example.mollyapi.payment.util.PaymentWebClientUtil;
+import org.example.mollyapi.user.dto.GetUserSummaryInfoWithPointResDto;
+import org.example.mollyapi.user.entity.User;
+import org.example.mollyapi.user.service.UserService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -35,6 +39,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderService orderService;
     private final PaymentWebClientUtil paymentWebClientUtil;
+    private final UserService userService;
 
     @Value("${secret.payment-api-key}")
     private String apiKey;
@@ -57,13 +62,11 @@ public class PaymentServiceImpl implements PaymentService {
         Order order = orderService.findOrderByTossOrderId(tossOrderId);
         Integer orderAmount = order.getAmount();
 
-        // 포인트 검증
+        // 유저 포인트 검증
+        validateUserPoint(userId, point);
 
         // 결제정보 검증
         validateAmount(orderAmount, amount);
-
-        // create payment -> 도메인 로직 ready 로 refactor
-        Payment payment = Payment.from(userId, order.getId(), tossOrderId, paymentKey, paymentType, amount, "결제대기");
 
         // payment API
         TossConfirmReqDto tossConfirmReqDto = new TossConfirmReqDto(paymentKey, tossOrderId, amount);
@@ -74,6 +77,9 @@ public class PaymentServiceImpl implements PaymentService {
 
         // api 응답 tossResDto로 추출
         TossConfirmResDto tossResDto = response.getBody();
+
+        // create pending payment
+        Payment payment = Payment.from(userId, order.getId(), tossOrderId, paymentKey, paymentType, amount, "결제대기");
 
         // 결제 성공 및 실패 로직
         if (res) {
@@ -176,6 +182,19 @@ public class PaymentServiceImpl implements PaymentService {
     private void validateAmount(Integer orderAmount, Integer amount) {
         if (!Objects.equals(amount, orderAmount)) {
             throw new CustomException(PaymentError.PAYMENT_AMOUNT_MISMATCH);
+        }
+    }
+
+    /*
+        포인트 검증
+     */
+    private void validateUserPoint(Long userId, Integer requiredPoint) {
+        GetUserSummaryInfoWithPointResDto userDto = userService.getUserSummaryWithPoint(userId);
+
+        Integer availablePoint = userDto.point();
+
+        if (requiredPoint > availablePoint) {
+            throw new CustomException(PaymentError.PAYMENT_POINT_INSUFFICIENT);
         }
     }
 }
