@@ -21,8 +21,8 @@ public class Order {
     @Column(name = "order_id")
     private Long id; // pk
 
-    @Column(unique = true, length = 30)
-    private String orderNumber; // 결제용 주문 id
+    @Column(name = "toss_order_id",unique = true, length = 30)
+    private String tossOrderId; // 결제용 주문 id
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -32,7 +32,10 @@ public class Order {
     private List<OrderDetail> orderDetails;
 
     @Column(nullable = false)
-    private Long paymentAmount;
+    private Long totalAmount; // 포인트 적용 전
+
+    @Column(nullable = true)
+    private Long paymentAmount; // 결제 예정 금액
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -54,6 +57,10 @@ public class Order {
         this.expirationTime = this.orderedAt.plusMinutes(10);
     }
 
+    public void updateOrderedAt(LocalDateTime paymentTime) { // 결제 후 주문 일시 업데이트
+        this.orderedAt = paymentTime;
+    }
+
     public void markAsFailed() {
         this.status = OrderStatus.FAILED;
     }
@@ -63,8 +70,8 @@ public class Order {
         this.cancelStatus = CancelStatus.REQUESTED;
     }
 
-    public void setPaymentAmount(long totalAmount) {
-        this.paymentAmount = totalAmount;
+    public void setTotalAmount(long totalAmount) {
+        this.totalAmount = totalAmount;
     }
 
 //    public void setOrderNumber(String orderNumber) {

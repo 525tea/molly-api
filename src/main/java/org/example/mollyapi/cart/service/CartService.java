@@ -2,6 +2,7 @@ package org.example.mollyapi.cart.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.mollyapi.cart.dto.AddCartReqDto;
+import org.example.mollyapi.cart.dto.CartInfoResDto;
 import org.example.mollyapi.cart.entity.Cart;
 import org.example.mollyapi.cart.repository.CartRepository;
 import org.example.mollyapi.common.exception.CustomException;
@@ -13,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 import static org.example.mollyapi.common.exception.error.impl.CartError.*;
 import static org.example.mollyapi.common.exception.error.impl.ProductItemError.*;
@@ -27,7 +30,6 @@ public class CartService {
 
     /**
      * 장바구니에 상품 담기 기능
-     *
      * @param addCartReqDto 추가하려는 데이터
      * @param userId     사용자 PK
      */
@@ -88,5 +90,21 @@ public class CartService {
                 .build();
 
         return cartRep.save(newCart);
+    }
+
+    /**
+     * 장바구니 조회 기능
+     * @param userId 사용자 PK
+     * */
+    public ResponseEntity<?> getCartDetail(Long userId) {
+        // 1. 가입된 사용자 여부 체크
+        boolean exists = userRep.existsById(userId);
+        if(!exists) throw new CustomException(NOT_EXISTS_USER);
+
+        // 2. 사용자 장바구니 조회
+        List<CartInfoResDto> cartInfoList = cartRep.getCartInfo(userId);
+        if(cartInfoList.isEmpty()) throw new CustomException(EMPTY_CART);
+
+        return ResponseEntity.ok(cartInfoList);
     }
 }
