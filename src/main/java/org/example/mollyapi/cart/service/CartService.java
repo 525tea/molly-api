@@ -1,12 +1,14 @@
 package org.example.mollyapi.cart.service;
 
 import lombok.RequiredArgsConstructor;
-import org.example.mollyapi.cart.dto.Response.CartInfoResDto;
+import org.example.mollyapi.cart.dto.Response.CartInfoDto;
 import org.example.mollyapi.cart.dto.Request.AddCartReqDto;
 import org.example.mollyapi.cart.dto.Request.UpdateCartReqDto;
+import org.example.mollyapi.cart.dto.Response.CartInfoResDto;
 import org.example.mollyapi.cart.entity.Cart;
 import org.example.mollyapi.cart.repository.CartRepository;
 import org.example.mollyapi.common.exception.CustomException;
+import org.example.mollyapi.product.dto.response.ProductResDto;
 import org.example.mollyapi.product.entity.ProductItem;
 import org.example.mollyapi.product.repository.ProductItemRepository;
 import org.example.mollyapi.user.entity.User;
@@ -16,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.example.mollyapi.common.exception.error.impl.CartError.*;
@@ -103,10 +106,22 @@ public class CartService {
         if(!exists) throw new CustomException(NOT_EXISTS_USER);
 
         // 2. 사용자 장바구니 조회
-        List<CartInfoResDto> cartInfoList = cartRep.getCartInfo(userId);
+        List<CartInfoDto> cartInfoList = cartRep.getCartInfo(userId);
         if(cartInfoList.isEmpty()) throw new CustomException(EMPTY_CART);
 
-        return ResponseEntity.ok(cartInfoList);
+        List<CartInfoResDto> responseDtoList = new ArrayList<>();
+        for(CartInfoDto cartInfoDto : cartInfoList) {
+            //상품에 해당하는 제품 리스트
+            List<ProductItem> itemList = productItemRep.findAllByProductId(cartInfoDto.productId())
+                    .orElseThrow(() -> new CustomException(NOT_EXISTS_PRODUCT));
+
+            //해당 제품의 컬러 및 사이즈
+            List<ProductResDto.ColorDetail> colorDetails = ProductResDto.groupItemByColor(itemList);
+
+            responseDtoList.add(new CartInfoResDto(cartInfoDto, colorDetails));
+        }
+
+        return ResponseEntity.ok(responseDtoList);
     }
 
     /**
