@@ -6,16 +6,19 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.mollyapi.common.exception.CustomErrorResponse;
+import org.example.mollyapi.common.exception.CustomException;
 import org.example.mollyapi.product.dto.response.ProductResListDto;
 import org.example.mollyapi.product.entity.Product;
 import org.example.mollyapi.product.service.ProductService;
 import org.example.mollyapi.product.dto.request.ProductRegisterReqDto;
 import org.example.mollyapi.product.dto.response.ProductResDto;
+import org.example.mollyapi.user.auth.annotation.Auth;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -43,11 +46,12 @@ public class ProductControllerImpl {
     })
     public ResponseEntity<ProductResListDto> getAllProducts() {
         List<Product> allProducts = productService.getAllProducts();
-
         if (allProducts.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok().body(ProductResListDto.from(allProducts));
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(ProductResListDto.from(allProducts));
     }
 
     @GetMapping("/{productId}")
@@ -64,10 +68,13 @@ public class ProductControllerImpl {
         if (product == null) {
             return ResponseEntity.noContent().build();
         }
-        return ResponseEntity.ok().body(ProductResDto.from(product));
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(ProductResDto.from(product));
     }
 
 
+    @Auth
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "상품 정보 및 상품아이템 등록", description = "상품 정보와 옵션별 상품 아이템 등록")
     @ApiResponses({
@@ -77,19 +84,21 @@ public class ProductControllerImpl {
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
     })
     public ResponseEntity<ProductResDto> registerProduct(
+            HttpServletRequest request,
             @Valid @RequestPart("product") ProductRegisterReqDto productRegisterReqDto,
             @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail,
             @RequestPart(value = "productImages", required = false) List<MultipartFile> productImages,
             @RequestPart(value = "productDescriptionImages", required = false) List<MultipartFile> productDescriptionImages
     )  {
-
-        Product product = productService.registerProduct(productRegisterReqDto, thumbnail, productImages, productDescriptionImages);
+        Long userId = (Long) request.getAttribute("userId");
+        Product product = productService.registerProduct(userId, productRegisterReqDto, thumbnail, productImages, productDescriptionImages);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(ProductResDto.from(product));
     }
 
 
+    @Auth
     @PutMapping(value = "/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "상품 정보 및 상품아이템 수정", description = "상품 정보와 옵션별 상품 아이템 데이터 수정")
     @ApiResponses({
@@ -98,15 +107,19 @@ public class ProductControllerImpl {
             @ApiResponse(responseCode = "400", description = "실패",
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
     })
-    public ResponseEntity<ProductResDto> updateProduct(@PathVariable Long productId, @RequestPart("product") ProductRegisterReqDto productRegisterReqDto) {
-        //Todo : 이미지 수정 [이미지 추가, 순서 재배치, 부분 교체]
-        Product product = productService.updateProduct(productId, productRegisterReqDto);
+    public ResponseEntity<ProductResDto> updateProduct(
+            HttpServletRequest request,
+            @PathVariable Long productId,
+            @RequestPart("product") ProductRegisterReqDto productRegisterReqDto) {
+        Long userId = (Long) request.getAttribute("userId");
+        Product product = productService.updateProduct(userId, productId, productRegisterReqDto);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(ProductResDto.from(product));
     }
 
 
+    @Auth
     @DeleteMapping("/{productId}")
     @Operation(summary = "상품 정보 및 상품아이템 전체", description = "상품 정보와 옵션별 상품 아이템 데이터 전체 삭제")
     @ApiResponses({
@@ -114,8 +127,11 @@ public class ProductControllerImpl {
             @ApiResponse(responseCode = "400", description = "실패",
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
     })
-    public ResponseEntity<?> deleteProduct(@PathVariable Long productId) {
-        productService.deleteProduct(productId);
+    public ResponseEntity<?> deleteProduct(
+            HttpServletRequest request,
+            @PathVariable Long productId) {
+        Long userId = (Long) request.getAttribute("userId");
+        productService.deleteProduct(userId, productId);
         return ResponseEntity.noContent().build();
     }
 }

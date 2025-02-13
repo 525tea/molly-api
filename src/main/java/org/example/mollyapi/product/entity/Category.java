@@ -6,6 +6,7 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.example.mollyapi.common.entity.Base;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.List;
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Category {
+public class Category extends Base {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "category_id")
@@ -34,7 +35,7 @@ public class Category {
     List<Product> products = new ArrayList<>();
 
     @Builder
-    public  Category(
+    public Category(
             String categoryName,
             Category parent
     ) {
