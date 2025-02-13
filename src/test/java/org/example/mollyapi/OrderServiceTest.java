@@ -104,30 +104,27 @@ class OrderServiceTest {
             log.info("상품 ID: {}, 주문 수량: {}", orderDetail.getProductItem().getId(), orderDetail.getQuantity());
         }
 
-        // When
+        // When: 결제 실패 처리
         orderService.failOrder(tossOrderId);
 
-        // Then
-        Optional<Order> order = orderRepository.findByTossOrderId(tossOrderId);
-        assertTrue(order.isEmpty(), "주문 실패한 주문이 삭제되지 않았습니다");
+        // Then: 주문 상태 변경 확인
+        Optional<Order> failedOrder = orderRepository.findByTossOrderId(tossOrderId);
+        if (failedOrder.isPresent()) {
+            assertEquals(OrderStatus.FAILED, failedOrder.get().getStatus(), "주문 상태가 FAILED로 변경되지 않았습니다");
+            log.info("주문 상태 변경 확인: FAILED");
+        } else {
+            log.warn("주문이 삭제되었으므로 상태를 확인할 수 없습니다");
+        }
+
+        // 주문(Order), 주문 상세(OrderDetail) 삭제 확인
         boolean isOrderDeleted = orderRepository.findByTossOrderId(tossOrderId).isEmpty();
         boolean isOrderDetailDeleted = orderRepository.countOrderDetailsByTossOrderId(tossOrderId) == 0;
 
+        assertTrue(isOrderDeleted, "주문이 삭제되지 않았습니다");
+        assertTrue(isOrderDetailDeleted, "주문 상세가 삭제되지 않았습니다");
 
-        // failOrder 실행 후, 재고 복구 확인
-        List<ProductItem> productItemsAfter = productItemsBefore.stream()
-                .map(itemBefore -> {
-                    ProductItem itemAfter = productItemRepository.findById(itemBefore.getId())
-                            .orElseThrow(() -> new IllegalArgumentException("상품 아이템을 찾을 수 없습니다. itemId=" + itemBefore.getId()));
-                    return itemAfter;
-                })
-                .toList();
-
-        log.info("==failOrder 테스트 완료==");
-
-        // Order, OrderDetail 삭제 확인
-        log.info("주문이 삭제되었는지 확인: {}", order.isEmpty() ? "성공" : "실패");
-        log.info("주문 삭제 확인: {}, 주문 상세 삭제 확인: {}", isOrderDeleted ? "성공" : "실패", isOrderDetailDeleted ? "성공" : "실패");
+        log.info("주문 삭제 확인: {}", isOrderDeleted ? "성공" : "실패");
+        log.info("주문 상세 삭제 확인: {}", isOrderDetailDeleted ? "성공" : "실패");
 
     }
 }
