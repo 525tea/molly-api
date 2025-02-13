@@ -18,6 +18,8 @@ import org.example.mollyapi.user.auth.annotation.Auth;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Tag(name = "Cart Controller", description = "장바구니 기능을 담당")
 @RestController
 @RequestMapping("/cart")
@@ -57,5 +59,34 @@ public class CartController {
     public ResponseEntity<?> getCartDetail(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         return cartService.getCartDetail(userId);
+    }
+
+    /*
+    @Auth
+    @PutMapping()
+    public ResponseEntity<?> updateItemOption(
+            @Valid @RequestBody UpdateCartOptionDto updateCartOptionDto,
+            HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return null;
+    }
+     */
+
+    @Auth
+    @DeleteMapping()
+    @Operation(summary = "장바구니 상품 삭제", description = "장바구니에 담긴 상품을 삭제할 수 있습니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "장바구니 내역 삭제 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 삭제 요청",
+                    content = @Content(schema = @Schema(implementation = CustomErrorResponse.class))),
+            @ApiResponse(responseCode = "500", description = "장바구니 내역 삭제 실패",
+                    content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
+    })
+    public ResponseEntity<?> deleteCartItem(
+            @Valid @RequestBody List<Long> cartList,
+            HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        cartService.deleteCartItem(cartList, userId);
+        return ResponseEntity.noContent().build();
     }
 }
