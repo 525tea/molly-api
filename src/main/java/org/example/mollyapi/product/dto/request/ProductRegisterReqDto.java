@@ -10,8 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 public record ProductRegisterReqDto(
-            Long id,
-
             @NotNull(message = "카테고리는 필수입니다")
             List<@NotBlank(message = "카테고리명은 공백일 수 없습니다") String> categories,
 
