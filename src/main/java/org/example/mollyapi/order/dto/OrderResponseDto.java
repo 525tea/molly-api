@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 
 @Getter
 public class OrderResponseDto {
-    private String orderId;
-    private String orderNumber;
+    private Long orderId;
+    private String tossOrderId;
     private Long userId;
     private Long totalAmount;
     private OrderStatus status;
@@ -26,8 +26,8 @@ public class OrderResponseDto {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public OrderResponseDto(Order order, List<OrderDetail> orderDetailList) {
-        this.orderId = "ORD-" + order.getId();
-        this.orderNumber = order.getOrderNumber();
+        this.orderId = order.getId();
+        this.tossOrderId = order.getTossOrderId();
         this.userId = order.getUser().getUserId();
         this.totalAmount = orderDetailList.stream()
                 .mapToLong(detail -> detail.getPrice() * detail.getQuantity())

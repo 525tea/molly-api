@@ -37,17 +37,16 @@ public class OrderService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다. userId=" + userId));
 
-        // 주문번호 생성
-        String orderNumber = generateOrderNumber();
+        // 결제용 주문 ID 생성
+        String tossOrderId = generateTossOrderId();
 
         // 새로운 주문 생성 (초기 상태는 PENDING)
         Order order = Order.builder()
                 .user(user)
-                .orderNumber(orderNumber)
-                .paymentAmount(0L)
+                .tossOrderId(tossOrderId)
+                .totalAmount(0L)
                 .status(OrderStatus.PENDING)
                 .cancelStatus(CancelStatus.NONE)
-                .orderedAt(null)
                 .expirationTime(LocalDateTime.now().plusMinutes(10))
                 .build();
         orderRepository.save(order);
@@ -74,6 +73,7 @@ public class OrderService {
             return OrderDetail.builder()
                     .order(order)
                     .productItem(productItem)
+                    .size(productItem.getSize())
                     .price(product.getPrice())
                     .quantity(req.getQuantity())
                     .brandName(product.getBrandName())
@@ -88,13 +88,13 @@ public class OrderService {
         long totalAmount = orderDetails.stream()
                 .mapToLong(d -> d.getPrice() * d.getQuantity())
                 .sum();
-        order.setPaymentAmount(totalAmount);
+        order.setTotalAmount(totalAmount);
         orderRepository.save(order);
 
         return new OrderResponseDto(order, orderDetails);
     }
 
-    private String generateOrderNumber() {
+    private String generateTossOrderId() {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         int randomNum = new Random().nextInt(9000) + 1000;
         return "ORD-" + timestamp + "-" + randomNum;
