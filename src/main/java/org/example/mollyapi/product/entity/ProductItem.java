@@ -3,6 +3,9 @@ package org.example.mollyapi.product.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.mollyapi.common.entity.Base;
+import org.example.mollyapi.order.entity.OrderDetail;
+
+import java.util.List;
 
 @Getter
 @Entity
@@ -23,6 +26,9 @@ public class ProductItem extends Base {
         @ManyToOne
         @JoinColumn(name = "product_id")
         Product product;
+
+        @OneToMany(mappedBy = "productItem")
+        List<OrderDetail> orderDetails;
 
         @Builder
         ProductItem(

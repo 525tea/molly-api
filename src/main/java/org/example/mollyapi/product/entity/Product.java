@@ -35,7 +35,7 @@ public class Product extends Base {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     List<ProductItem> items = new ArrayList<>();
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "user_id")
     User user;
 
