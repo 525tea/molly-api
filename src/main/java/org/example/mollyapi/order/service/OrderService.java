@@ -99,4 +99,28 @@ public class OrderService {
         int randomNum = new Random().nextInt(9000) + 1000;
         return "ORD-" + timestamp + "-" + randomNum;
     }
+
+    public void successOrder(String tossOrderId, String paymentId, String paymentType, Long paymentAmount, Integer pointUsage) {
+        // 주문 찾기
+        Order order = orderRepository.findByTossOrderId(tossOrderId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. tossOrderId=" + tossOrderId));
+
+        // 주문 상태 변경
+        order.setStatus(OrderStatus.SUCCEEDED);
+
+        // 사용자의 포인트 차감
+        User user = order.getUser();
+        if (pointUsage != null && pointUsage > 0) {
+            if (user.getPoint() < pointUsage) {
+                throw new IllegalArgumentException("사용자 포인트가 부족합니다.");
+            }
+            user.updatePoint(-pointUsage); // 포인트 차감
+            userRepository.save(user);
+        }
+
+        // 결제 정보 업데이트
+        order.updatePaymentInfo(paymentId, paymentType, paymentAmount, pointUsage);
+
+        orderRepository.save(order);
+    }
 }
