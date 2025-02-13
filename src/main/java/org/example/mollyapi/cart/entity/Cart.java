@@ -18,10 +18,6 @@ public class Cart extends Base {
     @Column(name = "cart_id")
     private Long cartId;
 
-    private String color; //컬러
-
-    private String size; //사이즈
-
     private Long quantity; //수량
 
     @ManyToOne(fetch = FetchType.LAZY)

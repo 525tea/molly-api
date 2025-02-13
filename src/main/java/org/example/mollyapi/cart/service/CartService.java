@@ -107,4 +107,25 @@ public class CartService {
 
         return ResponseEntity.ok(cartInfoList);
     }
+
+    /**
+     * 장바구니 내역 삭제 기능
+     * */
+    @Transactional
+    public void deleteCartItem(List<Long> cartList, Long userId) {
+        // 1. 가입된 사용자 여부 체크
+        boolean existsUser = userRep.existsById(userId);
+        if(!existsUser) throw new CustomException(NOT_EXISTS_USER);
+
+        for (Long cartId : cartList) {
+            try {
+                boolean existsCart = cartRep.existsByCartIdAndUserUserId(cartId, userId);
+                if(!existsCart) throw new CustomException(NOT_EXIST_CART);
+
+                cartRep.deleteByCartIdAndUserUserId(cartId, userId);
+            } catch (CustomException e) {
+                throw new CustomException(FAIL_DELETE);
+            }
+        }
+    }
 }
