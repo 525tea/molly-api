@@ -11,7 +11,7 @@ public record TossConfirmResDto(
         String method,
         String orderId,
         String orderName,
-        Integer totalAmount,
+        Long totalAmount,
 
         @JsonInclude(JsonInclude.Include.NON_NULL)
         CardInfo card,
@@ -31,11 +31,11 @@ public record TossConfirmResDto(
             String cardType,
             String ownerType,
             String acquireStatus,
-            Integer amount
+            Long amount
     ) {}
     public record EasyPayInfo(
             String provider,
-            Integer amount,
-            Integer discountAmount
+            Long amount,
+            Long discountAmount
     ) {}
 }
