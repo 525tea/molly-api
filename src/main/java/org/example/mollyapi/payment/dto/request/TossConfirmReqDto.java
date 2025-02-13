@@ -6,6 +6,6 @@ import lombok.Builder;
 public record TossConfirmReqDto(
         String paymentKey,
         String orderId,
-        Integer amount
+        Long amount
 ) {
 }

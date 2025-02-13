@@ -18,8 +18,8 @@ public record TossCancelResDto(
     public record Cancel(
             String cancelReason,
             LocalDateTime canceledAt,
-            Integer cancelAmount,
-            Integer refundableAmount,
+            Long cancelAmount,
+            Long refundableAmount,
             String transactionKey,
             String receiptKey,
             String cancelStatus

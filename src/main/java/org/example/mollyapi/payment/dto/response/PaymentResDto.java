@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 public record PaymentResDto(
         Long paymentId,
         String paymentType,
-        Integer amount,
+        Long amount,
 //        LocalDateTime paymentDate,
         String paymentStatus,
         String tossOrderId
