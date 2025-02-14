@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.example.mollyapi.common.exception.error.impl.OrderDetailError.NOT_EXIST_ORDERDETIAL;
+import static org.example.mollyapi.common.exception.error.impl.ReviewError.NOT_ACCESS_REVIEW;
 import static org.example.mollyapi.common.exception.error.impl.UserError.NOT_EXISTS_USER;
 
 @Slf4j
@@ -44,20 +45,27 @@ public class ReviewService {
             List<MultipartFile> uploadImages,
             Long userId
     ) {
+        Long orderDetailId = addReviewReqDto.orderDetailId();
+        String content = addReviewReqDto.content();
+
         // 가입된 사용자 여부 체크
         User user = userRep.findById(userId)
                 .orElseThrow(() -> new CustomException(NOT_EXISTS_USER));
 
         // 주문 상세 조회
-        OrderDetail orderDetail = orderDetailRep.findById(addReviewReqDto.orderDetailId())
+        OrderDetail orderDetail = orderDetailRep.findById(orderDetailId)
                 .orElseThrow(() -> new CustomException(NOT_EXIST_ORDERDETIAL));
+
+        //리뷰 작성 권한 체크
+        Review review = reviewRep.findByIsDeletedAndOrderDetailIdAndUserUserId(false, orderDetailId, userId);
+        if(review != null) throw new CustomException(NOT_ACCESS_REVIEW);
 
         // 업로드된 이미지 파일 저장
         List<UploadFile> uploadImageFiles = fileStore.storeFiles(uploadImages);
 
         // 리뷰 생성
         Review newReview = Review.builder()
-                .content(addReviewReqDto.content())
+                .content(content)
                 .reviewImages(null)
                 .isDeleted(false)
                 .user(user)
