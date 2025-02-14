@@ -25,7 +25,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 @Tag(name = "Product Controller", description = "상품 관련 엔드포인트")
 @Slf4j
@@ -48,7 +47,7 @@ public class ProductControllerImpl {
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
     })
     public ResponseEntity<?> getAllProducts(
-            @RequestParam String categories
+            @RequestParam(required = false) String categories
     ) {
         List<ProductResDto> products;
         if (categories == null) {
