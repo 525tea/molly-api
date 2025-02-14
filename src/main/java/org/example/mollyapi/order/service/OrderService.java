@@ -1,7 +1,11 @@
 package org.example.mollyapi.order.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.mollyapi.delivery.entity.Delivery;
+import org.example.mollyapi.delivery.repository.DeliveryRepository;
 import org.example.mollyapi.order.dto.OrderRequestDto;
 import org.example.mollyapi.order.dto.OrderResponseDto;
 import org.example.mollyapi.order.entity.*;
@@ -35,7 +39,8 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final ProductItemRepository productItemRepository;
     private final UserRepository userRepository;
-    private PaymentRepository paymentRepository;
+    private final PaymentRepository paymentRepository;
+    private final DeliveryRepository deliveryRepository;
 
     public OrderResponseDto createOrder(Long userId, List<OrderRequestDto> orderRequests) {
         User user = userRepository.findById(userId)
@@ -104,7 +109,7 @@ public class OrderService {
         return "ORD-" + timestamp + "-" + randomNum;
     }
 
-    public void successOrder(String tossOrderId, String paymentId, String paymentType, Long paymentAmount, Integer pointUsage) {
+    public void successOrder(String tossOrderId, String paymentId, String paymentType, Long paymentAmount, Integer pointUsage, String deliveryInfoJson) {
         // 주문 찾기
         Order order = orderRepository.findByTossOrderId(tossOrderId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. tossOrderId=" + tossOrderId));
@@ -119,11 +124,18 @@ public class OrderService {
                 throw new IllegalArgumentException("사용자 포인트가 부족합니다.");
             }
             user.updatePoint(-pointUsage); // 포인트 차감
+
             userRepository.save(user);
         }
 
         // 결제 정보 업데이트
         order.updatePaymentInfo(paymentId, paymentType, paymentAmount, pointUsage);
+
+        // 배송 정보 생성
+        order.setDeliveryInfo(deliveryInfoJson);
+        createDelivery(order);
+        orderRepository.save(order); // ✅ 저장 추가
+        orderRepository.flush(); // ✅ 즉시 반영
 
         orderRepository.save(order);
     }
@@ -197,6 +209,28 @@ public class OrderService {
 
         // 클라이언트에 응답 메시지 반환
         return isExpired ? "요청한 시간이 초과되어 주문이 취소되었습니다." : "주문을 취소했습니다.";
+    }
+
+    private void createDelivery(Order order) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode deliveryInfo = objectMapper.readTree(order.getDeliveryInfo());
+
+            String receiverName = deliveryInfo.get("receiver_name").asText();
+            String receiverPhone = deliveryInfo.get("receiver_phone").asText();
+            String roadAddress = deliveryInfo.get("road_address").asText();
+            String numberAddress = deliveryInfo.has("number_address") ? deliveryInfo.get("number_address").asText() : null;
+            String addrDetail = deliveryInfo.get("addr_detail").asText();
+
+            Delivery delivery = Delivery.from(order, receiverName, receiverPhone, roadAddress, numberAddress, addrDetail);
+            deliveryRepository.save(delivery);
+            deliveryRepository.flush();
+            log.info("배송 생성 완료. 주문번호: {}, 배송번호: {}", order.getId(), delivery.getId());
+
+        } catch (Exception e) {
+            log.error("배송 정보 파싱 실패: {}", e.getMessage());
+            throw new RuntimeException("배송 정보를 저장할 수 없습니다.");
+        }
     }
 
 }

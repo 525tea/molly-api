@@ -60,6 +60,9 @@ public class Order {
     @Column(nullable = false)
     private LocalDateTime expirationTime;
 
+    @Column(columnDefinition = "TEXT")
+    private String deliveryInfo; // JSON 형태로 배송 정보 저장
+
     @PrePersist
     protected void onCreate() {
         this.orderedAt = LocalDateTime.now();
@@ -92,5 +95,13 @@ public class Order {
         this.paymentType = paymentType;
         this.paymentAmount = paymentAmount;
         this.pointUsage = pointUsage;
+    }
+
+    public void setDeliveryInfo(String deliveryInfo) {
+        this.deliveryInfo = deliveryInfo;
+    }
+
+    public String getDeliveryInfo() {
+        return this.deliveryInfo;
     }
 }

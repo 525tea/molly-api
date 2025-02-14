@@ -99,9 +99,12 @@ public class PaymentServiceImpl implements PaymentService {
         // create pending payment
         Payment payment = Payment.from(user, order, tossOrderId, paymentKey, paymentType, amount, "결제대기");
 
+        // deliveryInfoJson 가져오기
+        String deliveryInfoJson = order.getDeliveryInfo();
+
         // 결제 성공 및 실패 로직
         if (res) {
-            successPayment(payment, tossOrderId, point);
+            successPayment(payment, tossOrderId, point,  deliveryInfoJson);
         } else {
             failPayment(payment, tossOrderId, "실패");
         }
@@ -174,12 +177,25 @@ public class PaymentServiceImpl implements PaymentService {
     /*
         결제 성공 - 주문 업데이트 (포인트, 상태), 포인트 차감
      */
-    public void successPayment(Payment payment, String tossOrderId, Integer point) {
+//    public void successPayment(Payment payment, String tossOrderId, Integer point) {
+//        //payment status change
+//        payment.successPayment(point);
+//        //order success (field update, point usage)
+//        orderService.successOrder(tossOrderId,payment.getPaymentKey(),payment.getPaymentType(),payment.getAmount(),point);
+//
+//    }
+    public void successPayment(Payment payment, String tossOrderId, Integer point, String deliveryInfoJson) {
         //payment status change
         payment.successPayment(point);
         //order success (field update, point usage)
-        orderService.successOrder(tossOrderId,payment.getPaymentKey(),payment.getPaymentType(),payment.getAmount(),point);
-
+        orderService.successOrder(
+                tossOrderId,
+                payment.getPaymentKey(),
+                payment.getPaymentType(),
+                payment.getAmount(),
+                point,
+                deliveryInfoJson // 추가된 deliveryInfoJson 전달
+        );
     }
 
     /*
