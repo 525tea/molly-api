@@ -2,8 +2,11 @@ package org.example.mollyapi;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.mollyapi.order.entity.Order;
+import org.example.mollyapi.order.entity.OrderDetail;
+import org.example.mollyapi.order.repository.OrderDetailRepository;
 import org.example.mollyapi.order.repository.OrderRepository;
 import org.example.mollyapi.order.service.OrderService;
+import org.example.mollyapi.order.type.CancelStatus;
 import org.example.mollyapi.order.type.OrderStatus;
 import org.example.mollyapi.product.entity.ProductItem;
 import org.example.mollyapi.product.repository.ProductItemRepository;
@@ -32,6 +35,9 @@ class OrderServiceTest {
     private OrderRepository orderRepository;
 
     @Autowired
+    private OrderDetailRepository orderDetailRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -47,7 +53,7 @@ class OrderServiceTest {
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         // DB에서 주문 조회 (tossOrderId 사용)
-        testOrder = orderRepository.findByTossOrderId("ORD-20250213132457-6375")
+        testOrder = orderRepository.findByTossOrderId("ORD-20250213132349-6572")
                 .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
 
         log.info("테스트 유저: {} , 포인트: {} " ,testUser.getNickname(), testUser.getPoint());
@@ -63,7 +69,7 @@ class OrderServiceTest {
         Integer fakePointUsage = 5000;
 
         // When: successOrder() 실행
-        orderService.successOrder("ORD-20250213132457-6375", fakePaymentId, fakePaymentType, fakePaymentAmount, fakePointUsage);
+        orderService.successOrder("ORD-20250213132349-6572", fakePaymentId, fakePaymentType, fakePaymentAmount, fakePointUsage);
 
         // Then: 주문 상태 변경 확인
         assertEquals(OrderStatus.SUCCEEDED, testOrder.getStatus());
@@ -86,7 +92,7 @@ class OrderServiceTest {
     @Test
     void 결제_실패시_주문_삭제_및_재고_복구() {
         // Given
-        String tossOrderId = "ORD-20250213132457-6375";
+        String tossOrderId = "ORD-20250213132349-6572";
 
         // 기존 재고 값 조회해서 저장
         List<ProductItem> productItemsBefore = testOrder.getOrderDetails().stream()
@@ -124,6 +130,48 @@ class OrderServiceTest {
         assertTrue(isOrderDetailDeleted, "주문 상세가 삭제되지 않았습니다");
 
         log.info("주문 삭제 확인: {}", isOrderDeleted ? "성공" : "실패");
+        log.info("주문 상세 삭제 확인: {}", isOrderDetailDeleted ? "성공" : "실패");
+
+    }
+
+    @Test
+    void 결제_전_주문_취소시_주문_삭제_및_재고_복구() {
+        // Given: 주문 데이터 생성
+        Long orderId = 3L;
+        String tossOrderId = "ORD-20250214131359-1578";
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다. orderId=" + orderId));
+
+        assertEquals(OrderStatus.PENDING, order.getStatus(), "주문의 상태가 PENDING이 아닙니다.");
+
+        // 기존 재고 값 조회
+        List<ProductItem> productItemsBefore = order.getOrderDetails().stream()
+                .map(OrderDetail::getProductItem)
+                .map(productItem -> productItemRepository.findById(productItem.getId())
+                        .orElseThrow(() -> new IllegalArgumentException("상품 아이템을 찾을 수 없습니다. itemId=" + productItem.getId())))
+                .toList();
+
+        log.info("== (결제 전)주문 취소 테스트 시작 ==");
+        log.info("주문 ID: {}, 주문 상태: {}", orderId, order.getStatus());
+        log.info("주문 상품 목록:");
+        for (var detail : order.getOrderDetails()) {
+            log.info("상품 ID: {}, 사이즈: {}, 가격: {}, 주문 수량: {}",
+                    detail.getProductItem().getId(), detail.getSize(), detail.getPrice(), detail.getQuantity());
+        }
+
+        // When: 주문 취소 처리
+        orderService.cancelOrder(orderId, false);
+
+        // Then: 주문 삭제 확인
+        Optional<Order> canceledOrder = orderRepository.findById(orderId);
+        assertTrue(canceledOrder.isEmpty(), "주문이 삭제되지 않았습니다.");
+
+        // 주문 상세(OrderDetail) 삭제 확인
+        boolean isOrderDetailDeleted = orderDetailRepository.findByOrderId(orderId).isEmpty();
+        assertTrue(isOrderDetailDeleted, "주문 상세가 삭제되지 않았습니다.");
+
+        log.info("주문 삭제 확인: {}", canceledOrder.isEmpty() ? "성공" : "실패");
         log.info("주문 상세 삭제 확인: {}", isOrderDetailDeleted ? "성공" : "실패");
 
     }
