@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.mollyapi.product.dto.UploadFile;
 import org.example.mollyapi.product.dto.request.ProductItemReqDto;
 import org.example.mollyapi.product.dto.request.ProductRegisterReqDto;
+import org.example.mollyapi.product.dto.response.*;
 import org.example.mollyapi.product.entity.Category;
 import org.example.mollyapi.product.entity.Product;
 import org.example.mollyapi.product.entity.ProductImage;
@@ -17,8 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -31,13 +34,41 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+    public List<ProductResDto> getAllProducts() {
+        List<ProductResDto> productResDtoList = new ArrayList<>();
+        List<Product> all = productRepository.findAll();
+        for (Product product : all) {
+            ProductResDto productResDto = convertToProductResDto(product);
+            productResDtoList.add(productResDto);
+        }
+        return productResDtoList;
     }
 
     @Override
     @Transactional
-    public Product updateProduct(Long userId, Long id, ProductRegisterReqDto productRegisterReqDto) {
+    public List<ProductResDto> getProductsByCategory(List<String> categories) {
+        Category category = categoryService.getCategory(categories);
+
+        List<Category> leafCategories = categoryService.getLeafCategories(category);
+
+        List<Product> products = new ArrayList<>();
+        for (Category leaf : leafCategories) {
+            List<Product> allByCategory = productRepository.findAllByCategory(leaf);
+            products.addAll(allByCategory);
+        }
+
+        List<ProductResDto> productResDtoList = new ArrayList<>();
+        for (Product product : products) {
+            ProductResDto productResDto = convertToProductResDto(product);
+            productResDtoList.add(productResDto);
+        }
+
+        return productResDtoList;
+    }
+
+    @Override
+    @Transactional
+    public ProductResDto updateProduct(Long userId, Long id, ProductRegisterReqDto productRegisterReqDto) {
 
         // 유저 조회
         User user = userRepository.findById(userId).orElseThrow(IllegalArgumentException::new);
@@ -51,8 +82,8 @@ public class ProductServiceImpl implements ProductService {
         }
 
         List<ProductItem> productItems = productRegisterReqDto.items().stream().map(ProductItemReqDto::toEntity).toList();
-        
-        return product.update(
+
+        Product updated = product.update(
                 categoryService.getCategory(productRegisterReqDto.categories()),
                 productRegisterReqDto.brandName(),
                 productRegisterReqDto.productName(),
@@ -61,11 +92,12 @@ public class ProductServiceImpl implements ProductService {
                 productItems,
                 new ArrayList<>()
         );
+        return convertToProductResDto(updated);
     }
 
     @Override
     @Transactional
-    public Product registerProduct(
+    public ProductResDto registerProduct(
             Long userId,
             ProductRegisterReqDto productRegisterReqDto,
             MultipartFile thumbnailImage,
@@ -108,13 +140,16 @@ public class ProductServiceImpl implements ProductService {
                 .user(user)
                 .build();
 
-        return productRepository.save(newProduct);
+        Product saved = productRepository.save(newProduct);
+        return convertToProductResDto(saved);
     }
 
     @Override
     @Transactional
-    public Optional<Product> getProductById(Long id) {
-        return productRepository.findById(id);
+    public Optional<ProductResDto> getProductById(Long id) {
+
+        Optional<Product> byId = productRepository.findById(id);
+        return byId.map(this::convertToProductResDto);
     }
 
     @Override
@@ -124,5 +159,47 @@ public class ProductServiceImpl implements ProductService {
         if (product.getUser().getUserId().equals(userId)) {
             productRepository.deleteById(id);
         }
+    }
+
+    public List<ColorDetailDto> groupItemByColor(List<ProductItem> items) {
+        return items.stream()
+                .collect(Collectors.groupingBy(
+                        item -> item.getColor() + "_" + item.getColorCode(), // 그룹화 키 생성
+                        LinkedHashMap::new, // 순서를 유지하는 맵 사용
+                        Collectors.toList()
+                ))
+                .values()
+                .stream()
+                .map(groupedItems -> new ColorDetailDto(
+                        groupedItems.get(0).getColor(),
+                        groupedItems.get(0).getColorCode(),
+                        groupedItems.stream()
+                                .map(item -> new SizeDetailDto(item.getId(), item.getSize(), item.getQuantity()))
+                                .collect(Collectors.toList())
+                ))
+                .collect(Collectors.toList());
+    }
+
+    public ProductResDto convertToProductResDto(Product product) {
+        FileInfoDto thumbnail = new FileInfoDto(product.getThumbnail().getStoredFileName(), product.getThumbnail().getUploadFileName());
+        List<FileInfoDto> productImages = product.getProductImages().stream().map((item)-> new FileInfoDto(item.getStoredFileName(), item.getUploadFileName())).toList();
+        List<FileInfoDto> descriptionImages = product.getDescriptionImages().stream().map(item -> new FileInfoDto(item.getStoredFileName(), item.getUploadFileName())).toList();
+
+        List<ProductItemResDto> itemResDtos = product.getItems().stream().map(ProductItemResDto::from).toList();
+        List<ColorDetailDto> colorDetails = groupItemByColor(product.getItems());
+
+        return new ProductResDto(
+                product.getId(),
+                categoryService.getCategoryPath(product.getCategory()),
+                product.getBrandName(),
+                product.getProductName(),
+                product.getPrice(),
+                product.getDescription(),
+                thumbnail,
+                productImages,
+                descriptionImages,
+                itemResDtos,
+                colorDetails
+        );
     }
 }
