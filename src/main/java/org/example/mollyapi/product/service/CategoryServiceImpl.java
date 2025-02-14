@@ -52,4 +52,23 @@ public class CategoryServiceImpl implements CategoryService {
 
         throw new IllegalArgumentException("Category not found");
     }
+
+    @Override
+    public List<Category> getLeafCategories(Category category) {
+        List<Category> categories = new ArrayList<>();
+        List<Category> children = category.getChildren();
+
+        // 자식이 없는 경우 자신을 리프 노드로 간주하고 추가
+        if (children.isEmpty()) {
+            categories.add(category);
+            return categories;
+        }
+
+        // 자식이 있다면 재귀적으로 탐색
+        for (Category child : children) {
+            categories.addAll(getLeafCategories(child));
+        }
+
+        return categories;
+    }
 }
