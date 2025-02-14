@@ -8,4 +8,5 @@ public interface CategoryService {
     List<Category> findByName(String name);
     List<String> getCategoryPath(Category category);
     Category getCategory(List<String> categories);
+    List<Category> getLeafCategories(Category category);
 }
