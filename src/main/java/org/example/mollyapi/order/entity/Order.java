@@ -2,6 +2,7 @@ package org.example.mollyapi.order.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.example.mollyapi.delivery.entity.Delivery;
 import org.example.mollyapi.order.type.CancelStatus;
 import org.example.mollyapi.order.type.OrderStatus;
 import org.example.mollyapi.user.entity.User;
@@ -31,6 +32,10 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderDetail> orderDetails;
 
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "delivery_id")
+    private Delivery delivery;
+
     @Column(nullable = false)
     private Long totalAmount; // 포인트 적용 전 금액
 
@@ -59,6 +64,9 @@ public class Order {
 
     @Column(nullable = false)
     private LocalDateTime expirationTime;
+
+    @Column(columnDefinition = "TEXT")
+    private String deliveryInfo; // JSON 형태로 배송 정보 저장
 
     @PrePersist
     protected void onCreate() {
@@ -92,5 +100,17 @@ public class Order {
         this.paymentType = paymentType;
         this.paymentAmount = paymentAmount;
         this.pointUsage = pointUsage;
+    }
+
+    public void setDeliveryInfo(String deliveryInfo) {
+        this.deliveryInfo = deliveryInfo;
+    }
+
+    public String getDeliveryInfo() {
+        return this.deliveryInfo;
+    }
+
+    public void setDelivery(Delivery delivery) {
+        this.delivery = delivery;
     }
 }
