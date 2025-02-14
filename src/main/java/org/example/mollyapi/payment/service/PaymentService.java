@@ -1,6 +1,7 @@
 package org.example.mollyapi.payment.service;
 
 import org.example.mollyapi.payment.dto.request.PaymentCancelReqDto;
+import org.example.mollyapi.payment.dto.response.PaymentInfoResDto;
 import org.example.mollyapi.payment.dto.response.PaymentResDto;
 import org.example.mollyapi.payment.entity.Payment;
 
@@ -24,4 +25,12 @@ public interface PaymentService {
     public Payment findPaymentByPaymentKey(String paymentKey);
 
 
+    //orderId로 최신결제찾기
+    public PaymentInfoResDto findLatestPayment(Long orderId);
+
+    //orderId로 모든 결제정보 찾기
+    public List<PaymentInfoResDto> findAllPayments(Long orderId);
+
+    //userId로 모든 결제정보 찾기
+    public List<PaymentInfoResDto> findUserPayments(Long userId);
 }

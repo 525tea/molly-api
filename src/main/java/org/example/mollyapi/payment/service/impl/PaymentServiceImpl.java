@@ -12,6 +12,7 @@ import org.example.mollyapi.order.repository.OrderRepository;
 import org.example.mollyapi.order.service.OrderService;
 import org.example.mollyapi.payment.dto.request.PaymentCancelReqDto;
 import org.example.mollyapi.payment.dto.request.TossCancelReqDto;
+import org.example.mollyapi.payment.dto.response.PaymentInfoResDto;
 import org.example.mollyapi.payment.dto.response.PaymentResDto;
 import org.example.mollyapi.payment.dto.response.TossCancelResDto;
 import org.example.mollyapi.payment.dto.request.TossConfirmReqDto;
@@ -25,6 +26,8 @@ import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
 import org.example.mollyapi.user.service.UserService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -32,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.toIntExact;
@@ -137,6 +141,35 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentRepository.findByPaymentKey(paymentKey)
                 .orElseThrow(() -> new CustomException(PaymentError.PAYMENT_NOT_FOUND));
     }
+
+    @Override
+    public PaymentInfoResDto findLatestPayment(Long orderId) {
+        Pageable pageable = PageRequest.of(0, 1); // 첫 번째 결과만 가져옴 (LIMIT 1 효과)
+        List<Payment> payments = paymentRepository.findLatestPaymentByOrderId(orderId, pageable);
+        return payments.stream()
+                .findFirst()
+                .map(PaymentInfoResDto::from)
+                .orElseThrow(() -> new CustomException(PaymentError.PAYMENT_NOT_FOUND));
+    }
+
+    @Override
+    public List<PaymentInfoResDto> findAllPayments(Long orderId){
+        List<Payment> payments = paymentRepository.findAllByOrderByCreatedAtDesc()
+                .orElseThrow(() -> new CustomException(PaymentError.PAYMENT_NOT_FOUND));
+        return payments.stream()
+                .map(PaymentInfoResDto::from)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<PaymentInfoResDto> findUserPayments(Long userId) {
+        List<Payment> payments = paymentRepository.findAllByUserId(userId)
+                .orElseThrow(() -> new CustomException(PaymentError.PAYMENT_NOT_FOUND));
+        return payments.stream()
+                .map(PaymentInfoResDto::from)
+                .collect(Collectors.toList());
+    }
+
 
     /*
         결제 성공 - 주문 업데이트 (포인트, 상태), 포인트 차감
