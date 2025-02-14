@@ -1,6 +1,7 @@
 package org.example.mollyapi.order.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.mollyapi.order.dto.OrderRequestDto;
 import org.example.mollyapi.order.dto.OrderResponseDto;
 import org.example.mollyapi.order.entity.*;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -123,4 +125,35 @@ public class OrderService {
 
         orderRepository.save(order);
     }
+
+    // 주문 실패: 결제 실패로 주문이 실패하는 경우
+    public void failOrder(String tossOrderId) {
+        Order order = orderRepository.findByTossOrderId(tossOrderId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. tossOrderId=" + tossOrderId));
+
+        order.setStatus(OrderStatus.FAILED);
+
+        // 재고 복구
+        for (OrderDetail detail : order.getOrderDetails()) {
+            ProductItem productItem = detail.getProductItem();
+            if (productItem != null) {
+                log.info("[Before] 재고 복구 전 - 상품 ID: {}, 기존 재고: {}, 주문 수량: {}",
+                        productItem.getId(), productItem.getQuantity(), detail.getQuantity());
+
+                productItem.restoreStock(detail.getQuantity()); // 재고 복구
+                productItemRepository.save(productItem);
+                productItemRepository.flush();
+
+                log.info("[After] 재고 복구 완료 - 상품 ID: {}, 실행 후 재고: {}",
+                        productItem.getId(), productItem.getQuantity());
+            } else {
+                log.warn("ProductItem이 null입니다. OrderDetail ID: {}", detail.getId());
+            }
+        }
+
+
+        // 주문 데이터 삭제 (Cascade로 OrderDetail도 삭제됨)
+        orderRepository.delete(order);
+    }
+
 }
