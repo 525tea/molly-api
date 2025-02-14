@@ -14,6 +14,9 @@ import org.example.mollyapi.product.file.FileStore;
 import org.example.mollyapi.product.repository.ProductRepository;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,36 +37,20 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     @Transactional
-    public List<ProductResDto> getAllProducts() {
-        List<ProductResDto> productResDtoList = new ArrayList<>();
-        List<Product> all = productRepository.findAll();
-        for (Product product : all) {
-            ProductResDto productResDto = convertToProductResDto(product);
-            productResDtoList.add(productResDto);
-        }
-        return productResDtoList;
+    public Slice<ProductResDto> getAllProducts(Pageable pageable) {
+        Slice<Product> page = productRepository.findAll(pageable);
+        return page.map(this::convertToProductResDto);
     }
 
     @Override
     @Transactional
-    public List<ProductResDto> getProductsByCategory(List<String> categories) {
+    public Slice<ProductResDto> getProductsByCategory(List<String> categories, Pageable pageable) {
         Category category = categoryService.getCategory(categories);
 
         List<Category> leafCategories = categoryService.getLeafCategories(category);
+        Slice<Product> allByCategory = productRepository.findAllByCategory(leafCategories, pageable);
 
-        List<Product> products = new ArrayList<>();
-        for (Category leaf : leafCategories) {
-            List<Product> allByCategory = productRepository.findAllByCategory(leaf);
-            products.addAll(allByCategory);
-        }
-
-        List<ProductResDto> productResDtoList = new ArrayList<>();
-        for (Product product : products) {
-            ProductResDto productResDto = convertToProductResDto(product);
-            productResDtoList.add(productResDto);
-        }
-
-        return productResDtoList;
+        return allByCategory.map(this::convertToProductResDto);
     }
 
     @Override
