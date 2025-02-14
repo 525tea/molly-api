@@ -17,11 +17,11 @@ public record ProductResDto(
         String productName,
         Long price,
         String description,
-        FileInfo thumbnail,
-        List<FileInfo> productImages,
-        List<FileInfo> productDescriptionImages,
+        FileInfoDto thumbnail,
+        List<FileInfoDto> productImages,
+        List<FileInfoDto> productDescriptionImages,
         List<ProductItemResDto> items,
-        List<ColorDetail> colorDetails
+        List<ColorDetailDto> colorDetails
 ) {
 
     @Data
@@ -38,13 +38,6 @@ public record ProductResDto(
         String color;
         String colorCode;
         List<SizeDetail> sizeDetails;
-    }
-
-    @Data
-    @AllArgsConstructor
-    static public class FileInfo {
-        String path;
-        String filename;
     }
 
     public static List<ColorDetail> groupItemByColor(List<ProductItem> items) {
@@ -64,30 +57,5 @@ public record ProductResDto(
                                 .collect(Collectors.toList())
                 ))
                 .collect(Collectors.toList());
-    }
-
-    static public ProductResDto from(Product product) {
-        FileInfo thumbnail = new FileInfo(product.getThumbnail().getStoredFileName(), product.getThumbnail().getUploadFileName());
-        List<FileInfo> productImages = product.getProductImages().stream().map((item)-> new FileInfo(item.getStoredFileName(), item.getUploadFileName())).toList();
-        List<FileInfo> descriptionImages = product.getDescriptionImages().stream().map(item -> new FileInfo(item.getStoredFileName(), item.getUploadFileName())).toList();
-
-        List<ProductItemResDto> itemResDtos = product.getItems().stream().map(ProductItemResDto::from).toList();
-        List<ColorDetail> colorDetails = groupItemByColor(product.getItems());
-
-        List<String> categories = new ArrayList<>();
-
-        return new ProductResDto(
-                product.getId(),
-                categories,
-                product.getBrandName(),
-                product.getProductName(),
-                product.getPrice(),
-                product.getDescription(),
-                thumbnail,
-                productImages,
-                descriptionImages,
-                itemResDtos,
-                colorDetails
-        );
     }
 }
