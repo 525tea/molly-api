@@ -110,37 +110,60 @@ class OrderServiceTest {
     }
 
     @Test
-    void 결제_성공시_Delivery_생성_확인() {
+    void 결제_성공시_Delivery_생성_및_주문_업데이트_확인() {
         // Given
-        String tossOrderId = "ORD-20250214164119-7656";
+        String tossOrderId = "ORD-20250214173656-8525";
+        String fakePaymentId = "PAY-123456";
+        String fakePaymentType = "CARD";
+        Long fakePaymentAmount = 516000L;
+        Integer fakePointUsage = 5000;
+        String fakeDeliveryInfo = """
+        {
+            "receiver_name": "X-3456",
+            "receiver_phone": "01773229999",
+            "road_address": "서울특별시 강남구 테헤란로 427",
+            "number_address": "서울특별시 강남구 삼성동 23-4",
+            "addr_detail": "101동 201호"
+        }
+    """;
 
-        // 주문 조회
-        log.info("==배송 생성 확인 테스트 시작==");
+        log.info("==배송 생성 및 주문 업데이트 확인 테스트 시작==");
+
+        // 기존 주문 정보 조회
         Order order = orderRepository.findByTossOrderId(tossOrderId)
                 .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다. tossOrderId=" + tossOrderId));
 
-        // 배송 정보가 주문에 존재하는지 확인
-        assertNotNull(order.getDeliveryInfo(), "주문에 배송 정보가 저장되지 않았습니다.");
-
-        // When: createDelivery() 실행
-        orderService.successOrder(tossOrderId, "PAY-99999", "CARD", 516000L, 5000, order.getDeliveryInfo());
+        // When: 결제 성공 처리 (이때 createDelivery() 실행됨)
+        orderService.successOrder(tossOrderId, fakePaymentId, fakePaymentType, fakePaymentAmount, fakePointUsage, fakeDeliveryInfo);
 
         // Then: 배송 정보 저장 확인
-        Optional<Delivery> savedDelivery = deliveryRepository.findByOrderId(order.getId());
+        Order updatedOrder = orderRepository.findByTossOrderId(tossOrderId)
+                .orElseThrow(() -> new IllegalArgumentException("업데이트된 주문을 찾을 수 없습니다. tossOrderId=" + tossOrderId));
 
+        // `delivery_info`가 `null`로 변경되었는지 확인
+        log.info("Updated Order delivery_info: {}", updatedOrder.getDeliveryInfo());
+        assertNull(updatedOrder.getDeliveryInfo(), "배송 정보가 null로 설정되지 않았습니다.");
+
+        // `order.delivery_id`가 정상적으로 저장되었는지 확인
+        assertNotNull(updatedOrder.getDelivery(), "배송이 생성되지 않았습니다.");
+        Long deliveryId = updatedOrder.getDelivery().getId();
+        assertNotNull(deliveryId, "주문에 연결된 배송 ID가 없습니다.");
+
+        // DB에서 배송 정보 조회 후 검증
+        Optional<Delivery> savedDelivery = deliveryRepository.findById(deliveryId);
         assertTrue(savedDelivery.isPresent(), "배송 정보가 DB에 저장되지 않았습니다.");
+
         Delivery delivery = savedDelivery.get();
 
-        // Delivery 정보 검증
-        assertEquals(order.getId(), delivery.getOrder().getId(), "배송과 주문이 올바르게 매핑되지 않았습니다.");
+        // delivery_info와 비교
+        assertEquals(updatedOrder.getId(), delivery.getOrder().getId(), "배송과 주문이 올바르게 매핑되지 않았습니다.");
         assertEquals("X-3456", delivery.getReceiverName(), "받는 사람 이름이 올바르지 않습니다.");
         assertEquals("01773229999", delivery.getReceiverPhone(), "받는 사람 전화번호가 올바르지 않습니다.");
         assertEquals("서울특별시 강남구 테헤란로 427", delivery.getRoadAddress(), "도로명 주소가 올바르지 않습니다.");
         assertEquals("서울특별시 강남구 삼성동 23-4", delivery.getNumberAddress(), "지번 주소가 올바르지 않습니다.");
         assertEquals("101동 201호", delivery.getAddrDetail(), "상세 주소가 올바르지 않습니다.");
 
-        // 로그 출력
-        log.info("Order ID: {}, Delivery ID: {}", order.getId(), delivery.getId());
+        log.info("Order ID: {}, Delivery ID: {}, Order.Delivery ID: {}", updatedOrder.getId(), delivery.getId(), updatedOrder.getDelivery().getId());
         log.info("Receiver Name: {}, Phone: {}", delivery.getReceiverName(), delivery.getReceiverPhone());
         log.info("Address: {}, {}", delivery.getRoadAddress(), delivery.getNumberAddress());
         log.info("Detail Address: {}", delivery.getAddrDetail());

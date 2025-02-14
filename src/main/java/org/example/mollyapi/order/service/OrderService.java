@@ -222,9 +222,17 @@ public class OrderService {
             String numberAddress = deliveryInfo.has("number_address") ? deliveryInfo.get("number_address").asText() : null;
             String addrDetail = deliveryInfo.get("addr_detail").asText();
 
+            // 배송 정보 생성 및 저장
             Delivery delivery = Delivery.from(order, receiverName, receiverPhone, roadAddress, numberAddress, addrDetail);
             deliveryRepository.save(delivery);
             deliveryRepository.flush();
+
+            // Order에 delivery_id 저장, delivery_info 제거
+            order.setDelivery(delivery);
+            order.setDeliveryInfo(null);
+            orderRepository.save(order);
+            orderRepository.flush();
+
             log.info("배송 생성 완료. 주문번호: {}, 배송번호: {}", order.getId(), delivery.getId());
 
         } catch (Exception e) {
