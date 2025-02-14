@@ -161,7 +161,8 @@ class OrderServiceTest {
         }
 
         // When: 주문 취소 처리
-        orderService.cancelOrder(orderId, false);
+        String responseMessage = orderService.cancelOrder(orderId, false);
+        log.info("responseMessage = {}", responseMessage);
 
         // Then: 주문 삭제 확인
         Optional<Order> canceledOrder = orderRepository.findById(orderId);
