@@ -6,6 +6,9 @@ import org.example.mollyapi.common.entity.Base;
 import org.example.mollyapi.order.entity.OrderDetail;
 import org.example.mollyapi.user.entity.User;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Builder
 @AllArgsConstructor
@@ -31,4 +34,7 @@ public class Review extends Base {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_detail_id", nullable = false, foreignKey = @ForeignKey(name = "FK_REVIEW_ORDERDETAIL"))
     private OrderDetail orderDetail;
+    
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReviewImage> reviewImages = new ArrayList<>(); //리뷰 이미지 리스트
 }
