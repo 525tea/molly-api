@@ -1,6 +1,8 @@
 package org.example.mollyapi;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.mollyapi.delivery.entity.Delivery;
+import org.example.mollyapi.delivery.repository.DeliveryRepository;
 import org.example.mollyapi.order.entity.Order;
 import org.example.mollyapi.order.entity.OrderDetail;
 import org.example.mollyapi.order.repository.OrderDetailRepository;
@@ -10,6 +12,7 @@ import org.example.mollyapi.order.type.CancelStatus;
 import org.example.mollyapi.order.type.OrderStatus;
 import org.example.mollyapi.product.entity.ProductItem;
 import org.example.mollyapi.product.repository.ProductItemRepository;
+import org.example.mollyapi.product.repository.ProductRepository;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
 import org.junit.jupiter.api.*;
@@ -43,13 +46,16 @@ class OrderServiceTest {
     @Autowired
     private ProductItemRepository productItemRepository;
 
+    @Autowired
+    private DeliveryRepository deliveryRepository;
+
     private Order testOrder;
     private User testUser;
 
     @BeforeEach
     void setUp() {
         // DB에서 User 조회 (id=1)
-        testUser = userRepository.findById(1L)
+        testUser = userRepository.findById(5L)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         // DB에서 주문 조회 (tossOrderId 사용)
@@ -67,9 +73,18 @@ class OrderServiceTest {
         String fakePaymentType = "CARD";
         Long fakePaymentAmount = 258000L;
         Integer fakePointUsage = 5000;
+        String fakeDeliveryInfo = """
+        {
+            "receiver_name": "X-3456",
+            "receiver_phone": "01773229999",
+            "road_address": "서울특별시 강남구 테헤란로 427",
+            "number_address": "서울특별시 강남구 삼성동 23-4",
+            "addr_detail": "101동 201호"
+        }
+    """;
 
         // When: successOrder() 실행
-        orderService.successOrder("ORD-20250213132349-6572", fakePaymentId, fakePaymentType, fakePaymentAmount, fakePointUsage);
+        orderService.successOrder("ORD-20250213132349-6572", fakePaymentId, fakePaymentType, fakePaymentAmount, fakePointUsage, fakeDeliveryInfo);
 
         // Then: 주문 상태 변경 확인
         assertEquals(OrderStatus.SUCCEEDED, testOrder.getStatus());
@@ -81,12 +96,77 @@ class OrderServiceTest {
         // 포인트 차감 확인
         assertEquals(100000 - fakePointUsage, testUser.getPoint());  // 원래 포인트에서 차감됐는지 확인
 
+        // delivery_info 저장 확인
+        assertNotNull(testOrder.getDeliveryInfo(), "Delivery 정보가 저장되지 않았습니다.");
+        assertEquals(fakeDeliveryInfo, testOrder.getDeliveryInfo(), "Delivery 정보가 올바르게 저장되지 않았습니다.");
+
         // 테스트 결과 출력
         log.info("successOrder 테스트 결과:");
         log.info("Order status: {}", testOrder.getStatus());
         log.info("Order payment 정보: paymentId={}, paymentType={}, paymentAmount={}", testOrder.getPaymentId(), testOrder.getPaymentType(), testOrder.getPaymentAmount());
         log.info("Order point_usage: {}", testOrder.getPointUsage());
         log.info("User point: {}", testUser.getPoint());
+        log.info("Order deliveryInfo: {}", testOrder.getDeliveryInfo());
+    }
+
+    @Test
+    void 결제_성공시_Delivery_생성_및_주문_업데이트_확인() {
+        // Given
+        String tossOrderId = "ORD-20250214173656-8525";
+        String fakePaymentId = "PAY-123456";
+        String fakePaymentType = "CARD";
+        Long fakePaymentAmount = 516000L;
+        Integer fakePointUsage = 5000;
+        String fakeDeliveryInfo = """
+        {
+            "receiver_name": "X-3456",
+            "receiver_phone": "01773229999",
+            "road_address": "서울특별시 강남구 테헤란로 427",
+            "number_address": "서울특별시 강남구 삼성동 23-4",
+            "addr_detail": "101동 201호"
+        }
+    """;
+
+        log.info("==배송 생성 및 주문 업데이트 확인 테스트 시작==");
+
+        // 기존 주문 정보 조회
+        Order order = orderRepository.findByTossOrderId(tossOrderId)
+                .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다. tossOrderId=" + tossOrderId));
+
+        // When: 결제 성공 처리 (이때 createDelivery() 실행됨)
+        orderService.successOrder(tossOrderId, fakePaymentId, fakePaymentType, fakePaymentAmount, fakePointUsage, fakeDeliveryInfo);
+
+        // Then: 배송 정보 저장 확인
+        Order updatedOrder = orderRepository.findByTossOrderId(tossOrderId)
+                .orElseThrow(() -> new IllegalArgumentException("업데이트된 주문을 찾을 수 없습니다. tossOrderId=" + tossOrderId));
+
+        // `delivery_info`가 `null`로 변경되었는지 확인
+        log.info("Updated Order delivery_info: {}", updatedOrder.getDeliveryInfo());
+        assertNull(updatedOrder.getDeliveryInfo(), "배송 정보가 null로 설정되지 않았습니다.");
+
+        // `order.delivery_id`가 정상적으로 저장되었는지 확인
+        assertNotNull(updatedOrder.getDelivery(), "배송이 생성되지 않았습니다.");
+        Long deliveryId = updatedOrder.getDelivery().getId();
+        assertNotNull(deliveryId, "주문에 연결된 배송 ID가 없습니다.");
+
+        // DB에서 배송 정보 조회 후 검증
+        Optional<Delivery> savedDelivery = deliveryRepository.findById(deliveryId);
+        assertTrue(savedDelivery.isPresent(), "배송 정보가 DB에 저장되지 않았습니다.");
+
+        Delivery delivery = savedDelivery.get();
+
+        // delivery_info와 비교
+        assertEquals(updatedOrder.getId(), delivery.getOrder().getId(), "배송과 주문이 올바르게 매핑되지 않았습니다.");
+        assertEquals("X-3456", delivery.getReceiverName(), "받는 사람 이름이 올바르지 않습니다.");
+        assertEquals("01773229999", delivery.getReceiverPhone(), "받는 사람 전화번호가 올바르지 않습니다.");
+        assertEquals("서울특별시 강남구 테헤란로 427", delivery.getRoadAddress(), "도로명 주소가 올바르지 않습니다.");
+        assertEquals("서울특별시 강남구 삼성동 23-4", delivery.getNumberAddress(), "지번 주소가 올바르지 않습니다.");
+        assertEquals("101동 201호", delivery.getAddrDetail(), "상세 주소가 올바르지 않습니다.");
+
+        log.info("Order ID: {}, Delivery ID: {}, Order.Delivery ID: {}", updatedOrder.getId(), delivery.getId(), updatedOrder.getDelivery().getId());
+        log.info("Receiver Name: {}, Phone: {}", delivery.getReceiverName(), delivery.getReceiverPhone());
+        log.info("Address: {}, {}", delivery.getRoadAddress(), delivery.getNumberAddress());
+        log.info("Detail Address: {}", delivery.getAddrDetail());
     }
 
     @Test
