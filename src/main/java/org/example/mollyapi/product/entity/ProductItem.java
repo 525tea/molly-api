@@ -2,11 +2,13 @@ package org.example.mollyapi.product.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.example.mollyapi.common.entity.Base;
 import org.example.mollyapi.order.entity.OrderDetail;
 
 import java.util.List;
 
+@Slf4j
 @Getter
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -55,5 +57,9 @@ public class ProductItem extends Base {
                         throw new IllegalArgumentException("재고 부족: 현재 수량=" + this.quantity + ", 요청 수량=" + quantityToDecrease);
                 }
                 this.quantity -= quantityToDecrease;
+        }
+
+        public void restoreStock(Long quantityToRestore) {
+                this.quantity += quantityToRestore;
         }
 }
