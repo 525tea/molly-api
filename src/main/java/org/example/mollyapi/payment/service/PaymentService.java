@@ -13,7 +13,7 @@ public interface PaymentService {
     public Payment processPayment(Long userId, String paymentKey, String tossOrderId, Long amount, Integer point, Long deliveryId, String paymentType);
 
     //결제 성공 절차
-    public void successPayment(Payment payment, String tossOrderId,Integer point);
+    public void successPayment(Payment payment, String tossOrderId,Integer point, String deliveryInfoJson);
 
     //결제 실패 절차
     public void failPayment(Payment payment, String tossOrderId, String failureReason);
