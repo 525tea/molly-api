@@ -9,6 +9,7 @@ import org.example.mollyapi.order.repository.OrderRepository;
 import org.example.mollyapi.order.repository.OrderDetailRepository;
 import org.example.mollyapi.order.type.CancelStatus;
 import org.example.mollyapi.order.type.OrderStatus;
+import org.example.mollyapi.payment.repository.PaymentRepository;
 import org.example.mollyapi.product.entity.Product;
 import org.example.mollyapi.product.entity.ProductItem;
 import org.example.mollyapi.product.repository.ProductItemRepository;
@@ -34,6 +35,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final ProductItemRepository productItemRepository;
     private final UserRepository userRepository;
+    private PaymentRepository paymentRepository;
 
     public OrderResponseDto createOrder(Long userId, List<OrderRequestDto> orderRequests) {
         User user = userRepository.findById(userId)
@@ -154,6 +156,47 @@ public class OrderService {
 
         // 주문 데이터 삭제 (Cascade로 OrderDetail도 삭제됨)
         orderRepository.delete(order);
+    }
+
+    // 주문 취소: 결제 요청 전 주문을 취소하는 경우
+    @Transactional
+    public String cancelOrder(Long orderId, boolean isExpired) {
+        // 주문 조회
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. orderId=" + orderId));
+
+        // 주문 상태가 PENDING이 아닐 경우 취소 불가
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new IllegalStateException("결제 요청이 진행된 주문은 취소할 수 없습니다.");
+        }
+
+        // 주문 상태를 CANCELED로 변경
+        order.setStatus(OrderStatus.CANCELED);
+        orderRepository.save(order);
+
+        // 주문에 속한 OrderDetail 조회 및 재고 복구
+        List<OrderDetail> orderDetails = order.getOrderDetails();
+        for (OrderDetail detail : orderDetails) {
+            ProductItem productItem = detail.getProductItem();
+            if (productItem != null) {
+                log.info("[Before] 재고 복구 전 - 상품 ID: {}, 기존 재고: {}, 주문 수량: {}",
+                        productItem.getId(), productItem.getQuantity(), detail.getQuantity());
+
+                productItem.restoreStock(detail.getQuantity()); // 재고 복구
+                productItemRepository.save(productItem);
+
+                log.info("[After] 재고 복구 완료 - 상품 ID: {}, 실행 후 재고: {}",
+                        productItem.getId(), productItem.getQuantity());
+            } else {
+                log.warn("ProductItem이 null입니다. OrderDetail ID: {}", detail.getId());
+            }
+        }
+
+        // 주문 및 주문 상세 삭제 (Cascade로 OrderDetail도 삭제됨)
+        orderRepository.delete(order);
+
+        // 클라이언트에 응답 메시지 반환
+        return isExpired ? "요청한 시간이 초과되어 주문이 취소되었습니다." : "주문을 취소했습니다.";
     }
 
 }

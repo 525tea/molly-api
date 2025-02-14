@@ -18,4 +18,11 @@ public class OrderController {
         OrderResponseDto response = orderService.createOrder(request.getUserId(), request.getOrderRequests());
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<String> cancelOrder(@PathVariable Long orderId,
+                                              @RequestParam(required = false, defaultValue = "false") boolean isExpired) {
+        String message = orderService.cancelOrder(orderId, isExpired);
+        return ResponseEntity.ok(message);
+    }
 }
