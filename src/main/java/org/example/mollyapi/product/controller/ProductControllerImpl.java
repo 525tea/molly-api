@@ -14,10 +14,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.mollyapi.common.exception.CustomErrorResponse;
 import org.example.mollyapi.product.dto.response.ListResDto;
+import org.example.mollyapi.product.dto.response.PageResDto;
 import org.example.mollyapi.product.service.ProductService;
 import org.example.mollyapi.product.dto.request.ProductRegisterReqDto;
 import org.example.mollyapi.product.dto.response.ProductResDto;
 import org.example.mollyapi.user.auth.annotation.Auth;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,28 +44,39 @@ public class ProductControllerImpl {
                     "파라미터 예시: ?categories=여성,아우터")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "상품 목록 반환",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = ProductResDto.class)))),
+                    content = @Content(schema = @Schema(implementation = ListResDto.class))),
             @ApiResponse(responseCode = "204", description = "조회 데이터 없음", content = @Content(schema = @Schema(type = "string", example = ""))),
             @ApiResponse(responseCode = "400", description = "실패",
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
     })
-    public ResponseEntity<?> getAllProducts(
-            @RequestParam(required = false) String categories
+    public ResponseEntity<ListResDto> getAllProducts(
+            @RequestParam(required = false) String categories,
+            @RequestParam int page,
+            @RequestParam int size
     ) {
-        List<ProductResDto> products;
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Slice<ProductResDto> products;
         if (categories == null) {
-            products = productService.getAllProducts();
+            products = productService.getAllProducts(pageRequest);
         } else {
             List<String> categoriesList = Arrays.stream(categories.split(",")).toList();
-            products = productService.getProductsByCategory(categoriesList);
+            products = productService.getProductsByCategory(categoriesList, pageRequest);
         }
 
         if (products.isEmpty()) {
             return ResponseEntity.noContent().build();
         }
+
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(new ListResDto(products));
+                .body(new ListResDto(
+                        new PageResDto(
+                                (long) products.getContent().size(),
+                                products.hasNext(),
+                                products.isFirst(),products.isLast()
+                        ),
+                        products.getContent()
+                        ));
     }
 
     @GetMapping("/{productId}")
