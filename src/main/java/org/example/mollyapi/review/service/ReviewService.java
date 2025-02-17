@@ -9,6 +9,8 @@ import org.example.mollyapi.product.entity.Product;
 import org.example.mollyapi.product.file.FileStore;
 import org.example.mollyapi.product.repository.ProductRepository;
 import org.example.mollyapi.review.dto.request.AddReviewReqDto;
+import org.example.mollyapi.review.dto.response.GetReviewResDto;
+import org.example.mollyapi.review.dto.response.ReviewInfo;
 import org.example.mollyapi.review.entity.Review;
 import org.example.mollyapi.review.entity.ReviewImage;
 import org.example.mollyapi.review.repository.ReviewRepository;
@@ -25,6 +27,7 @@ import java.util.List;
 import static org.example.mollyapi.common.exception.error.impl.OrderDetailError.NOT_EXIST_ORDERDETIAL;
 import static org.example.mollyapi.common.exception.error.impl.ProductItemError.NOT_EXISTS_PRODUCT;
 import static org.example.mollyapi.common.exception.error.impl.ReviewError.NOT_ACCESS_REVIEW;
+import static org.example.mollyapi.common.exception.error.impl.ReviewError.NOT_EXIST_REVIEW;
 import static org.example.mollyapi.common.exception.error.impl.UserError.NOT_EXISTS_USER;
 
 @Service
@@ -60,7 +63,7 @@ public class ReviewService {
                 .orElseThrow(() -> new CustomException(NOT_EXIST_ORDERDETIAL));
 
         // 상품 정보 조회
-        Product product = productRep.findById( orderDetail.getProductItem().getProduct().getId())
+        Product product = productRep.findById(orderDetail.getProductItem().getProduct().getId())
                 .orElseThrow(() -> new CustomException(NOT_EXISTS_PRODUCT));
 
         //리뷰 작성 권한 체크
@@ -89,5 +92,34 @@ public class ReviewService {
         // 리뷰에 이미지 추가
         newReview.updateImages(images);
         reviewRep.save(newReview);
+    }
+
+
+    /**
+     * 상품별 리뷰 조회
+     * @param productId 상품 PK
+     * @param userId 사용자 PK
+     * @return reviewResDtoList 리뷰 정보를 담을 DtoList
+     * */
+    @Transactional
+    public ResponseEntity<?> getReviewList(Long productId, Long userId) {
+        // 상품 존재 여부 체크
+        Product product = productRep.findById(productId)
+                .orElseThrow(() -> new CustomException(NOT_EXISTS_PRODUCT));
+
+        // 해당 상품의 리뷰 정보 조회
+        List<ReviewInfo> reviewInfoList = reviewRep.getReviewInfo(productId, userId);
+        if(reviewInfoList.isEmpty()) throw new CustomException(NOT_EXIST_REVIEW);
+
+        // Response로 전달할 상품 리뷰 정보 담기
+        List<GetReviewResDto> reviewResDtoList = new ArrayList<>();
+        for(ReviewInfo info : reviewInfoList) {
+            List<String> images = reviewRep.getImageList(info.reviewId());
+            if(images.isEmpty()) continue;
+
+            // 리스트에 리뷰 정보 담기
+            reviewResDtoList.add(new GetReviewResDto(info, images));
+        }
+        return ResponseEntity.ok(reviewResDtoList);
     }
 }
