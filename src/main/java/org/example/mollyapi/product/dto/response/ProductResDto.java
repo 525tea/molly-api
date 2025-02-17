@@ -2,10 +2,9 @@ package org.example.mollyapi.product.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.example.mollyapi.product.entity.Product;
+import org.example.mollyapi.product.dto.ProductItemDto;
 import org.example.mollyapi.product.entity.ProductItem;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,7 +19,7 @@ public record ProductResDto(
         FileInfoDto thumbnail,
         List<FileInfoDto> productImages,
         List<FileInfoDto> productDescriptionImages,
-        List<ProductItemResDto> items,
+        List<ProductItemDto> items,
         List<ColorDetailDto> colorDetails
 ) {
 
