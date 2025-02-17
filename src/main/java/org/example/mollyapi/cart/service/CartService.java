@@ -8,9 +8,10 @@ import org.example.mollyapi.cart.dto.Response.CartInfoResDto;
 import org.example.mollyapi.cart.entity.Cart;
 import org.example.mollyapi.cart.repository.CartRepository;
 import org.example.mollyapi.common.exception.CustomException;
-import org.example.mollyapi.product.dto.response.ProductResDto;
+import org.example.mollyapi.product.dto.response.ColorDetailDto;
 import org.example.mollyapi.product.entity.ProductItem;
 import org.example.mollyapi.product.repository.ProductItemRepository;
+import org.example.mollyapi.product.service.ProductServiceImpl;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -28,6 +29,7 @@ import static org.example.mollyapi.common.exception.error.impl.UserError.NOT_EXI
 @Service
 @RequiredArgsConstructor
 public class CartService {
+    private final ProductServiceImpl productService;
     private final UserRepository userRep;
     private final ProductItemRepository productItemRep;
     private final CartRepository cartRep;
@@ -116,7 +118,7 @@ public class CartService {
                     .orElseThrow(() -> new CustomException(NOT_EXISTS_PRODUCT));
 
             //해당 제품의 컬러 및 사이즈
-            List<ProductResDto.ColorDetail> colorDetails = ProductResDto.groupItemByColor(itemList);
+            List<ColorDetailDto> colorDetails = productService.groupItemByColor(itemList);
 
             responseDtoList.add(new CartInfoResDto(cartInfoDto, colorDetails));
         }
