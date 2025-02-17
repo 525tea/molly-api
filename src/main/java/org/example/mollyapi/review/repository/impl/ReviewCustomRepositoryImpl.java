@@ -30,7 +30,8 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
                 .innerJoin(review.user, user)
                 .leftJoin(reviewLike).on(review.id.eq(reviewLike.review.id)
                         .and(reviewLike.user.userId.eq(userId)))
-                .where(review.product.id.eq(productId))
+                .where(review.product.id.eq(productId)
+                        .and(review.isDeleted.eq(Boolean.FALSE)))
                 .fetch();
     }
 
