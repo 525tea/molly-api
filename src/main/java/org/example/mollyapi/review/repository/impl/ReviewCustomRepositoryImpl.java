@@ -25,7 +25,7 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
                                 review.content,
                                 user.nickname,
                                 user.profileImage,
-                                reviewLike.isLike.coalesce(Boolean.FALSE).as("isLike")
+                                reviewLike.isLike.coalesce(false).as("isLike")
                         )).from(review)
                 .innerJoin(review.user, user)
                 .leftJoin(reviewLike).on(review.id.eq(reviewLike.review.id)
