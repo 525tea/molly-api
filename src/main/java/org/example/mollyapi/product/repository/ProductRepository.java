@@ -21,7 +21,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p WHERE p.id = :productId")
     Optional<Product> findWithLockById(@Param("productId") Long productId);
 
-
+  
     @Query("SELECT p FROM Product p WHERE p.category IN :categories")
     Slice<Product> findAllByCategory(@Param("categories") List<Category> categories, Pageable pageable);
 
