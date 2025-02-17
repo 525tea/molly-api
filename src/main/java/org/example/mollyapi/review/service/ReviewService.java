@@ -1,18 +1,20 @@
 package org.example.mollyapi.review.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.example.mollyapi.common.exception.CustomException;
 import org.example.mollyapi.order.entity.OrderDetail;
 import org.example.mollyapi.order.repository.OrderDetailRepository;
 import org.example.mollyapi.product.dto.UploadFile;
+import org.example.mollyapi.product.entity.Product;
 import org.example.mollyapi.product.file.FileStore;
+import org.example.mollyapi.product.repository.ProductRepository;
 import org.example.mollyapi.review.dto.request.AddReviewReqDto;
 import org.example.mollyapi.review.entity.Review;
 import org.example.mollyapi.review.entity.ReviewImage;
 import org.example.mollyapi.review.repository.ReviewRepository;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,15 +23,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.example.mollyapi.common.exception.error.impl.OrderDetailError.NOT_EXIST_ORDERDETIAL;
+import static org.example.mollyapi.common.exception.error.impl.ProductItemError.NOT_EXISTS_PRODUCT;
 import static org.example.mollyapi.common.exception.error.impl.ReviewError.NOT_ACCESS_REVIEW;
 import static org.example.mollyapi.common.exception.error.impl.UserError.NOT_EXISTS_USER;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
     private final FileStore fileStore;
     private final UserRepository userRep;
+    private final ProductRepository productRep;
     private final OrderDetailRepository orderDetailRep;
     private final ReviewRepository reviewRep;
 
@@ -56,6 +59,10 @@ public class ReviewService {
         OrderDetail orderDetail = orderDetailRep.findById(orderDetailId)
                 .orElseThrow(() -> new CustomException(NOT_EXIST_ORDERDETIAL));
 
+        // 상품 정보 조회
+        Product product = productRep.findById( orderDetail.getProductItem().getProduct().getId())
+                .orElseThrow(() -> new CustomException(NOT_EXISTS_PRODUCT));
+
         //리뷰 작성 권한 체크
         Review review = reviewRep.findByIsDeletedAndOrderDetailIdAndUserUserId(false, orderDetailId, userId);
         if(review != null) throw new CustomException(NOT_ACCESS_REVIEW);
@@ -70,6 +77,7 @@ public class ReviewService {
                 .isDeleted(false)
                 .user(user)
                 .orderDetail(orderDetail)
+                .product(product)
                 .build();
 
         //저장된 파일로 리뷰 이미지 생성
