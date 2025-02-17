@@ -23,7 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-@Slf4j
 @Tag(name = "리뷰 Controller", description = "리뷰 기능을 담당")
 @RestController
 @RequestMapping("/review")
