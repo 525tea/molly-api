@@ -1,7 +1,6 @@
 package org.example.mollyapi.product.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -16,7 +15,7 @@ import org.example.mollyapi.common.exception.CustomErrorResponse;
 import org.example.mollyapi.product.dto.response.ListResDto;
 import org.example.mollyapi.product.dto.response.PageResDto;
 import org.example.mollyapi.product.service.ProductService;
-import org.example.mollyapi.product.dto.request.ProductRegisterReqDto;
+import org.example.mollyapi.product.dto.request.ProductReqDto;
 import org.example.mollyapi.product.dto.response.ProductResDto;
 import org.example.mollyapi.user.auth.annotation.Auth;
 import org.springframework.data.domain.PageRequest;
@@ -51,6 +50,7 @@ public class ProductControllerImpl {
     })
     public ResponseEntity<ListResDto> getAllProducts(
             @RequestParam(required = false) String categories,
+            @RequestParam(required = false) String sellerId,
             @RequestParam int page,
             @RequestParam int size
     ) {
@@ -110,13 +110,17 @@ public class ProductControllerImpl {
     })
     public ResponseEntity<ProductResDto> registerProduct(
             HttpServletRequest request,
-            @Valid @RequestPart("product") ProductRegisterReqDto productRegisterReqDto,
+            @Valid @RequestPart("product") ProductReqDto productReqDto,
             @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail,
             @RequestPart(value = "productImages", required = false) List<MultipartFile> productImages,
             @RequestPart(value = "productDescriptionImages", required = false) List<MultipartFile> productDescriptionImages
-    )  {
+    ) {
         Long userId = (Long) request.getAttribute("userId");
-        ProductResDto productResDto = productService.registerProduct(userId, productRegisterReqDto, thumbnail, productImages, productDescriptionImages);
+        ProductResDto productResDto = productService.registerProduct(
+                userId,
+                ProductReqDto.from(productReqDto),
+                productReqDto.items(),
+                thumbnail, productImages, productDescriptionImages);
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(productResDto);
@@ -135,9 +139,13 @@ public class ProductControllerImpl {
     public ResponseEntity<ProductResDto> updateProduct(
             HttpServletRequest request,
             @PathVariable Long productId,
-            @RequestPart("product") ProductRegisterReqDto productRegisterReqDto) {
+            @RequestPart("product") ProductReqDto productRegisterReqDto) {
         Long userId = (Long) request.getAttribute("userId");
-        ProductResDto productResDto = productService.updateProduct(userId, productId, productRegisterReqDto);
+        ProductResDto productResDto = productService.updateProduct(
+                userId,
+                productId,
+                ProductReqDto.from(productRegisterReqDto),
+                productRegisterReqDto.items());
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(productResDto);
