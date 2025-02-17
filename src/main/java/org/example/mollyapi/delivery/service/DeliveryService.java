@@ -43,9 +43,14 @@ public class DeliveryService {
 
         // 주문 금액의 10% 포인트 적립 (소수점 버림)
         int rewardPoint = (int) (order.getPaymentAmount() * 0.1);
-        log.info("결제 금액: {}", order.getPaymentAmount());
+        log.info("결제 금액: {}, 적립 포인트: {}", order.getPaymentAmount(), rewardPoint);
+
         user.updatePoint(rewardPoint);
         userRepository.save(user);
+
+        // Order.point_save 적립 포인트 저장
+        order.setPointSave(rewardPoint);
+        orderRepository.save(order);
 
         log.info("포인트 적립 완료: User ID = {}, 적립 포인트 = {}", user.getUserId(), rewardPoint);
     }

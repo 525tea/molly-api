@@ -68,17 +68,23 @@ class DeliveryServiceTest {
         int beforePoint = testUser.getPoint(); // 기존 유저 포인트
         deliveryService.updateDeliveryStatus(testDelivery.getId(), DeliveryStatus.ARRIVED);
 
-        // Then: 배송 상태 확인
+        // Then: Delivery.status 확인
         Delivery updatedDelivery2 = deliveryRepository.findById(testDelivery.getId()).orElseThrow();
         assertEquals(DeliveryStatus.ARRIVED, updatedDelivery2.getStatus(), "배송 상태가 ARRIVED로 변경되지 않았습니다.");
 
-        // Then: 포인트 적립 확인
+        // Then: Order.point 업데이트 확인
         int expectedPoint = beforePoint + (int) (testOrder.getTotalAmount() * 0.1);
         User updatedUser = userRepository.findById(testUser.getUserId()).orElseThrow();
         assertEquals(expectedPoint, updatedUser.getPoint(), "포인트 적립이 정상적으로 되지 않았습니다.");
 
+        // Then: Order.pointSave 업데이트 확인
+        Order updatedOrder = orderRepository.findById(testOrder.getId()).orElseThrow();
+        int expectedOrderPointSave = (int) (updatedOrder.getPaymentAmount() * 0.1);
+        assertEquals(expectedOrderPointSave, updatedOrder.getPointSave(), "Order.pointSave 값이 정상적으로 저장되지 않았습니다.");
+
         log.info("==배송 상태 변경 및 포인트 적립 테스트 완료==");
         log.info("최종 배송 상태: {}", updatedDelivery2.getStatus());
         log.info("포인트 적립 확인: 기존 포인트 = {}, 적립 후 포인트 = {}", beforePoint, updatedUser.getPoint());
+        log.info("Order.pointSave 확인: 예상 = {}, 실제 = {}", expectedOrderPointSave, updatedOrder.getPointSave());
     }
 }
