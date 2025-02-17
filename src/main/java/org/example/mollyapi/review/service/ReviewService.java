@@ -9,7 +9,9 @@ import org.example.mollyapi.product.entity.Product;
 import org.example.mollyapi.product.file.FileStore;
 import org.example.mollyapi.product.repository.ProductRepository;
 import org.example.mollyapi.review.dto.request.AddReviewReqDto;
+import org.example.mollyapi.review.dto.response.GetMyReviewResDto;
 import org.example.mollyapi.review.dto.response.GetReviewResDto;
+import org.example.mollyapi.review.dto.response.MyReviewInfo;
 import org.example.mollyapi.review.dto.response.ReviewInfo;
 import org.example.mollyapi.review.entity.Review;
 import org.example.mollyapi.review.entity.ReviewImage;
@@ -99,7 +101,7 @@ public class ReviewService {
      * 상품별 리뷰 조회
      * @param productId 상품 PK
      * @param userId 사용자 PK
-     * @return reviewResDtoList 리뷰 정보를 담을 DtoList
+     * @return reviewResDtoList 리뷰 정보를 담은 DtoList
      * */
     @Transactional
     public ResponseEntity<?> getReviewList(Long productId, Long userId) {
@@ -121,5 +123,31 @@ public class ReviewService {
             reviewResDtoList.add(new GetReviewResDto(info, images));
         }
         return ResponseEntity.ok(reviewResDtoList);
+    }
+
+    /**
+     * 사용자 본인이 작성한 리뷰 조회
+     * @param userId 사용자 PK
+     * @return myReviewResDtoList 사용자 본인이 작성한 리뷰 정보를 담은 DtoList
+     * */
+    public ResponseEntity<?> getMyReviewList(Long userId) {
+        // 가입된 사용자 여부 체크
+        User user = userRep.findById(userId)
+                .orElseThrow(() -> new CustomException(NOT_EXISTS_USER));
+
+        // 사용자 본인이 작성한 리뷰 정보 조회
+        List<MyReviewInfo> myReviewInfoList = reviewRep.getMyReviewInfo(userId);
+        if(myReviewInfoList.isEmpty()) throw new CustomException(NOT_EXIST_REVIEW);
+
+        // Response로 전달할 상품 리뷰 정보 담기
+        List<GetMyReviewResDto> myReviewResDtoList = new ArrayList<>();
+        for(MyReviewInfo info : myReviewInfoList) {
+            List<String> images = reviewRep.getImageList(info.reviewId());
+            if(images.isEmpty()) continue;
+
+            // 리스트에 리뷰 정보 담기
+            myReviewResDtoList.add(new GetMyReviewResDto(info, images));
+        }
+        return ResponseEntity.ok(myReviewResDtoList);
     }
 }

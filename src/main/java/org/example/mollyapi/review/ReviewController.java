@@ -56,12 +56,28 @@ public class ReviewController {
                     content = @Content(schema = @Schema(implementation = GetReviewResDto.class))),
             @ApiResponse(responseCode = "204", description = "리뷰가 존재하지 않는 상품",
                     content = @Content(schema = @Schema(implementation = CommonResDto.class))),
-            @ApiResponse(responseCode = "400", description = "존재 하지 않는 상품",
+            @ApiResponse(responseCode = "400", description = "1. 존재 하지 않는 상품 \t\n 2. 리뷰 조회 실패",
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
     })
     public ResponseEntity<?> getReviewList(@PathVariable Long productId, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         if(userId == null) userId = 0L;
         return reviewService.getReviewList(productId, userId);
+    }
+
+    @Auth
+    @GetMapping("/myReview")
+    @Operation(summary = "사용자 본인이 작성한 리뷰 조회", description = "자신이 작성한 리뷰내역을 조회할 수 있습니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "리뷰 조회 성공",
+                    content = @Content(schema = @Schema(implementation = GetReviewResDto.class))),
+            @ApiResponse(responseCode = "204", description = "작성한 리뷰가 없음",
+                    content = @Content(schema = @Schema(implementation = CommonResDto.class))),
+            @ApiResponse(responseCode = "400", description = "리뷰 조회 실패",
+                    content = @Content(schema = @Schema(implementation = CommonResDto.class)))
+    })
+    public ResponseEntity<?> getMyReviewList(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return reviewService.getMyReviewList(userId);
     }
 }
