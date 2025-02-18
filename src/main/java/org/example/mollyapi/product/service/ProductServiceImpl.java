@@ -38,7 +38,6 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional
     public Slice<ProductResDto> getAllProducts(ProductFilterCondition condition, Pageable pageable) {
-//        Slice<Product> page = productRepository.findAll(pageable);
         Slice<ProductAndThumbnailDto> page = productRepository.findByCondition(condition, pageable);
 
         return page.map(this::convertToProductResDto);
