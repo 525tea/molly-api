@@ -133,8 +133,8 @@ public class ReviewService {
      * */
     public ResponseEntity<?> getMyReviewList(Long userId) {
         // 가입된 사용자 여부 체크
-        User user = userRep.findById(userId)
-                .orElseThrow(() -> new CustomException(NOT_EXISTS_USER));
+        boolean existsUser = userRep.existsById(userId);
+        if(!existsUser) throw new CustomException(NOT_EXISTS_USER);
 
         // 사용자 본인이 작성한 리뷰 정보 조회
         List<MyReviewInfo> myReviewInfoList = reviewRep.getMyReviewInfo(userId);
@@ -195,5 +195,22 @@ public class ReviewService {
             review.getReviewImages().addAll(newImages); // 새로운 이미지 추가
             reviewRep.save(review);
         }
+    }
+
+    /**
+     * 리뷰 삭제 기능(삭제 후 재작성이 불가능하기 때문에, 삭제 여부 칼럼 업데이트
+     * @param reviewId 리뷰 PK
+     * @param userId 사용자 PK
+     * */
+    @Transactional
+    public ResponseEntity<?> deleteReview(Long reviewId, Long userId) {
+        // 해당하는 리뷰가 있다면
+        Review review = reviewRep.findByIdAndUserUserId(reviewId, userId)
+                .orElseThrow(() -> new CustomException(NOT_EXIST_REVIEW));
+
+        boolean isUpdate = review.updateIsDeleted(Boolean.TRUE);
+        if(!isUpdate) throw new CustomException(FAIL_UPDATE);
+
+        return ResponseEntity.ok().body("리뷰 삭제에 성공했습니다.");
     }
 }
