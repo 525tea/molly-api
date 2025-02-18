@@ -1,5 +1,5 @@
 package org.example.mollyapi.product.service;
-import org.example.mollyapi.product.dto.BrandStatDto;
+import org.example.mollyapi.product.dto.BrandSummaryDto;
 import org.example.mollyapi.product.dto.ProductDto;
 import org.example.mollyapi.product.dto.ProductFilterCondition;
 import org.example.mollyapi.product.dto.ProductItemDto;
@@ -18,7 +18,7 @@ public interface ProductService {
     Slice<ProductResDto> getAllProducts(ProductFilterCondition condition, Pageable pageable);
     Slice<ProductResDto> getProductsByCategory(List<String> categories, Pageable pageable);
 
-    Slice<BrandStatDto> getPopularBrand(Pageable pageable);
+    Slice<BrandSummaryDto> getPopularBrand(Pageable pageable);
 
     Optional<ProductResDto> getProductById(Long id);
     ProductResDto registerProduct(

@@ -23,12 +23,15 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
     }
 
     @Override
-    public Slice<BrandStatDto> getTotalViewGroupByBrandName(Pageable pageable) {
-        List<BrandStatDto> content = queryFactory.select(
-                new QBrandStatDto(
+    public Slice<BrandSummaryDto> getTotalViewGroupByBrandName(Pageable pageable) {
+        List<BrandSummaryDto> content = queryFactory.select(
+                new QBrandSummaryDto(
+                        productImage.url.max().as("brandThumbnail"),
                         product.brandName,
                         product.viewCount.sum().as("viewCount")))
-                .from(product)
+                .from(productImage)
+                .join(productImage.product, product)
+                .on(productImage.isRepresentative.isTrue())
                 .groupBy(product.brandName)
                 .orderBy(product.viewCount.sum().desc())
                 .offset(pageable.getOffset())
@@ -39,7 +42,7 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
             content.remove(pageable.getPageSize());
             hasNext = true;
         }
-        return new SliceImpl<BrandStatDto>(content, pageable, hasNext);
+        return new SliceImpl<BrandSummaryDto>(content, pageable, hasNext);
     }
 
     @Override
