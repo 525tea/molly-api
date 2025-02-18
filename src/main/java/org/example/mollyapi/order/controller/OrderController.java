@@ -37,14 +37,14 @@ public class OrderController {
     }
 
     @Auth
-    @GetMapping(value = "/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/user/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<OrderHistoryResponseDto> getUserOrders(@PathVariable Long userId) {
         OrderHistoryResponseDto orders = orderService.getUserOrders(userId);
         return ResponseEntity.ok(orders);
     }
 
     @Auth
-    @GetMapping("/{orderId}")
+    @GetMapping(value = "/{orderId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "주문 상세 조회 API", description = "주문 ID를 받아 주문의 orderDetail을 조회")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공",
@@ -54,6 +54,8 @@ public class OrderController {
     })
     public ResponseEntity<OrderResponseDto> getOrderDetails(@PathVariable Long orderId) {
         OrderResponseDto response = orderService.getOrderDetails(orderId);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(response);
     }
 }
