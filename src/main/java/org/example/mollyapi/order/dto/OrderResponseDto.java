@@ -1,16 +1,15 @@
 package org.example.mollyapi.order.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import org.example.mollyapi.order.entity.Order;
 import org.example.mollyapi.order.entity.OrderDetail;
 import org.example.mollyapi.order.type.CancelStatus;
 import org.example.mollyapi.order.type.OrderStatus;
+import org.example.mollyapi.payment.dto.response.PaymentInfoResDto;
 import org.example.mollyapi.payment.entity.Payment;
 import org.example.mollyapi.payment.repository.PaymentRepository;
 import org.springframework.data.domain.PageRequest;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,7 +32,8 @@ public class OrderResponseDto {
     private String paymentMethod;
     private String deliveryStatus;
 
-    private List<OrderDetailDto> orderDetails;
+    private PaymentInfoResDto payment;
+    private List<OrderDetailResponseDto> orderDetails;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -55,42 +55,18 @@ public class OrderResponseDto {
         // 주문에 대한 최신 결제 정보 조회
         List<Payment> payments = paymentRepository.findLatestPaymentByOrderId(order.getId(), PageRequest.of(0, 1));
         if (!payments.isEmpty()) {
-            Payment payment = payments.get(0);
-            this.paymentStatus = payment.getPaymentStatus().name();
-            this.paymentMethod = payment.getPaymentType();
+            this.payment = PaymentInfoResDto.from(payments.get(0));
         } else {
-            this.paymentStatus = null;
-            this.paymentMethod = null;
+            this.payment = null;
         }
 
-        // OrderDetail 정보 매핑
+        // OrderDetail 리스트 변환
         this.orderDetails = orderDetailList.stream()
-                .map(OrderDetailDto::new)
+                .map(OrderDetailResponseDto::from)
                 .collect(Collectors.toList());
-
-        System.out.println("OrderResponseDto - orderedAt: " + this.orderedAt);
     }
 
-    @Getter
-    public static class OrderDetailDto {
-        private Long orderId;
-        private Long productId;
-        private Long itemId;
-        private String brandName;
-        private String productName;
-        private String size;
-        private Long price;
-        private Long quantity;
-
-        public OrderDetailDto(OrderDetail orderDetail) {
-            this.orderId = orderDetail.getOrder().getId();
-            this.productId = orderDetail.getProductItem().getProduct().getId();
-            this.itemId = orderDetail.getProductItem().getId();
-            this.brandName = orderDetail.getBrandName();
-            this.productName = orderDetail.getProductItem().getProduct().getProductName();
-            this.size = orderDetail.getProductItem().getSize();
-            this.price = orderDetail.getPrice();
-            this.quantity = orderDetail.getQuantity();
-        }
+    public static OrderResponseDto from(Order order, PaymentRepository paymentRepository) {
+        return new OrderResponseDto(order, order.getOrderDetails(), paymentRepository);
     }
 }

@@ -2,50 +2,53 @@ package org.example.mollyapi.order.dto;
 
 import lombok.Getter;
 import org.example.mollyapi.order.entity.Order;
+import org.example.mollyapi.order.type.OrderStatus;
 import org.example.mollyapi.payment.entity.Payment;
 import org.example.mollyapi.payment.repository.PaymentRepository;
-import org.example.mollyapi.user.entity.User;
 import org.springframework.data.domain.PageRequest;
 
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
 public class OrderHistoryResponseDto {
     private Long userId;
-    private String userName;
-    private Integer userPoint;
     private List<OrderSummaryDto> orders;
 
-    public OrderHistoryResponseDto(User user, List<Order> orders, PaymentRepository paymentRepository) {
-        this.userId = user.getUserId();
-        this.userName = user.getName();
-        this.userPoint = user.getPoint();
+    public OrderHistoryResponseDto(Long userId, List<Order> orders, PaymentRepository paymentRepository) {
+        this.userId = userId;
         this.orders = orders.stream()
-                .map(order -> new OrderSummaryDto(order, paymentRepository))
+                .map(order -> OrderSummaryDto.from(order, paymentRepository))
                 .collect(Collectors.toList());
     }
 
     @Getter
     public static class OrderSummaryDto {
-        private Long orderId;
         private String tossOrderId;
-        private Long totalAmount;
-        private String deliveryStatus;
-        private String paymentStatus;
+        private OrderStatus orderStatus;
         private String orderedAt;
+        private Long paymentAmount;
+        private String deliveryStatus;
+        private List<OrderDetailResponseDto> orderDetails;
 
-        public OrderSummaryDto(Order order, PaymentRepository paymentRepository) {
-            this.orderId = order.getId();
-            this.tossOrderId = order.getTossOrderId();
-            this.totalAmount = order.getTotalAmount();
-            this.deliveryStatus = order.getDelivery() != null ? order.getDelivery().getStatus().name() : null;
+        private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-            // 주문에 대한 최신 결제 정보 조회
+        public static OrderSummaryDto from(Order order, PaymentRepository paymentRepository) {
             List<Payment> payments = paymentRepository.findLatestPaymentByOrderId(order.getId(), PageRequest.of(0, 1));
-            this.paymentStatus = payments.isEmpty() ? null : payments.get(0).getPaymentStatus().name();
+            Long paymentAmount = payments.isEmpty() ? 0L : payments.get(0).getAmount();
+            return new OrderSummaryDto(order, paymentAmount);
+        }
 
-            this.orderedAt = order.getOrderedAt() != null ? order.getOrderedAt().toString() : null;
+        private OrderSummaryDto(Order order, Long paymentAmount) {
+            this.tossOrderId = order.getTossOrderId();
+            this.orderStatus = order.getStatus();
+            this.orderedAt = order.getOrderedAt() != null ? order.getOrderedAt().format(FORMATTER) : null;
+            this.paymentAmount = paymentAmount;
+            this.deliveryStatus = order.getDelivery() != null ? order.getDelivery().getStatus().name() : null;
+            this.orderDetails = order.getOrderDetails().stream()
+                    .map(OrderDetailResponseDto::from)
+                    .collect(Collectors.toList());
         }
     }
 }

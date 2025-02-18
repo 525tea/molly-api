@@ -53,7 +53,7 @@ public class OrderService {
                 user, List.of(OrderStatus.SUCCEEDED, OrderStatus.WITHDRAW)
         );
 
-        return new OrderHistoryResponseDto(user, orders, paymentRepository);
+        return new OrderHistoryResponseDto(userId, orders, paymentRepository);
     }
 
 
@@ -62,7 +62,7 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. orderId=" + orderId));
 
-        return new OrderResponseDto(order, order.getOrderDetails(), paymentRepository);
+        return OrderResponseDto.from(order, paymentRepository);
     }
 
 
