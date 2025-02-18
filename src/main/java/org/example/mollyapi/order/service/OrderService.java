@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.mollyapi.delivery.entity.Delivery;
 import org.example.mollyapi.delivery.repository.DeliveryRepository;
+import org.example.mollyapi.order.dto.OrderHistoryResponseDto;
 import org.example.mollyapi.order.dto.OrderRequestDto;
 import org.example.mollyapi.order.dto.OrderResponseDto;
 import org.example.mollyapi.order.entity.*;
@@ -42,6 +43,30 @@ public class OrderService {
     private final PaymentRepository paymentRepository;
     private final DeliveryRepository deliveryRepository;
 
+
+    // 사용자의 주문 내역 조회 (GET /orders/{userId})
+    public OrderHistoryResponseDto getUserOrders(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다. userId=" + userId));
+
+        List<Order> orders = orderRepository.findOrdersByUserAndStatusIn(
+                user, List.of(OrderStatus.SUCCEEDED, OrderStatus.WITHDRAW)
+        );
+
+        return new OrderHistoryResponseDto(user, orders, paymentRepository);
+    }
+
+
+    // 주문 상세 조회 (GET /orders/{orderId})
+    public OrderResponseDto getOrderDetails(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. orderId=" + orderId));
+
+        return new OrderResponseDto(order, order.getOrderDetails(), paymentRepository);
+    }
+
+
+    // 주문 생성
     public OrderResponseDto createOrder(Long userId, List<OrderRequestDto> orderRequests) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다. userId=" + userId));
@@ -98,9 +123,10 @@ public class OrderService {
                 .mapToLong(d -> d.getPrice() * d.getQuantity())
                 .sum();
         order.setTotalAmount(totalAmount);
+
         orderRepository.save(order);
 
-        return new OrderResponseDto(order, orderDetails);
+        return new OrderResponseDto(order, orderDetails, paymentRepository);
     }
 
     private String generateTossOrderId() {
