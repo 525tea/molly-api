@@ -1,5 +1,6 @@
 package org.example.mollyapi.order.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
 import org.example.mollyapi.delivery.dto.DeliveryResponseDto;
 import org.example.mollyapi.order.entity.Order;
@@ -26,6 +27,7 @@ public class OrderResponseDto {
     private OrderStatus status;
     private CancelStatus cancelStatus;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private String orderedAt;
 
     private PaymentInfoResDto payment;
