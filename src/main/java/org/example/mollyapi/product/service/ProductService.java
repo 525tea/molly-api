@@ -1,5 +1,6 @@
 package org.example.mollyapi.product.service;
 import org.example.mollyapi.product.dto.ProductDto;
+import org.example.mollyapi.product.dto.ProductFilterCondition;
 import org.example.mollyapi.product.dto.ProductItemDto;
 import org.example.mollyapi.product.dto.response.ColorDetailDto;
 import org.example.mollyapi.product.dto.response.ProductResDto;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductService {
-    Slice<ProductResDto> getAllProducts(Pageable pageable);
+    Slice<ProductResDto> getAllProducts(ProductFilterCondition condition, Pageable pageable);
     Slice<ProductResDto> getProductsByCategory(List<String> categories, Pageable pageable);
 
     Optional<ProductResDto> getProductById(Long id);
