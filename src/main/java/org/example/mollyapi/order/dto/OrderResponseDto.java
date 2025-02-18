@@ -1,6 +1,7 @@
 package org.example.mollyapi.order.dto;
 
 import lombok.Getter;
+import org.example.mollyapi.delivery.dto.DeliveryResponseDto;
 import org.example.mollyapi.order.entity.Order;
 import org.example.mollyapi.order.entity.OrderDetail;
 import org.example.mollyapi.order.type.CancelStatus;
@@ -27,12 +28,10 @@ public class OrderResponseDto {
 
     private String orderedAt;
 
-    private Long paymentAmount;
-    private String paymentStatus;
-    private String paymentMethod;
-    private String deliveryStatus;
-
     private PaymentInfoResDto payment;
+
+    //    private String deliveryStatus;
+    private DeliveryResponseDto delivery;
     private List<OrderDetailResponseDto> orderDetails;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -49,8 +48,6 @@ public class OrderResponseDto {
         this.status = order.getStatus();
         this.cancelStatus = order.getCancelStatus();
         this.orderedAt = order.getOrderedAt() != null ? order.getOrderedAt().format(FORMATTER) : null;
-        this.paymentAmount = order.getPaymentAmount();
-        this.deliveryStatus = order.getDelivery() != null ? order.getDelivery().getStatus().name() : null;
 
         // 주문에 대한 최신 결제 정보 조회
         List<Payment> payments = paymentRepository.findLatestPaymentByOrderId(order.getId(), PageRequest.of(0, 1));
@@ -59,6 +56,9 @@ public class OrderResponseDto {
         } else {
             this.payment = null;
         }
+
+        // 배송 정보
+        this.delivery = order.getDelivery() != null ? DeliveryResponseDto.from(order.getDelivery()) : null;
 
         // OrderDetail 리스트 변환
         this.orderDetails = orderDetailList.stream()
