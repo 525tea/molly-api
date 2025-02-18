@@ -28,6 +28,7 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
                 new QBrandSummaryDto(
                         productImage.url.max().as("brandThumbnail"),
                         product.brandName,
+                        product.count(),
                         product.viewCount.sum().as("viewCount")))
                 .from(productImage)
                 .join(productImage.product, product)
