@@ -65,12 +65,10 @@ public class ProductControllerImpl {
         PageRequest pageRequest = PageRequest.of(page, size);
 
         List<Long> categoryIdList = new ArrayList<>();
-        if (categories != null && !categories.isEmpty()) {
-            Long id = categoryService
-                    .getCategory(
-                            Arrays.stream(categories.split(",")).toList()
-                    ).getId();
-            categoryIdList.add(id);
+        List<String> categoriesList = categories == null ? null : Arrays.asList(categories.split(","));
+        if (categoriesList != null) {
+            Category category = categoryService.getCategory(categoriesList);
+            categoryIdList = categoryService.getLeafCategories(category).stream().map(Category::getId).toList();
         }
 
         ProductFilterCondition condition = new ProductFilterCondition(
@@ -126,12 +124,11 @@ public class ProductControllerImpl {
         PageRequest pageRequest = PageRequest.of(page, size);
 
         List<Long> categoryIdList = new ArrayList<>();
-        if (categories != null && !categories.isEmpty()) {
-            Long id = categoryService
-                    .getCategory(
-                            Arrays.stream(categories.split(",")).toList()
-                    ).getId();
-            categoryIdList.add(id);
+        List<String> categoriesList = categories == null ? null : Arrays.asList(categories.split(","));
+
+        if (categoriesList != null) {
+            Category category = categoryService.getCategory(categoriesList);
+            categoryIdList = categoryService.getLeafCategories(category).stream().map(Category::getId).toList();
         }
 
         ProductFilterCondition condition = new ProductFilterCondition(
