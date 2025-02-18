@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.mollyapi.common.exception.CustomErrorResponse;
+import org.example.mollyapi.product.dto.BrandStatDto;
 import org.example.mollyapi.product.dto.ProductFilterCondition;
 import org.example.mollyapi.product.dto.response.ListResDto;
 import org.example.mollyapi.product.dto.response.PageResDto;
@@ -176,6 +177,35 @@ public class ProductControllerImpl {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(productResDto);
+    }
+
+    @GetMapping("/popular-brand")
+    @Operation(summary = "상품 정보 및 상품아이템 목록", description = "상품 정보와 옵션별 상품 아이템 데이터 조회")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공",
+                    content = @Content(schema = @Schema(implementation = ProductResDto.class))),
+            @ApiResponse(responseCode = "204", description = "조회 데이터 없음", content = @Content(schema = @Schema(type = "string", example = ""))),
+            @ApiResponse(responseCode = "400", description = "실패",
+                    content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
+    })
+    public ResponseEntity<ListResDto> getPopularBrand(
+            @RequestParam int page,
+            @RequestParam int size
+    ) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        Slice<BrandStatDto> brands = productService.getPopularBrand(pageRequest);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new ListResDto(
+                        new PageResDto(
+                                (long) brands.getContent().size(),
+                                brands.hasNext(),
+                                brands.isFirst(),brands.isLast()
+                        ),
+                        brands.getContent()
+                ));
     }
 
 

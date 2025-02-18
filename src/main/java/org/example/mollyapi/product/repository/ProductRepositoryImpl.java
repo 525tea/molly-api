@@ -2,9 +2,7 @@ package org.example.mollyapi.product.repository;
 
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import org.example.mollyapi.product.dto.ProductAndThumbnailDto;
-import org.example.mollyapi.product.dto.ProductFilterCondition;
-import org.example.mollyapi.product.dto.QProductAndThumbnailDto;
+import org.example.mollyapi.product.dto.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -22,6 +20,26 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
 
     public ProductRepositoryImpl(JPAQueryFactory queryFactory) {
         this.queryFactory = queryFactory;
+    }
+
+    @Override
+    public Slice<BrandStatDto> getTotalViewGroupByBrandName(Pageable pageable) {
+        List<BrandStatDto> content = queryFactory.select(
+                new QBrandStatDto(
+                        product.brandName,
+                        product.viewCount.sum().as("viewCount")))
+                .from(product)
+                .groupBy(product.brandName)
+                .orderBy(product.viewCount.sum().desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize() + 1)
+                .fetch();
+        boolean hasNext = false;
+        if (content.size() > pageable.getPageSize()) {
+            content.remove(pageable.getPageSize());
+            hasNext = true;
+        }
+        return new SliceImpl<BrandStatDto>(content, pageable, hasNext);
     }
 
     @Override
@@ -60,7 +78,7 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
             content.remove(pageable.getPageSize());
             hasNext = true;
         }
-        return new SliceImpl(content, pageable, hasNext);
+        return new SliceImpl<ProductAndThumbnailDto>(content, pageable, hasNext);
     }
     private BooleanExpression colorCodeEq(String colorCode) {
         return hasText(colorCode)? productItem.colorCode.eq(colorCode) : null;
