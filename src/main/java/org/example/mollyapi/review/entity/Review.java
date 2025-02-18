@@ -52,4 +52,15 @@ public class Review extends Base {
     public void updateContent(String content) {
         this.content = content;
     }
+
+    public boolean updateIsDeleted(Boolean isDeleted) {
+        boolean flag = false;
+
+        if(!this.isDeleted.equals(isDeleted)) {
+            this.isDeleted = isDeleted;
+            flag = true;
+        }
+
+        return flag;
+    }
 }
