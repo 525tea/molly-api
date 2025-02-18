@@ -2,15 +2,14 @@ package org.example.mollyapi.product.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.example.mollyapi.product.dto.ProductDto;
-import org.example.mollyapi.product.dto.ProductItemDto;
-import org.example.mollyapi.product.dto.UploadFile;
+import org.example.mollyapi.product.dto.*;
 import org.example.mollyapi.product.dto.response.*;
 import org.example.mollyapi.product.entity.Category;
 import org.example.mollyapi.product.entity.Product;
 import org.example.mollyapi.product.entity.ProductImage;
 import org.example.mollyapi.product.entity.ProductItem;
 import org.example.mollyapi.product.file.FileStore;
+import org.example.mollyapi.product.repository.CategoryRepository;
 import org.example.mollyapi.product.repository.ProductItemRepository;
 import org.example.mollyapi.product.repository.ProductRepository;
 import org.example.mollyapi.user.entity.User;
@@ -34,11 +33,14 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final ProductItemRepository productItemRepository;
+    private final CategoryRepository categoryRepository;
 
     @Override
     @Transactional
-    public Slice<ProductResDto> getAllProducts(Pageable pageable) {
-        Slice<Product> page = productRepository.findAll(pageable);
+    public Slice<ProductResDto> getAllProducts(ProductFilterCondition condition, Pageable pageable) {
+//        Slice<Product> page = productRepository.findAll(pageable);
+        Slice<ProductAndThumbnailDto> page = productRepository.findByCondition(condition, pageable);
+
         return page.map(this::convertToProductResDto);
     }
 
@@ -225,6 +227,26 @@ public class ProductServiceImpl implements ProductService {
                 descriptionImages,
                 itemResDtos,
                 colorDetails
+        );
+    }
+
+    public ProductResDto convertToProductResDto(ProductAndThumbnailDto productAndThumbnailDto) {
+        FileInfoDto thumbnail = new FileInfoDto(
+                productAndThumbnailDto.getUrl(), productAndThumbnailDto.getFilename());
+
+        Category category = categoryRepository.findById(productAndThumbnailDto.getCategoryId()).orElseThrow();
+        return new ProductResDto(
+                productAndThumbnailDto.getId(),
+                categoryService.getCategoryPath(category),
+                productAndThumbnailDto.getBrandName(),
+                productAndThumbnailDto.getProductName(),
+                productAndThumbnailDto.getPrice(),
+                productAndThumbnailDto.getDescription(),
+                thumbnail,
+                null,
+                null,
+                null,
+                null
         );
     }
 }

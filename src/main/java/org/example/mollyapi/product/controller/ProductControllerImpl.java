@@ -12,8 +12,11 @@ import lombok.RequiredArgsConstructor;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.mollyapi.common.exception.CustomErrorResponse;
+import org.example.mollyapi.product.dto.ProductFilterCondition;
 import org.example.mollyapi.product.dto.response.ListResDto;
 import org.example.mollyapi.product.dto.response.PageResDto;
+import org.example.mollyapi.product.entity.Category;
+import org.example.mollyapi.product.service.CategoryService;
 import org.example.mollyapi.product.service.ProductService;
 import org.example.mollyapi.product.dto.request.ProductReqDto;
 import org.example.mollyapi.product.dto.response.ProductResDto;
@@ -25,6 +28,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -36,6 +40,7 @@ import java.util.List;
 public class ProductControllerImpl {
 
     private final ProductService productService;
+    private final CategoryService categoryService;
 
     @GetMapping
     @Operation(summary = "상품 정보 목록",
@@ -49,19 +54,35 @@ public class ProductControllerImpl {
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
     })
     public ResponseEntity<ListResDto> getAllProducts(
+            @RequestParam(required = false) String colorCode,
+            @RequestParam(required = false) String productSize,
             @RequestParam(required = false) String categories,
-            @RequestParam(required = false) String sellerId,
+            @RequestParam(required = false) Long priceGoe,
+            @RequestParam(required = false) Long priceLt,
             @RequestParam int page,
             @RequestParam int size
     ) {
         PageRequest pageRequest = PageRequest.of(page, size);
-        Slice<ProductResDto> products;
-        if (categories == null) {
-            products = productService.getAllProducts(pageRequest);
-        } else {
-            List<String> categoriesList = Arrays.stream(categories.split(",")).toList();
-            products = productService.getProductsByCategory(categoriesList, pageRequest);
+
+        List<Long> categoryIdList = new ArrayList<>();
+        if (categories != null && !categories.isEmpty()) {
+            Long id = categoryService
+                    .getCategory(
+                            Arrays.stream(categories.split(",")).toList()
+                    ).getId();
+            categoryIdList.add(id);
         }
+
+        ProductFilterCondition condition = new ProductFilterCondition(
+                colorCode,
+                productSize,
+                categoryIdList,
+                priceGoe,
+                priceLt,
+                null
+        );
+
+        Slice<ProductResDto> products = productService.getAllProducts(condition, pageRequest);
 
         if (products.isEmpty()) {
             return ResponseEntity.noContent().build();
@@ -78,6 +99,68 @@ public class ProductControllerImpl {
                         products.getContent()
                         ));
     }
+
+    @Auth
+    @GetMapping("/seller")
+    @Operation(summary = "상품 정보 목록",
+            description = "상품 정보와 옵션별 상품 아이템 데이터 조회,  " +
+                    "파라미터 예시: ?categories=여성,아우터")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "상품 목록 반환",
+                    content = @Content(schema = @Schema(implementation = ListResDto.class))),
+            @ApiResponse(responseCode = "204", description = "조회 데이터 없음", content = @Content(schema = @Schema(type = "string", example = ""))),
+            @ApiResponse(responseCode = "400", description = "실패",
+                    content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
+    })
+    public ResponseEntity<ListResDto> getAllProductsBySeller(
+            HttpServletRequest request,
+            @RequestParam(required = false) String colorCode,
+            @RequestParam(required = false) String productSize,
+            @RequestParam(required = false) String categories,
+            @RequestParam(required = false) Long priceGoe,
+            @RequestParam(required = false) Long priceLt,
+            @RequestParam int page,
+            @RequestParam int size
+    ) {
+        Long userId = (Long) request.getAttribute("userId");
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        List<Long> categoryIdList = new ArrayList<>();
+        if (categories != null && !categories.isEmpty()) {
+            Long id = categoryService
+                    .getCategory(
+                            Arrays.stream(categories.split(",")).toList()
+                    ).getId();
+            categoryIdList.add(id);
+        }
+
+        ProductFilterCondition condition = new ProductFilterCondition(
+                colorCode,
+                productSize,
+                categoryIdList,
+                priceGoe,
+                priceLt,
+                userId
+        );
+
+        Slice<ProductResDto> products = productService.getAllProducts(condition, pageRequest);
+
+        if (products.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new ListResDto(
+                        new PageResDto(
+                                (long) products.getContent().size(),
+                                products.hasNext(),
+                                products.isFirst(),products.isLast()
+                        ),
+                        products.getContent()
+                ));
+    }
+
 
     @GetMapping("/{productId}")
     @Operation(summary = "상품 정보 및 상품아이템 목록", description = "상품 정보와 옵션별 상품 아이템 데이터 조회")
