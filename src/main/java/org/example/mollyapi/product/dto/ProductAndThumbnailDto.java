@@ -15,7 +15,6 @@ public class ProductAndThumbnailDto {
     String productName;
     Long price;
     String description;
-//    ProductImage thumbnail;
     String url;
     String filename;
     LocalDateTime createdAt;
@@ -29,7 +28,6 @@ public class ProductAndThumbnailDto {
             String productName,
             Long price,
             String description,
-//            ProductImage thumbnail
             String url,
             String filename,
             LocalDateTime createdAt
