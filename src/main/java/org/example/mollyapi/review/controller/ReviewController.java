@@ -1,4 +1,4 @@
-package org.example.mollyapi.review;
+package org.example.mollyapi.review.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -55,7 +55,7 @@ public class ReviewController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "리뷰 조회 성공",
                     content = @Content(schema = @Schema(implementation = GetReviewResDto.class))),
-            @ApiResponse(responseCode = "204", description = "리뷰가 존재하지 않는 상품",
+            @ApiResponse(responseCode = "204", description = "등록된 리뷰가 없는 상품",
                     content = @Content(schema = @Schema(implementation = CommonResDto.class))),
             @ApiResponse(responseCode = "400", description = "1. 존재 하지 않는 상품 \t\n 2. 리뷰 조회 실패",
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
