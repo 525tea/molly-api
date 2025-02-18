@@ -23,7 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-@Tag(name = "리뷰 Controller", description = "리뷰 기능을 담당")
+@Tag(name = "리뷰 Controller", description = "리뷰 담당")
 @RestController
 @RequestMapping("/review")
 @RequiredArgsConstructor
@@ -32,7 +32,7 @@ public class ReviewController {
 
     @Auth
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "리뷰 작성 기능", description = "배송완료된 상품의 리뷰를 작성할 수 있습니다.")
+    @Operation(summary = "리뷰내역 작성 API", description = "배송완료된 상품의 리뷰를 작성할 수 있습니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "리뷰 등록 성공",
                     content = @Content(schema = @Schema(implementation = CommonResDto.class))),
@@ -50,7 +50,7 @@ public class ReviewController {
     }
 
     @GetMapping("/{productId}")
-    @Operation(summary = "상품별 리뷰 조회 기능", description = "상품의 리뷰를 조회할 수 있습니다.")
+    @Operation(summary = "상품별 리뷰 내역 조회 API", description = "상품의 리뷰를 조회할 수 있습니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "리뷰 조회 성공",
                     content = @Content(schema = @Schema(implementation = GetReviewResDto.class))),
@@ -67,7 +67,7 @@ public class ReviewController {
 
     @Auth
     @GetMapping("/myReview")
-    @Operation(summary = "사용자 본인이 작성한 리뷰 조회", description = "자신이 작성한 리뷰내역을 조회할 수 있습니다.")
+    @Operation(summary = "로그인한 사용자의 리뷰내역 조회 API", description = "자신이 작성한 리뷰내역을 조회할 수 있습니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "리뷰 조회 성공",
                     content = @Content(schema = @Schema(implementation = GetReviewResDto.class))),
@@ -79,5 +79,26 @@ public class ReviewController {
     public ResponseEntity<?> getMyReviewList(HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
         return reviewService.getMyReviewList(userId);
+    }
+
+    @Auth
+    @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "리뷰 수정 API", description = "자신이 작성한 리뷰 내역을 수정할 수 있습니다.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "리뷰 수정 성공",
+                    content = @Content(schema = @Schema(implementation = GetReviewResDto.class))),
+            @ApiResponse(responseCode = "204", description = "작성한 리뷰가 없음",
+                    content = @Content(schema = @Schema(implementation = CommonResDto.class))),
+            @ApiResponse(responseCode = "400", description = "리뷰 수정 실패",
+                    content = @Content(schema = @Schema(implementation = CommonResDto.class)))
+    })
+    public ResponseEntity<?> updateReview(
+            @Valid @RequestPart("review") AddReviewReqDto addReviewReqDto,
+            @RequestPart(value = "reviewImages", required = false) List<MultipartFile> uploadImages,
+            HttpServletRequest request){
+        Long userId = (Long) request.getAttribute("userId");
+        reviewService.updateReview(addReviewReqDto, uploadImages, userId);
+        return ResponseEntity.status(HttpStatusCode.valueOf(204)).body(
+                new CommonResDto("리뷰 수정에 성공했습니다."));
     }
 }

@@ -48,4 +48,8 @@ public class Review extends Base {
     public void updateImages(List<ReviewImage> reviewImage) {
         this.reviewImages = reviewImage;
     }
+
+    public void updateContent(String content) {
+        this.content = content;
+    }
 }
