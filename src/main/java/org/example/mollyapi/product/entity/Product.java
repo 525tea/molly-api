@@ -29,6 +29,8 @@ public class Product extends Base {
     String productName;
     Long price;
     String description;
+    Long viewCount = 0L;
+    Long purchaseCount = 0L;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     List<ProductImage> images = new ArrayList<>();
@@ -55,6 +57,18 @@ public class Product extends Base {
         this.price = price;
         this.description = description;
         this.user = user;
+    }
+
+    public void increaseViewCount() {
+        this.viewCount++;
+    }
+
+    public void increasePurchaseCount() {
+        this.purchaseCount++;
+    }
+
+    public void decreasePurchaseCount() {
+        this.purchaseCount--;
     }
 
     public void addImage(ProductImage productImage) {

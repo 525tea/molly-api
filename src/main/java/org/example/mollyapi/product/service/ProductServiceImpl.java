@@ -14,6 +14,7 @@ import org.example.mollyapi.product.repository.ProductItemRepository;
 import org.example.mollyapi.product.repository.ProductRepository;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -115,6 +116,11 @@ public class ProductServiceImpl implements ProductService {
         return convertToProductResDto(savedProduct);
     }
 
+    @Override
+    public Slice<BrandStatDto> getPopularBrand(Pageable pageable) {
+        return productRepository.getTotalViewGroupByBrandName(pageable);
+    }
+
     private Product registerThumbnail(Product product, MultipartFile thumbnailImage) {
         UploadFile uploadFile = fileStore.storeFile(thumbnailImage);
         ProductImage thumbnail = ProductImage.createThumbnail(product, uploadFile);
@@ -174,8 +180,12 @@ public class ProductServiceImpl implements ProductService {
     @Transactional
     public Optional<ProductResDto> getProductById(Long id) {
 
-        Optional<Product> byId = productRepository.findById(id);
-        return byId.map(this::convertToProductResDto);
+        Optional<Product> product = productRepository.findById(id);
+
+        // 조회수 증가
+        product.ifPresent(Product::increaseViewCount);
+
+        return product.map(this::convertToProductResDto);
     }
 
     @Override
