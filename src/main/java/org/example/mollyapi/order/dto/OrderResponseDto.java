@@ -2,6 +2,7 @@ package org.example.mollyapi.order.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
+import org.example.mollyapi.address.dto.AddressResponseDto;
 import org.example.mollyapi.delivery.dto.DeliveryResponseDto;
 import org.example.mollyapi.order.entity.Order;
 import org.example.mollyapi.order.entity.OrderDetail;
@@ -22,6 +23,7 @@ public class OrderResponseDto {
     private String tossOrderId;
     private Long userId;
     private Long totalAmount;
+    private Integer userPoint;
     private Integer pointUsage;
     private Integer pointSave;
     private OrderStatus status;
@@ -31,17 +33,17 @@ public class OrderResponseDto {
     private String orderedAt;
 
     private PaymentInfoResDto payment;
-
-    //    private String deliveryStatus;
     private DeliveryResponseDto delivery;
+    private AddressResponseDto defaultAddress;
     private List<OrderDetailResponseDto> orderDetails;
 
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public OrderResponseDto(Order order, List<OrderDetail> orderDetailList, PaymentRepository paymentRepository) {
+    public OrderResponseDto(Order order, List<OrderDetail> orderDetailList, PaymentRepository paymentRepository, Integer userPoint, AddressResponseDto defaultAddress) {
         this.orderId = order.getId();
         this.tossOrderId = order.getTossOrderId();
         this.userId = order.getUser().getUserId();
+        this.userPoint = order.getUser().getPoint();
         this.totalAmount = orderDetailList.stream()
                 .mapToLong(detail -> detail.getPrice() * detail.getQuantity())
                 .sum();
@@ -59,6 +61,9 @@ public class OrderResponseDto {
             this.payment = null;
         }
 
+        // 기본 배송지 설정
+        this.defaultAddress = defaultAddress;
+
         // 배송 정보
         this.delivery = order.getDelivery() != null ? DeliveryResponseDto.from(order.getDelivery()) : null;
 
@@ -68,7 +73,7 @@ public class OrderResponseDto {
                 .collect(Collectors.toList());
     }
 
-    public static OrderResponseDto from(Order order, PaymentRepository paymentRepository) {
-        return new OrderResponseDto(order, order.getOrderDetails(), paymentRepository);
+    public static OrderResponseDto from(Order order, PaymentRepository paymentRepository, Integer userPoint, AddressResponseDto defaultAddress) {
+        return new OrderResponseDto(order, order.getOrderDetails(), paymentRepository, userPoint, defaultAddress);
     }
 }

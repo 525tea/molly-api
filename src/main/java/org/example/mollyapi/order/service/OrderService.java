@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.mollyapi.address.dto.AddressResponseDto;
+import org.example.mollyapi.address.repository.AddressRepository;
 import org.example.mollyapi.delivery.entity.Delivery;
 import org.example.mollyapi.delivery.repository.DeliveryRepository;
 import org.example.mollyapi.order.dto.OrderHistoryResponseDto;
@@ -42,6 +44,7 @@ public class OrderService {
     private final UserRepository userRepository;
     private final PaymentRepository paymentRepository;
     private final DeliveryRepository deliveryRepository;
+    private final AddressRepository addressRepository;
 
 
     // 사용자의 주문 내역 조회 (GET /orders/{userId})
@@ -59,10 +62,22 @@ public class OrderService {
 
     // 주문 상세 조회 (GET /orders/{orderId})
     public OrderResponseDto getOrderDetails(Long orderId) {
+        // 주문 조회
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 주문을 찾을 수 없습니다. orderId=" + orderId));
 
-        return OrderResponseDto.from(order, paymentRepository);
+        User user = order.getUser();
+
+        // 사용자 보유 포인트 조회
+        Integer userPoint = user.getPoint();
+
+        // 기본 배송지 조회
+        AddressResponseDto defaultAddress = addressRepository.findByUserAndDefaultAddr(user, true)
+                .map(AddressResponseDto::from)
+                .orElse(null);
+
+        // 주문 상세 응답 반환
+        return OrderResponseDto.from(order, paymentRepository, userPoint, defaultAddress);
     }
 
 
@@ -70,6 +85,14 @@ public class OrderService {
     public OrderResponseDto createOrder(Long userId, List<OrderRequestDto> orderRequests) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다. userId=" + userId));
+
+        // 사용자 보유 포인트 가져오기
+        Integer userPoint = user.getPoint();
+
+        // 기본 배송지 찾기
+        AddressResponseDto defaultAddress = addressRepository.findByUserAndDefaultAddr(user, true)
+                .map(AddressResponseDto::from)
+                .orElse(null);
 
         // 결제용 주문 ID 생성
         String tossOrderId = generateTossOrderId();
@@ -126,7 +149,7 @@ public class OrderService {
 
         orderRepository.save(order);
 
-        return new OrderResponseDto(order, orderDetails, paymentRepository);
+        return new OrderResponseDto(order, orderDetails, paymentRepository, userPoint, defaultAddress);
     }
 
     private String generateTossOrderId() {
