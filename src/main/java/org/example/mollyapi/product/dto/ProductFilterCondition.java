@@ -12,7 +12,7 @@ public class ProductFilterCondition {
     String size;
 
     List<Long> categoryId;
-//    String brandName;
+    String brandName;
     Long priceGoe;
     Long priceLt;
     Long sellerId;

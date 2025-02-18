@@ -67,6 +67,7 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
                         colorCodeEq(condition.getColorCode()),
                         sizeEq(condition.getSize()),
                         categoryIdEq(condition.getCategoryId()),
+                        brandNameEq(condition.getBrandName()),
                         priceGoe(condition.getPriceGoe()),
                         priceLt(condition.getPriceLt()),
                         sellerIdEq(condition.getSellerId())
@@ -93,6 +94,10 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
 
     private BooleanExpression categoryIdEq(List<Long> categoryId) {
         return categoryId != null && !categoryId.isEmpty()? product.category.id.in(categoryId) : null;
+    }
+
+    private BooleanExpression brandNameEq(String brandName) {
+        return hasText(brandName)? product.brandName.eq(brandName) : null;
     }
 
     private BooleanExpression priceGoe(Long priceGoe) {

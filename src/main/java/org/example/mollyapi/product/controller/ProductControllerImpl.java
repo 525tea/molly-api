@@ -58,6 +58,7 @@ public class ProductControllerImpl {
             @RequestParam(required = false) String colorCode,
             @RequestParam(required = false) String productSize,
             @RequestParam(required = false) String categories,
+            @RequestParam(required = false) String brandName,
             @RequestParam(required = false) Long priceGoe,
             @RequestParam(required = false) Long priceLt,
             @RequestParam int page,
@@ -76,6 +77,7 @@ public class ProductControllerImpl {
                 colorCode,
                 productSize,
                 categoryIdList,
+                brandName,
                 priceGoe,
                 priceLt,
                 null
@@ -116,6 +118,7 @@ public class ProductControllerImpl {
             @RequestParam(required = false) String colorCode,
             @RequestParam(required = false) String productSize,
             @RequestParam(required = false) String categories,
+            @RequestParam(required = false) String brandName,
             @RequestParam(required = false) Long priceGoe,
             @RequestParam(required = false) Long priceLt,
             @RequestParam int page,
@@ -136,6 +139,7 @@ public class ProductControllerImpl {
                 colorCode,
                 productSize,
                 categoryIdList,
+                brandName,
                 priceGoe,
                 priceLt,
                 userId
