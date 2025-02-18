@@ -105,7 +105,7 @@ public class ReviewController {
     }
 
     @Auth
-    @DeleteMapping("/{reviewId}")
+    @PostMapping("/{reviewId}")
     @Operation(summary = "리뷰 삭제 API", description = "자신이 작성한 리뷰 내역을 삭제할 수 있습니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "리뷰 삭제 성공",
