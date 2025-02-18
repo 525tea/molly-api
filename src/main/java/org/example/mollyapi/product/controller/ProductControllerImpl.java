@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.mollyapi.common.exception.CustomErrorResponse;
-import org.example.mollyapi.product.dto.BrandStatDto;
+import org.example.mollyapi.product.dto.BrandSummaryDto;
 import org.example.mollyapi.product.dto.ProductFilterCondition;
 import org.example.mollyapi.product.dto.response.ListResDto;
 import org.example.mollyapi.product.dto.response.PageResDto;
@@ -194,7 +194,7 @@ public class ProductControllerImpl {
     ) {
         PageRequest pageRequest = PageRequest.of(page, size);
 
-        Slice<BrandStatDto> brands = productService.getPopularBrand(pageRequest);
+        Slice<BrandSummaryDto> brands = productService.getPopularBrand(pageRequest);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)

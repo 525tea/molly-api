@@ -14,7 +14,6 @@ import org.example.mollyapi.product.repository.ProductItemRepository;
 import org.example.mollyapi.product.repository.ProductRepository;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -117,7 +116,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Slice<BrandStatDto> getPopularBrand(Pageable pageable) {
+    public Slice<BrandSummaryDto> getPopularBrand(Pageable pageable) {
         return productRepository.getTotalViewGroupByBrandName(pageable);
     }
 
