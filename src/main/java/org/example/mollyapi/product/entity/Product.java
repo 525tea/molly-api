@@ -4,10 +4,10 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.example.mollyapi.common.entity.Base;
 import org.example.mollyapi.product.dto.UploadFile;
 import org.example.mollyapi.user.entity.User;
-
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,13 +30,13 @@ public class Product extends Base {
     Long price;
     String description;
 
-    @OneToMany(mappedBy = "product")
-    List<ProductImage> images;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    List<ProductImage> images = new ArrayList<>();
 
-    @OneToMany(mappedBy = "product")
-    List<ProductItem> items;
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
+    List<ProductItem> items = new ArrayList<>();
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "user_id")
     User user;
 
@@ -47,22 +47,22 @@ public class Product extends Base {
             String productName,
             Long price,
             String description,
-            UploadFile thumbnail,
-            List<UploadFile> productImages,
-            List<UploadFile> descriptionImages,
-            List<ProductItem> items,
             User user
     ) {
-        ArrayList<ProductImage> images = createImages(thumbnail, productImages, descriptionImages);
-
         this.category = category;
         this.brandName = brandName;
         this.productName = productName;
         this.price = price;
         this.description = description;
-        this.items = items;
-        this.images = images;
         this.user = user;
+    }
+
+    public void addImage(ProductImage productImage) {
+        images.add(productImage);
+    }
+
+    public void addItem(ProductItem productItem) {
+        items.add(productItem);
     }
 
     public UploadFile getThumbnail() {
@@ -88,37 +88,19 @@ public class Product extends Base {
                 .toList();
     }
 
-    private static ArrayList<ProductImage> createImages(UploadFile thumbnail, List<UploadFile> productImages, List<UploadFile> descriptionImages) {
-        ArrayList<ProductImage> images = new ArrayList<>();
-        images.add(createProductImage(thumbnail, false, true, false, 0));
-
-        for (int idx = 0; idx < productImages.size(); idx++) {
-            UploadFile img = productImages.get(idx);
-            ProductImage productImage = createProductImage(img, true, false, false, idx + 1);
-            images.add(productImage);  // 생성된 ProductImage 객체를 리스트에 추가
-        }
-
-        for (int idx = 0; idx < productImages.size(); idx++) {
-            UploadFile img = descriptionImages.get(idx);
-            ProductImage descriptionImage = createProductImage(img, false, false, true, idx);
-            images.add(descriptionImage);  // 생성된 ProductImage 객체를 리스트에 추가
-        }
-        return images;
-    }
-
-    private static ProductImage createProductImage(
-            UploadFile thumbnail,
-            boolean isProductImage,
-            boolean isRepresentative,
-            boolean isDescriptionImage,
-            long idx
+    public Product update(
+            Category category,
+            String brandName,
+            String productName,
+            Long price,
+            String description
     ) {
-        return ProductImage.builder()
-                .uploadFile(thumbnail)
-                .isProductImage(isProductImage)
-                .isRepresentative(isRepresentative)
-                .isDescriptionImage(isDescriptionImage)
-                .imageIndex(idx)
-                .build();
+        this.category = category;
+        this.brandName = brandName;
+        this.productName = productName;
+        this.price = price;
+        this.description = description;
+
+        return this;
     }
 }

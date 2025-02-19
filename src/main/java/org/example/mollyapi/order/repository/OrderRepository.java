@@ -1,0 +1,23 @@
+package org.example.mollyapi.order.repository;
+
+import org.example.mollyapi.order.entity.Order;
+import org.example.mollyapi.order.type.OrderStatus;
+import org.example.mollyapi.user.entity.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface OrderRepository extends JpaRepository<Order, Long> {
+    Optional<Order> findById(Long orderId);
+    Optional<Order> findByTossOrderId(String tossOrderId);
+
+    @Query("SELECT COUNT(od) FROM OrderDetail od WHERE od.order.tossOrderId = :tossOrderId")
+    int countOrderDetailsByTossOrderId(@Param("tossOrderId") String tossOrderId);
+
+    @Query("SELECT o FROM Order o WHERE o.user = :user AND o.status IN (:statuses)")
+    List<Order> findOrdersByUserAndStatusIn(@Param("user") User user, @Param("statuses") List<OrderStatus> statuses);
+
+}
