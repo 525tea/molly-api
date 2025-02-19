@@ -1,6 +1,6 @@
 package org.example.mollyapi.review.dto.response;
 
-public record MyReviewInfo(
+public record MyReviewInfoDto(
         Long reviewId, //리뷰 PK
         String content, //리뷰 내용
         Long productId,//상품 PK
