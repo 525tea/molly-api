@@ -37,7 +37,7 @@ public class Review extends Base {
     private OrderDetail orderDetail;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "prodcut_id", nullable = false, foreignKey = @ForeignKey(name = "FK_REVIEW_PRODUCT"))
+    @JoinColumn(name = "product_id", nullable = false, foreignKey = @ForeignKey(name = "FK_REVIEW_PRODUCT"))
     private Product product;
 
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
