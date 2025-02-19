@@ -85,20 +85,29 @@ public class Product extends Base {
                 .findAny()
                 .orElseThrow(() -> new IllegalStateException("No product image found"));
 
-        return new UploadFile(productImage.url, productImage.filename);
+        return UploadFile.builder()
+                .storedFileName(productImage.url)
+                .uploadFileName(productImage.filename)
+                .build();
     }
 
     public List<UploadFile> getProductImages() {
         return images.stream()
                 .filter(img -> img.isProductImage)
-                .map(img -> new UploadFile(img.url, img.filename))
+                .map(img -> UploadFile.builder()
+                        .storedFileName(img.url)
+                        .uploadFileName(img.filename)
+                        .build())
                 .toList();
     }
 
     public List<UploadFile> getDescriptionImages() {
         return images.stream()
                 .filter(img -> img.isDescriptionImage)
-                .map(img -> new UploadFile(img.url, img.filename))
+                .map(img -> UploadFile.builder()
+                        .storedFileName(img.url)
+                        .uploadFileName(img.filename)
+                        .build())
                 .toList();
     }
 
