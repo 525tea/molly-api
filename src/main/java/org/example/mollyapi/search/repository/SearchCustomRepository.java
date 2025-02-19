@@ -1,5 +1,6 @@
 package org.example.mollyapi.search.repository;
 
+import org.example.mollyapi.search.dto.AutoWordResDto;
 import org.example.mollyapi.search.dto.SearchItemResDto;
 import org.springframework.data.domain.Pageable;
 
@@ -13,4 +14,6 @@ public interface SearchCustomRepository {
                                   Long cursorId,
                                   LocalDateTime lastCreatedAt,
                                   Pageable pageable);
+
+    AutoWordResDto searchAutoWord(String keyword);
 }

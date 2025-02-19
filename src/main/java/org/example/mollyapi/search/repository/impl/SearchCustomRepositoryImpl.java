@@ -10,6 +10,7 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.example.mollyapi.product.entity.Product;
+import org.example.mollyapi.search.dto.AutoWordResDto;
 import org.example.mollyapi.search.dto.SearchItemResDto;
 import org.example.mollyapi.search.repository.SearchCustomRepository;
 import org.springframework.data.domain.Pageable;
@@ -35,18 +36,18 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository {
                                          Pageable pageable) {
 
         BooleanBuilder condition = new BooleanBuilder();
-
+        String likeKeyword = "%" + keyword + "%";
         if (keyword != null && !keyword.isEmpty()) {
 
-            //대소문자 무시
-            condition.and(product.productName.likeIgnoreCase(keyword))
-                    .or(product.brandName.likeIgnoreCase(keyword))
-                    .or(product.description.likeIgnoreCase(keyword));
+//            // 대소문자 무시
+//            condition.or(product.productName.likeIgnoreCase(likeKeyword))
+//                    .or(product.brandName.likeIgnoreCase(likeKeyword))
+//                    .or(product.description.likeIgnoreCase(likeKeyword));
 
             //값이 있을 때만, 검색
-            condition.and(product.productName.like("%" + keyword + "%"))
-                    .or(product.brandName.like("%" + keyword + "%"))
-                    .or(product.description.like("%" + keyword + "%"));
+            condition.or(product.productName.like(likeKeyword))
+                    .or(product.brandName.like(likeKeyword))
+                    .or(product.description.like(likeKeyword));
 
         }
 
@@ -62,7 +63,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository {
         JPAQuery<SearchItemResDto> query = jpaQueryFactory
                 .select(
                         Projections.constructor(SearchItemResDto.class,
-                                product.id.as("productId"),
+                                product.id,
                                 productImage.url,
                                 product.brandName,
                                 product.productName,
@@ -71,12 +72,19 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository {
                 ).from(product)
                 .innerJoin(productImage).on(
                         productImage.product.id.eq(product.id)
-                                .and(productImage.isProductImage.eq(true)))
+                                .and(productImage.isRepresentative.eq(true)))
                 .where(condition)
                 .limit(pageable.getPageSize())
                 ;
 
+
         return query.fetch();
     }
+
+    @Override
+    public AutoWordResDto searchAutoWord(String keyword) {
+        return null;
+    }
+
 
 }
