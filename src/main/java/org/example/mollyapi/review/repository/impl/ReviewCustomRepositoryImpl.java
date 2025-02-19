@@ -1,6 +1,7 @@
 package org.example.mollyapi.review.repository.impl;
 
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.example.mollyapi.review.dto.response.MyReviewInfo;
@@ -27,13 +28,15 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
                                 review.content,
                                 user.nickname,
                                 user.profileImage,
-                                reviewLike.isLike.coalesce(Boolean.FALSE).as("isLike")
+                                reviewLike.isLike.coalesce(Boolean.FALSE).as("isLike"),
+                                Expressions.stringTemplate("DATE_FORMAT({0}, '%Y-%m-%d')", review.createdAt)
                         )).from(review)
                 .innerJoin(review.user, user)
                 .leftJoin(reviewLike).on(review.id.eq(reviewLike.review.id)
                         .and(reviewLike.user.userId.eq(userId)))
                 .where(review.product.id.eq(productId)
                         .and(review.isDeleted.eq(Boolean.FALSE)))
+                .orderBy(review.createdAt.desc())
                 .fetch();
     }
 
@@ -54,12 +57,14 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
                         review.content,
                         review.product.id,
                         review.product.productName.coalesce("게시 중단된 상품입니다."),
-                        productImage.url.coalesce("게시 중단된 상품입니다.")
+                        productImage.url.coalesce("게시 중단된 상품입니다."),
+                        Expressions.stringTemplate("DATE_FORMAT({0}, '%Y-%m-%d')", review.createdAt)
                 )).from(review)
                 .innerJoin(productImage).on(review.product.id.eq(productImage.product.id)
                         .and(productImage.isRepresentative.eq(Boolean.TRUE)))
                 .where(review.isDeleted.eq(Boolean.FALSE)
                         .and(review.user.userId.eq(userId)))
+                .orderBy(review.createdAt.desc())
                 .fetch();
     }
 }
