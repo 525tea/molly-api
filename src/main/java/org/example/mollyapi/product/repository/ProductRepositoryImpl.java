@@ -1,8 +1,10 @@
 package org.example.mollyapi.product.repository;
 
+import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.example.mollyapi.product.dto.*;
+import org.example.mollyapi.product.enums.OrderBy;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.SliceImpl;
@@ -58,7 +60,9 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
                         product.description,
                         productImage.url,
                         productImage.filename,
-                        product.createdAt
+                        product.createdAt,
+                        product.viewCount,
+                        product.purchaseCount
                 ))
                 .distinct()
                 .from(productItem)
@@ -73,7 +77,7 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
                         priceLt(condition.getPriceLt()),
                         sellerIdEq(condition.getSellerId())
                 )
-                .orderBy(product.createdAt.desc())
+                .orderBy(orderByCondition(condition.getOrderBy()))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize() + 1)
                 .fetch();
@@ -113,7 +117,13 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
         return sellerId != null? product.user.userId.eq(sellerId) : null;
     }
 
-    private BooleanExpression getThumbnail() {
-        return productImage.isRepresentative.eq(true);
+    private OrderSpecifier<?> orderByCondition(OrderBy orderBy) {
+        if (orderBy != null) {
+            return switch (orderBy) {
+                case CREATED_AT -> product.category.createdAt.desc();
+                case VIEW_COUNT -> product.viewCount.desc();
+            };
+        }
+        return product.createdAt.desc();
     }
 }

@@ -2,6 +2,7 @@ package org.example.mollyapi.product.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.example.mollyapi.product.enums.OrderBy;
 
 import java.util.List;
 
@@ -16,4 +17,6 @@ public class ProductFilterCondition {
     Long priceGoe;
     Long priceLt;
     Long sellerId;
+
+    OrderBy orderBy;
 }

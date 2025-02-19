@@ -17,6 +17,7 @@ import org.example.mollyapi.product.dto.ProductFilterCondition;
 import org.example.mollyapi.product.dto.response.ListResDto;
 import org.example.mollyapi.product.dto.response.PageResDto;
 import org.example.mollyapi.product.entity.Category;
+import org.example.mollyapi.product.enums.OrderBy;
 import org.example.mollyapi.product.service.CategoryService;
 import org.example.mollyapi.product.service.ProductService;
 import org.example.mollyapi.product.dto.request.ProductReqDto;
@@ -46,7 +47,9 @@ public class ProductControllerImpl {
     @GetMapping
     @Operation(summary = "상품 정보 목록",
             description = "상품 정보와 옵션별 상품 아이템 데이터 조회,  " +
-                    "파라미터 예시: ?categories=여성,아우터")
+                    "파라미터 예시: ?categories=여성,아우터,  " +
+                    "priceGoe= ~이상, priceLt= ~미만"
+    )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "상품 목록 반환",
                     content = @Content(schema = @Schema(implementation = ListResDto.class))),
@@ -61,6 +64,7 @@ public class ProductControllerImpl {
             @RequestParam(required = false) String brandName,
             @RequestParam(required = false) Long priceGoe,
             @RequestParam(required = false) Long priceLt,
+            @RequestParam(required = false) OrderBy orderBy,
             @RequestParam int page,
             @RequestParam int size
     ) {
@@ -80,7 +84,8 @@ public class ProductControllerImpl {
                 brandName,
                 priceGoe,
                 priceLt,
-                null
+                null,
+                orderBy
         );
 
         Slice<ProductResDto> products = productService.getAllProducts(condition, pageRequest);
@@ -103,9 +108,11 @@ public class ProductControllerImpl {
 
     @Auth
     @GetMapping("/seller")
-    @Operation(summary = "상품 정보 목록",
+    @Operation(summary = "상품 정보 목록(판매자용)",
             description = "상품 정보와 옵션별 상품 아이템 데이터 조회,  " +
-                    "파라미터 예시: ?categories=여성,아우터")
+                    "파라미터 예시: ?categories=여성,아우터,  " +
+                    "priceGoe= ~이상, priceLt= ~미만"
+    )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "상품 목록 반환",
                     content = @Content(schema = @Schema(implementation = ListResDto.class))),
@@ -121,6 +128,7 @@ public class ProductControllerImpl {
             @RequestParam(required = false) String brandName,
             @RequestParam(required = false) Long priceGoe,
             @RequestParam(required = false) Long priceLt,
+            @RequestParam(required = false) OrderBy orderBy,
             @RequestParam int page,
             @RequestParam int size
     ) {
@@ -142,7 +150,8 @@ public class ProductControllerImpl {
                 brandName,
                 priceGoe,
                 priceLt,
-                userId
+                userId,
+                orderBy
         );
 
         Slice<ProductResDto> products = productService.getAllProducts(condition, pageRequest);
@@ -184,11 +193,12 @@ public class ProductControllerImpl {
     }
 
     @GetMapping("/popular-brand")
-    @Operation(summary = "상품 정보 및 상품아이템 목록", description = "상품 정보와 옵션별 상품 아이템 데이터 조회")
+    @Operation(summary = "인기 브랜드 목록 조회", description = "브랜드별 조회수가 높은 순으로 조회")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "성공",
-                    content = @Content(schema = @Schema(implementation = ProductResDto.class))),
-            @ApiResponse(responseCode = "204", description = "조회 데이터 없음", content = @Content(schema = @Schema(type = "string", example = ""))),
+            @ApiResponse(responseCode = "200", description = "상품 목록 반환",
+                    content = @Content(schema = @Schema(implementation = ListResDto.class))),
+            @ApiResponse(responseCode = "204", description = "조회 데이터 없음",
+                    content = @Content(schema = @Schema(type = "string", example = ""))),
             @ApiResponse(responseCode = "400", description = "실패",
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
     })
