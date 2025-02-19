@@ -77,6 +77,10 @@ public class Order {
         this.status = status;
     }
 
+    public void setCancelStatus(CancelStatus cancelStatus) {
+        this.cancelStatus = cancelStatus;
+    }
+
     public void updateOrderedAt(LocalDateTime paymentTime) { // 결제 후 주문 일시 업데이트
         this.orderedAt = paymentTime;
     }
