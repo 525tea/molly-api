@@ -5,20 +5,26 @@ import org.example.mollyapi.common.exception.CustomException;
 import org.example.mollyapi.order.entity.OrderDetail;
 import org.example.mollyapi.order.repository.OrderDetailRepository;
 import org.example.mollyapi.product.dto.UploadFile;
+import org.example.mollyapi.product.dto.response.ListResDto;
+import org.example.mollyapi.product.dto.response.PageResDto;
 import org.example.mollyapi.product.entity.Product;
 import org.example.mollyapi.product.file.FileStore;
 import org.example.mollyapi.product.repository.ProductRepository;
 import org.example.mollyapi.review.dto.request.AddReviewReqDto;
 import org.example.mollyapi.review.dto.response.GetMyReviewResDto;
 import org.example.mollyapi.review.dto.response.GetReviewResDto;
-import org.example.mollyapi.review.dto.response.MyReviewInfo;
-import org.example.mollyapi.review.dto.response.ReviewInfo;
+import org.example.mollyapi.review.dto.response.MyReviewInfoDto;
+import org.example.mollyapi.review.dto.response.ReviewInfoDto;
 import org.example.mollyapi.review.entity.Review;
 import org.example.mollyapi.review.entity.ReviewImage;
 import org.example.mollyapi.review.repository.ReviewImageRepository;
 import org.example.mollyapi.review.repository.ReviewRepository;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,7 +46,6 @@ public class ReviewService {
     private final ProductRepository productRep;
     private final OrderDetailRepository orderDetailRep;
     private final ReviewRepository reviewRep;
-    private final ReviewImageRepository reviewImageRep;
 
     /**
      * 리뷰 작성 기능
@@ -105,25 +110,35 @@ public class ReviewService {
      * @return reviewResDtoList 리뷰 정보를 담은 DtoList
      * */
     @Transactional
-    public ResponseEntity<?> getReviewList(Long productId, Long userId) {
+    public ResponseEntity<?> getReviewList(PageRequest pageRequest, Long productId, Long userId) {
         // 상품 존재 여부 체크
         Product product = productRep.findById(productId)
                 .orElseThrow(() -> new CustomException(NOT_EXISTS_PRODUCT));
 
         // 해당 상품의 리뷰 정보 조회
-        List<ReviewInfo> reviewInfoList = reviewRep.getReviewInfo(productId, userId);
+        Slice<ReviewInfoDto> reviewInfoList = reviewRep.getReviewInfo(pageRequest, productId, userId);
         if(reviewInfoList.isEmpty()) throw new CustomException(NOT_EXIST_REVIEW);
 
         // Response로 전달할 상품 리뷰 정보 담기
         List<GetReviewResDto> reviewResDtoList = new ArrayList<>();
-        for(ReviewInfo info : reviewInfoList) {
+        for(ReviewInfoDto info : reviewInfoList) {
             List<String> images = reviewRep.getImageList(info.reviewId());
             if(images.isEmpty()) continue;
 
             // 리스트에 리뷰 정보 담기
             reviewResDtoList.add(new GetReviewResDto(info, images));
         }
-        return ResponseEntity.ok(reviewResDtoList);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new ListResDto(
+                        new PageResDto(
+                                (long) reviewInfoList.getContent().size(),
+                                reviewInfoList.hasNext(),
+                                reviewInfoList.isFirst(),reviewInfoList.isLast()
+                        ),
+                        reviewInfoList.getContent()
+                ));
     }
 
     /**
@@ -131,18 +146,18 @@ public class ReviewService {
      * @param userId 사용자 PK
      * @return myReviewResDtoList 사용자 본인이 작성한 리뷰 정보를 담은 DtoList
      * */
-    public ResponseEntity<?> getMyReviewList(Long userId) {
+    public ResponseEntity<?> getMyReviewList(Pageable pageable, Long userId) {
         // 가입된 사용자 여부 체크
         boolean existsUser = userRep.existsById(userId);
         if(!existsUser) throw new CustomException(NOT_EXISTS_USER);
 
         // 사용자 본인이 작성한 리뷰 정보 조회
-        List<MyReviewInfo> myReviewInfoList = reviewRep.getMyReviewInfo(userId);
+        Slice<MyReviewInfoDto> myReviewInfoList = reviewRep.getMyReviewInfo(pageable, userId);
         if(myReviewInfoList.isEmpty()) throw new CustomException(NOT_EXIST_REVIEW);
 
         // Response로 전달할 상품 리뷰 정보 담기
         List<GetMyReviewResDto> myReviewResDtoList = new ArrayList<>();
-        for(MyReviewInfo info : myReviewInfoList) {
+        for(MyReviewInfoDto info : myReviewInfoList) {
             List<String> images = reviewRep.getImageList(info.reviewId());
             if(images.isEmpty()) continue;
 

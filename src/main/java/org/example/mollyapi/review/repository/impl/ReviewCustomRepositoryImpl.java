@@ -4,9 +4,12 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.example.mollyapi.review.dto.response.MyReviewInfo;
-import org.example.mollyapi.review.dto.response.ReviewInfo;
+import org.example.mollyapi.review.dto.response.MyReviewInfoDto;
+import org.example.mollyapi.review.dto.response.ReviewInfoDto;
 import org.example.mollyapi.review.repository.ReviewCustomRepository;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 
 import java.util.List;
 
@@ -21,16 +24,16 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<ReviewInfo> getReviewInfo(Long productId, Long userId) {
-        return jpaQueryFactory.select(
-                        Projections.constructor(ReviewInfo.class,
-                                review.id,
-                                review.content,
-                                user.nickname,
-                                user.profileImage,
-                                reviewLike.isLike.coalesce(Boolean.FALSE).as("isLike"),
-                                Expressions.stringTemplate("DATE_FORMAT({0}, '%Y-%m-%d')", review.createdAt)
-                        )).from(review)
+    public Slice<ReviewInfoDto> getReviewInfo(Pageable pageable, Long productId, Long userId) {
+         List<ReviewInfoDto> infoList = jpaQueryFactory.select(
+                Projections.constructor(ReviewInfoDto.class,
+                        review.id,
+                        review.content,
+                        user.nickname,
+                        user.profileImage,
+                        reviewLike.isLike.coalesce(Boolean.FALSE).as("isLike"),
+                        Expressions.stringTemplate("DATE_FORMAT({0}, '%Y-%m-%d')", review.createdAt)
+                )).from(review)
                 .innerJoin(review.user, user)
                 .leftJoin(reviewLike).on(review.id.eq(reviewLike.review.id)
                         .and(reviewLike.user.userId.eq(userId)))
@@ -38,6 +41,13 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
                         .and(review.isDeleted.eq(Boolean.FALSE)))
                 .orderBy(review.createdAt.desc())
                 .fetch();
+
+         boolean hasNext = false;
+         if (infoList.size() > pageable.getPageSize()) {
+             infoList.remove(pageable.getPageSize());
+            hasNext = true;
+        }
+        return new SliceImpl<ReviewInfoDto>(infoList, pageable, hasNext);
     }
 
     @Override
@@ -50,9 +60,9 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
     }
 
     @Override
-    public List<MyReviewInfo> getMyReviewInfo(Long userId) {
-        return jpaQueryFactory.select(
-                Projections.constructor(MyReviewInfo.class,
+    public Slice<MyReviewInfoDto> getMyReviewInfo(Pageable pageable, Long userId) {
+        List<MyReviewInfoDto> infoList = jpaQueryFactory.select(
+                Projections.constructor(MyReviewInfoDto.class,
                         review.id,
                         review.content,
                         review.product.id,
@@ -66,5 +76,13 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
                         .and(review.user.userId.eq(userId)))
                 .orderBy(review.createdAt.desc())
                 .fetch();
+
+        boolean hasNext = false;
+        if (infoList.size() > pageable.getPageSize()) {
+            infoList.remove(pageable.getPageSize());
+            hasNext = true;
+        }
+        return new SliceImpl<MyReviewInfoDto>(infoList, pageable, hasNext);
+
     }
 }
