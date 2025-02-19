@@ -32,7 +32,8 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderDetail> orderDetails;
 
-    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "delivery_id") // FK 설정
     private Delivery delivery;
 
     @Column(nullable = false)
@@ -107,7 +108,9 @@ public class Order {
 
     public void setDelivery(Delivery delivery) {
         this.delivery = delivery;
-        delivery.setOrder(this); // 양방향 관계 설정
+        if (delivery != null && delivery.getOrder() != this) {
+            delivery.setOrder(this);
+        }
     }
 
     public void setPointSave(int point) {

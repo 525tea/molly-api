@@ -198,6 +198,11 @@ public class PaymentServiceImpl implements PaymentService {
 //
 //    }
     public void successPayment(Payment payment, String tossOrderId, Integer point, String deliveryInfoJson) {
+        // deliveryInfoJson이 null인지 확인
+        if (deliveryInfoJson == null || deliveryInfoJson.isEmpty()) {
+            log.error("deliveryInfoJson이 null이거나 비어 있습니다");
+        }
+
         //payment status change
         payment.successPayment(point);
         //order success (field update, point usage)
