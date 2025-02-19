@@ -8,8 +8,6 @@ import org.example.mollyapi.review.dto.response.MyReviewInfoDto;
 import org.example.mollyapi.review.dto.response.ReviewInfoDto;
 import org.example.mollyapi.review.repository.ReviewCustomRepository;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
 
 import java.util.List;
 
@@ -24,8 +22,8 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public Slice<ReviewInfoDto> getReviewInfo(Pageable pageable, Long productId, Long userId) {
-         List<ReviewInfoDto> infoList = jpaQueryFactory.select(
+    public List<ReviewInfoDto> getReviewInfo(Pageable pageable, Long productId, Long userId) {
+        return jpaQueryFactory.select(
                 Projections.constructor(ReviewInfoDto.class,
                         review.id,
                         review.content,
@@ -40,14 +38,9 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
                 .where(review.product.id.eq(productId)
                         .and(review.isDeleted.eq(Boolean.FALSE)))
                 .orderBy(review.createdAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize() + 1)
                 .fetch();
-
-         boolean hasNext = false;
-         if (infoList.size() > pageable.getPageSize()) {
-             infoList.remove(pageable.getPageSize());
-            hasNext = true;
-        }
-        return new SliceImpl<ReviewInfoDto>(infoList, pageable, hasNext);
     }
 
     @Override
@@ -60,8 +53,8 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
     }
 
     @Override
-    public Slice<MyReviewInfoDto> getMyReviewInfo(Pageable pageable, Long userId) {
-        List<MyReviewInfoDto> infoList = jpaQueryFactory.select(
+    public List<MyReviewInfoDto> getMyReviewInfo(Pageable pageable, Long userId) {
+        return jpaQueryFactory.select(
                 Projections.constructor(MyReviewInfoDto.class,
                         review.id,
                         review.content,
@@ -76,13 +69,6 @@ public class ReviewCustomRepositoryImpl implements ReviewCustomRepository {
                         .and(review.user.userId.eq(userId)))
                 .orderBy(review.createdAt.desc())
                 .fetch();
-
-        boolean hasNext = false;
-        if (infoList.size() > pageable.getPageSize()) {
-            infoList.remove(pageable.getPageSize());
-            hasNext = true;
-        }
-        return new SliceImpl<MyReviewInfoDto>(infoList, pageable, hasNext);
 
     }
 }
