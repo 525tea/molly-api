@@ -16,7 +16,6 @@ import org.example.mollyapi.order.repository.OrderDetailRepository;
 import org.example.mollyapi.order.type.CancelStatus;
 import org.example.mollyapi.order.type.OrderStatus;
 import org.example.mollyapi.payment.repository.PaymentRepository;
-import org.example.mollyapi.payment.service.PaymentService;
 import org.example.mollyapi.product.entity.Product;
 import org.example.mollyapi.product.entity.ProductItem;
 import org.example.mollyapi.product.repository.ProductItemRepository;
