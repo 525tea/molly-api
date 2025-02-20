@@ -2,12 +2,14 @@ package org.example.mollyapi.product.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.example.mollyapi.product.client.ImageClient;
 import org.example.mollyapi.product.dto.*;
 import org.example.mollyapi.product.dto.response.*;
 import org.example.mollyapi.product.entity.Category;
 import org.example.mollyapi.product.entity.Product;
 import org.example.mollyapi.product.entity.ProductImage;
 import org.example.mollyapi.product.entity.ProductItem;
+import org.example.mollyapi.product.enums.ImageType;
 import org.example.mollyapi.product.file.FileStore;
 import org.example.mollyapi.product.repository.CategoryRepository;
 import org.example.mollyapi.product.repository.ProductItemRepository;
@@ -29,7 +31,7 @@ import java.util.stream.Collectors;
 public class ProductServiceImpl implements ProductService {
 
     private final CategoryService categoryService;
-    private final FileStore fileStore;
+    private final ImageClient imageClient;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final ProductItemRepository productItemRepository;
@@ -121,14 +123,16 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private Product registerThumbnail(Product product, MultipartFile thumbnailImage) {
-        UploadFile uploadFile = fileStore.storeFile(thumbnailImage);
+//        UploadFile uploadFile = fileStore.storeFile(thumbnailImage);
+        UploadFile uploadFile = imageClient.upload(ImageType.PRODUCT ,thumbnailImage).orElseThrow();
         ProductImage thumbnail = ProductImage.createThumbnail(product, uploadFile);
         product.addImage(thumbnail);
         return product;
     }
 
     private Product registerProductImages(Product product, List<MultipartFile> productImages) {
-        List<UploadFile> uploadFiles = fileStore.storeFiles(productImages);
+//        List<UploadFile> uploadFiles = fileStore.storeFiles(productImages);
+        List<UploadFile> uploadFiles = imageClient.upload(ImageType.PRODUCT ,productImages);
         for (int i = 0; i < uploadFiles.size(); i++) {
             UploadFile uploadFile = uploadFiles.get(i);
             ProductImage productImage = ProductImage.createProductImage(product, uploadFile, i+1);
@@ -137,8 +141,9 @@ public class ProductServiceImpl implements ProductService {
         return product;
     }
 
-    private Product regsierDescriptionImages(Product product, List<MultipartFile> productImages) {
-        List<UploadFile> uploadFiles = fileStore.storeFiles(productImages);
+    private Product regsierDescriptionImages(Product product, List<MultipartFile> descriptionImages) {
+//        List<UploadFile> uploadFiles = fileStore.storeFiles(descriptionImages);
+        List<UploadFile> uploadFiles = imageClient.upload(ImageType.PRODUCT ,descriptionImages);
         for (int i = 0; i < uploadFiles.size(); i++) {
             UploadFile uploadFile = uploadFiles.get(i);
             ProductImage productImage = ProductImage.createDescriptionImage(product, uploadFile, i);

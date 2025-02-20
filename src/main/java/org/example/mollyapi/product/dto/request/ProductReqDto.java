@@ -5,12 +5,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.example.mollyapi.product.dto.ProductDto;
 import org.example.mollyapi.product.dto.ProductItemDto;
-import org.example.mollyapi.product.entity.Product;
 
 import java.util.List;
 
 public record ProductReqDto(
-        Long id,
+//        Long id,
         @NotNull(message = "카테고리는 필수입니다")
             List<@NotBlank(message = "카테고리명은 공백일 수 없습니다") String> categories,
 
@@ -31,7 +30,8 @@ public record ProductReqDto(
             ) {
         static public ProductDto from(ProductReqDto productReqDto) {
             return new ProductDto(
-                    productReqDto.id(),
+//                    productReqDto.id(),
+                    null,
                     productReqDto.categories(),
                     productReqDto.brandName(),
                     productReqDto.productName(),
