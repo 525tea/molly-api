@@ -1,7 +1,7 @@
 package org.example.mollyapi.product.file;
 
 import lombok.RequiredArgsConstructor;
-import org.example.mollyapi.product.client.ImageClient;
+import org.example.mollyapi.common.client.ImageClient;
 import org.example.mollyapi.product.dto.UploadFile;
 import org.example.mollyapi.product.enums.ImageType;
 import org.springframework.http.HttpEntity;
