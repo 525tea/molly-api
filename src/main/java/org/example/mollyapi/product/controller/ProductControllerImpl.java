@@ -70,11 +70,13 @@ public class ProductControllerImpl {
     ) {
         PageRequest pageRequest = PageRequest.of(page, size);
 
-        List<Long> categoryIdList = new ArrayList<>();
-        List<String> categoriesList = categories == null ? null : Arrays.asList(categories.split(","));
-        if (categoriesList != null) {
-            Category category = categoryService.getCategory(categoriesList);
-            categoryIdList = categoryService.getLeafCategories(category).stream().map(Category::getId).toList();
+        List<String> categoryPath = categories == null ? null : Arrays.asList(categories.split(","));
+        List<Category> categoryListEndWith = categoryService.findEndWith(categoryPath);
+
+        List<Long> categoryIdList  = new ArrayList<>();
+        for (Category categoryEndWith : categoryListEndWith) {
+            List<Long> longList = categoryService.getLeafCategories(categoryEndWith).stream().map(Category::getId).toList();
+            categoryIdList.addAll(longList);
         }
 
         ProductFilterCondition condition = new ProductFilterCondition(
@@ -135,12 +137,13 @@ public class ProductControllerImpl {
         Long userId = (Long) request.getAttribute("userId");
         PageRequest pageRequest = PageRequest.of(page, size);
 
-        List<Long> categoryIdList = new ArrayList<>();
-        List<String> categoriesList = categories == null ? null : Arrays.asList(categories.split(","));
+        List<String> categoryPath = categories == null ? null : Arrays.asList(categories.split(","));
+        List<Category> categoryListEndWith = categoryService.findEndWith(categoryPath);
 
-        if (categoriesList != null) {
-            Category category = categoryService.getCategory(categoriesList);
-            categoryIdList = categoryService.getLeafCategories(category).stream().map(Category::getId).toList();
+        List<Long> categoryIdList  = new ArrayList<>();
+        for (Category categoryEndWith : categoryListEndWith) {
+            List<Long> longList = categoryService.getLeafCategories(categoryEndWith).stream().map(Category::getId).toList();
+            categoryIdList.addAll(longList);
         }
 
         ProductFilterCondition condition = new ProductFilterCondition(
