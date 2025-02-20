@@ -71,17 +71,21 @@ public class ProductControllerImpl {
         PageRequest pageRequest = PageRequest.of(page, size);
 
         List<String> categoryPath = categories == null ? null : Arrays.asList(categories.split(","));
-        List<Category> categoryListEndWith = categoryService.findEndWith(categoryPath);
 
-        List<Long> categoryIdList  = new ArrayList<>();
-        for (Category categoryEndWith : categoryListEndWith) {
-            List<Long> longList = categoryService.getLeafCategories(categoryEndWith).stream().map(Category::getId).toList();
-            categoryIdList.addAll(longList);
+        List<Long> categoryIdList = null;
+        if (categoryPath != null) {
+            categoryIdList = new ArrayList<>();
+            List<Category> categoryListEndWith = categoryService.findEndWith(categoryPath);
+
+            for (Category categoryEndWith : categoryListEndWith) {
+                List<Long> longList = categoryService.getLeafCategories(categoryEndWith).stream().map(Category::getId).toList();
+                categoryIdList.addAll(longList);
+            }
         }
 
         ProductFilterCondition condition = new ProductFilterCondition(
-                colorCode,
-                productSize,
+                colorCode!=null?Arrays.asList(colorCode.split(",")):null,
+                productSize!=null?Arrays.asList(productSize.split(",")):null,
                 categoryIdList,
                 brandName,
                 priceGoe,
@@ -138,17 +142,21 @@ public class ProductControllerImpl {
         PageRequest pageRequest = PageRequest.of(page, size);
 
         List<String> categoryPath = categories == null ? null : Arrays.asList(categories.split(","));
-        List<Category> categoryListEndWith = categoryService.findEndWith(categoryPath);
 
-        List<Long> categoryIdList  = new ArrayList<>();
-        for (Category categoryEndWith : categoryListEndWith) {
-            List<Long> longList = categoryService.getLeafCategories(categoryEndWith).stream().map(Category::getId).toList();
-            categoryIdList.addAll(longList);
+        List<Long> categoryIdList = null;
+        if (categoryPath != null) {
+            categoryIdList = new ArrayList<>();
+            List<Category> categoryListEndWith = categoryService.findEndWith(categoryPath);
+
+            for (Category categoryEndWith : categoryListEndWith) {
+                List<Long> longList = categoryService.getLeafCategories(categoryEndWith).stream().map(Category::getId).toList();
+                categoryIdList.addAll(longList);
+            }
         }
 
         ProductFilterCondition condition = new ProductFilterCondition(
-                colorCode,
-                productSize,
+                colorCode!=null?Arrays.asList(colorCode.split(",")):null,
+                productSize!=null?Arrays.asList(productSize.split(",")):null,
                 categoryIdList,
                 brandName,
                 priceGoe,
