@@ -2,6 +2,9 @@ package org.example.mollyapi.search.controller;
 
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -9,9 +12,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.example.mollyapi.search.dto.ItemDto;
 import org.example.mollyapi.search.dto.SearchItemResDto;
 import org.example.mollyapi.search.service.SearchService;
-import org.example.mollyapi.user.dto.GetUserInfoResDto;
 import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -37,12 +40,24 @@ public class SearchController {
             @ApiResponse(responseCode = "200", description = "성공",
                     content = @Content(schema = @Schema(implementation = SearchItemResDto.class))),
     })
-    public ResponseEntity<List<SearchItemResDto>> search(@RequestParam(required = false) String keyword,
-                                    @RequestParam(required = false) Long cursorId,
-                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime lastCreatedAt,
-                                    Pageable pageable) {
-        List<SearchItemResDto> result = searchService.searchItem(keyword, cursorId, lastCreatedAt, pageable);
+    public ResponseEntity<SearchItemResDto> search(@RequestParam(required = false) String keyword,
+                                                @RequestParam(required = false) Long cursorId,
+                                                @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime lastCreatedAt,
+                                                @RequestParam(required = false) Integer size) {
 
-        return ResponseEntity.ok(result);
+        int pageSize = 48;
+        if( size != null) {
+            pageSize = size;
+        }
+        SearchItemResDto searchItemResDto = searchService.searchItem(keyword, cursorId, lastCreatedAt, pageSize);
+
+        return ResponseEntity.ok(searchItemResDto);
     }
+
+//    @GetMapping("/auto")
+//    @Operation(summary = "검색어 자동 완성 기능", description = "검색어 자동 완성")
+//    @ApiResponses({
+//
+//    })
+//    public ResponseEntity<?> searchAuto(@RequestParam(required = false))
 }
