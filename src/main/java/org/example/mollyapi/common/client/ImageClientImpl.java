@@ -1,4 +1,4 @@
-package org.example.mollyapi.product.client;
+package org.example.mollyapi.common.client;
 
 import lombok.Data;
 import org.example.mollyapi.product.dto.UploadFile;
