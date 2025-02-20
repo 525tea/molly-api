@@ -1,6 +1,5 @@
 package org.example.mollyapi.product.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
