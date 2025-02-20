@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.mollyapi.common.exception.CustomErrorResponse;
 import org.example.mollyapi.order.dto.OrderCreateRequestDto;
 import org.example.mollyapi.order.dto.OrderHistoryResponseDto;
@@ -18,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+@Slf4j
 @RestController
 @RequestMapping("/orders")
 @RequiredArgsConstructor
@@ -33,6 +35,7 @@ public class OrderController {
     }
 
     @PostMapping("/{orderId}/cancel")
+    @Operation(summary = "주문 취소 API", description = "사용자의 요청으로 주문 프로세스를 종료")
     public ResponseEntity<String> cancelOrder(@PathVariable Long orderId,
                                               @RequestParam(required = false, defaultValue = "false") boolean isExpired) {
         String message = orderService.cancelOrder(orderId, isExpired);
@@ -61,5 +64,14 @@ public class OrderController {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(response);
+    }
+
+    @Auth
+    @PostMapping("/{orderId}/withdraw")
+    @Operation(summary = "주문 철회 요청 API", description = "주문 ID를 받아 주문 철회 요청")
+    public ResponseEntity<String> withdrawOrder(@PathVariable Long orderId) {
+        log.info("주문 철회 요청: orderId={}", orderId);
+        orderService.withdrawOrder(orderId);
+        return ResponseEntity.ok("주문 철회가 완료되었습니다.");
     }
 }

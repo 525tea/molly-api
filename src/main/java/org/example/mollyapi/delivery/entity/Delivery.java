@@ -56,4 +56,11 @@ public class Delivery {
         order.setDelivery(delivery); // 주문과 배송 연결
         return delivery;
     }
+
+    public void setOrder(Order order) {
+        this.order = order;
+        if (order != null && order.getDelivery() != this) {
+            order.setDelivery(this);
+        }
+    }
 }
