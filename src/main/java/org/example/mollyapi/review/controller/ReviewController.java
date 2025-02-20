@@ -34,19 +34,19 @@ public class ReviewController {
 
     @Auth
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "리뷰내역 작성 API", description = "배송완료된 상품의 리뷰를 작성할 수 있습니다.")
+    @Operation(summary = "리뷰내역 작성 API", description = "배송완료된 상품의 리뷰를 작성할 수 있습니다. id = order_detail_id")
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "리뷰 등록 성공",
                     content = @Content(schema = @Schema(implementation = CommonResDto.class))),
             @ApiResponse(responseCode = "400", description = "1. 존재 하지 않는 사용자 \t\n 2. 주문 상세 조회 불가",
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
     })
-    public ResponseEntity<?> addReview(
+    public ResponseEntity<?> registerReview(
             @Valid @RequestPart("review") AddReviewReqDto addReviewReqDto,
             @RequestPart(value = "reviewImages", required = false) List<MultipartFile> uploadImages,
             HttpServletRequest request){
         Long userId = (Long) request.getAttribute("userId");
-        reviewService.addReview(addReviewReqDto, uploadImages, userId);
+        reviewService.registerReview(addReviewReqDto, uploadImages, userId);
         return ResponseEntity.status(HttpStatusCode.valueOf(204)).body(
                 new CommonResDto("리뷰 등록에 성공했습니다."));
     }
@@ -97,7 +97,7 @@ public class ReviewController {
 
     @Auth
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @Operation(summary = "리뷰 수정 API", description = "자신이 작성한 리뷰 내역을 수정할 수 있습니다.")
+    @Operation(summary = "리뷰 수정 API", description = "자신이 작성한 리뷰 내역을 수정할 수 있습니다. id = review_id")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "리뷰 수정 성공",
                     content = @Content(schema = @Schema(implementation = CommonResDto.class))),

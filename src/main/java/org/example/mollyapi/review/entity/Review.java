@@ -45,6 +45,10 @@ public class Review extends Base {
     private List<ReviewImage> reviewImages = new ArrayList<>(); //리뷰 이미지 리스트
 
 
+    public void addImage(ReviewImage reviewImage) {
+        this.reviewImages.add(reviewImage);
+    }
+
     public void updateImages(List<ReviewImage> reviewImage) {
         this.reviewImages = reviewImage;
     }
