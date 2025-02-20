@@ -48,7 +48,8 @@ public class ProductControllerImpl {
     @Operation(summary = "상품 정보 목록",
             description = "상품 정보와 옵션별 상품 아이템 데이터 조회,  " +
                     "파라미터 예시: ?categories=여성,아우터,  " +
-                    "priceGoe= ~이상, priceLt= ~미만"
+                    "priceGoe= ~이상, priceLt= ~미만, " +
+                    "colorCode, productSize 복수선택가능(쉼표(,)로 구분), 예시: L,XL / #8D429F,#1790C8"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "상품 목록 반환",
@@ -117,7 +118,8 @@ public class ProductControllerImpl {
     @Operation(summary = "상품 정보 목록(판매자용)",
             description = "상품 정보와 옵션별 상품 아이템 데이터 조회,  " +
                     "파라미터 예시: ?categories=여성,아우터,  " +
-                    "priceGoe= ~이상, priceLt= ~미만"
+                    "priceGoe= ~이상, priceLt= ~미만, " +
+                    "colorCode, productSize 복수선택가능(쉼표(,)로 구분), 예시: L,XL / #8D429F,#1790C8"
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "상품 목록 반환",
