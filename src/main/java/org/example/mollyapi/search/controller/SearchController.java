@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.example.mollyapi.search.dto.AutoWordResDto;
 import org.example.mollyapi.search.dto.ItemDto;
 import org.example.mollyapi.search.dto.SearchItemResDto;
 import org.example.mollyapi.search.service.SearchService;
@@ -54,10 +55,14 @@ public class SearchController {
         return ResponseEntity.ok(searchItemResDto);
     }
 
-//    @GetMapping("/auto")
-//    @Operation(summary = "검색어 자동 완성 기능", description = "검색어 자동 완성")
-//    @ApiResponses({
-//
-//    })
-//    public ResponseEntity<?> searchAuto(@RequestParam(required = false))
+    @GetMapping("/auto")
+    @Operation(summary = "검색어 자동 완성 기능", description = "검색어 자동 완성")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공",
+                    content = @Content(schema = @Schema(implementation = AutoWordResDto.class))),
+    })
+    public ResponseEntity<AutoWordResDto> searchWord(@RequestParam(required = false) String keyword){
+        AutoWordResDto result = searchService.searchWord(keyword);
+        return ResponseEntity.ok(result);
+    }
 }

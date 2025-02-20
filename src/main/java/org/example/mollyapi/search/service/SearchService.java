@@ -3,9 +3,11 @@ package org.example.mollyapi.search.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.mollyapi.product.repository.ProductRepository;
+import org.example.mollyapi.search.dto.AutoWordResDto;
 import org.example.mollyapi.search.dto.ItemDto;
 import org.example.mollyapi.search.dto.SearchItemResDto;
 import org.example.mollyapi.search.entity.Search;
+import org.example.mollyapi.search.repository.SearchCustomRepository;
 import org.example.mollyapi.search.repository.SearchRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -36,6 +38,11 @@ public class SearchService {
         search.increaseCount();
         searchRepository.save(search);
 
-        return productRepository.search(keyword, cursorId, lastCreatedAt, pageSize);
+        return searchRepository.search(keyword, cursorId, lastCreatedAt, pageSize);
+    }
+
+    public AutoWordResDto searchWord(String keyword) {
+
+        return searchRepository.searchAutoWord(keyword);
     }
 }
