@@ -2,19 +2,13 @@ package org.example.mollyapi.search.repository.impl;
 
 import com.querydsl.core.BooleanBuilder;
 
-import com.querydsl.core.types.Order;
-import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.PathBuilder;
-import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.example.mollyapi.product.entity.Product;
 import org.example.mollyapi.search.dto.AutoWordResDto;
+import org.example.mollyapi.search.dto.ItemDto;
 import org.example.mollyapi.search.dto.SearchItemResDto;
 import org.example.mollyapi.search.repository.SearchCustomRepository;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 
 import java.time.LocalDateTime;
@@ -30,55 +24,80 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<SearchItemResDto> search(String keyword,
+    public SearchItemResDto search(String keyword,
                                          Long cursorId,
                                          LocalDateTime lastCreatedAt,
-                                         Pageable pageable) {
+                                         int pageSize) {
 
         BooleanBuilder condition = new BooleanBuilder();
         String likeKeyword = "%" + keyword + "%";
+
         if (keyword != null && !keyword.isEmpty()) {
-
-//            // 대소문자 무시
-//            condition.or(product.productName.likeIgnoreCase(likeKeyword))
-//                    .or(product.brandName.likeIgnoreCase(likeKeyword))
-//                    .or(product.description.likeIgnoreCase(likeKeyword));
-
             //값이 있을 때만, 검색
             condition.or(product.productName.like(likeKeyword))
                     .or(product.brandName.like(likeKeyword))
                     .or(product.description.like(likeKeyword));
-
         }
 
         // 값 중복을 피하기 위한 조건 값
         if (lastCreatedAt != null && cursorId != null) {
-
-            condition.and(product.createdAt.lt(lastCreatedAt))
-                    .or(
-                            product.createdAt.eq(lastCreatedAt)
-                                    .and(product.id.lt(cursorId)));
+            condition.and(
+                    product.createdAt.lt(lastCreatedAt)
+                            .or(
+                                    product.createdAt.eq(lastCreatedAt)
+                                            .and(product.id.lt(cursorId))
+                            )
+            );
+        } else {
+            // 첫 페이지의 경우 정렬을 명확히 하기 위해 createdAt, id 정렬 유지
+            condition.and(product.id.isNotNull());
         }
 
-        JPAQuery<SearchItemResDto> query = jpaQueryFactory
+        List<ItemDto> itemDtos = jpaQueryFactory
                 .select(
-                        Projections.constructor(SearchItemResDto.class,
+                        Projections.constructor(ItemDto.class,
                                 product.id,
                                 productImage.url,
                                 product.brandName,
                                 product.productName,
-                                product.price
+                                product.price,
+                                product.createdAt
                                 )
                 ).from(product)
                 .innerJoin(productImage).on(
                         productImage.product.id.eq(product.id)
                                 .and(productImage.isRepresentative.eq(true)))
+                .orderBy(product.createdAt.desc(), product.id.desc())
                 .where(condition)
-                .limit(pageable.getPageSize())
-                ;
+                .limit(pageSize + 1)
+                .fetch();
 
 
-        return query.fetch();
+        boolean isLastPage = itemDtos.size() <= pageSize;
+        if (!isLastPage) {
+            itemDtos.remove(itemDtos.size() - 1);
+        }
+
+
+        Long id = null;
+        LocalDateTime localDateTime = null;
+
+        if (!itemDtos.isEmpty()) {
+            ItemDto lastItemDto = itemDtos.get(itemDtos.size() - 1);
+            id = lastItemDto.id();
+            localDateTime = lastItemDto.lastCratedAt();
+        }
+
+        System.out.println("Condition: " + condition);
+        System.out.println("Query result size: " + itemDtos.size());
+        System.out.println("Is last page: " + isLastPage);
+
+        return new SearchItemResDto(
+                itemDtos,
+                id,
+                localDateTime,
+                isLastPage
+        );
     }
 
     @Override

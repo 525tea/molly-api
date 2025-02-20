@@ -3,6 +3,7 @@ package org.example.mollyapi.search.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.mollyapi.product.repository.ProductRepository;
+import org.example.mollyapi.search.dto.ItemDto;
 import org.example.mollyapi.search.dto.SearchItemResDto;
 import org.example.mollyapi.search.entity.Search;
 import org.example.mollyapi.search.repository.SearchRepository;
@@ -19,10 +20,10 @@ public class SearchService {
     private final ProductRepository productRepository;
     private final SearchRepository searchRepository;
 
-    public List<SearchItemResDto> searchItem(String keyword,
-                                             Long cursorId,
-                                             LocalDateTime lastCreatedAt,
-                                             Pageable pageable){
+    public SearchItemResDto searchItem(String keyword,
+                                    Long cursorId,
+                                    LocalDateTime lastCreatedAt,
+                                    int pageSize){
 
         Search search = searchRepository.findByKeyword(keyword)
                 .orElse(
@@ -33,9 +34,8 @@ public class SearchService {
                 );
 
         search.increaseCount();
-
         searchRepository.save(search);
 
-        return productRepository.search(keyword, cursorId, lastCreatedAt, pageable);
+        return productRepository.search(keyword, cursorId, lastCreatedAt, pageSize);
     }
 }
