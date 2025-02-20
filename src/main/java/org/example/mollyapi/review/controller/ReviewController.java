@@ -51,6 +51,7 @@ public class ReviewController {
                 new CommonResDto("리뷰 등록에 성공했습니다."));
     }
 
+    @Auth
     @GetMapping("/{productId}")
     @Operation(summary = "상품별 리뷰 내역 조회 API", description = "상품의 리뷰를 조회할 수 있습니다.")
     @ApiResponses({
