@@ -40,14 +40,14 @@ public class ReviewImage extends Base {
             boolean isVideo,
             Review review
     ) {
-        this.url = uploadFile.getUploadFileName();
-        this.filename = uploadFile.getStoredFileName();
+        this.url = uploadFile.getStoredFileName();
+        this.filename = uploadFile.getUploadFileName();
         this.imageIndex = imageIndex;
         this.isVideo = isVideo;
         this.review = review;
     }
 
-    public static ReviewImage createReviewImage(Review review, UploadFile uploadFile, Long idx) {
+    public static ReviewImage createReviewImage(Review review, UploadFile uploadFile, long idx) {
         return new ReviewImage(uploadFile, idx, false, review);
     }
 }
