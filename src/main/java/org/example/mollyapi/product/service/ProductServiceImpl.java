@@ -9,7 +9,7 @@ import org.example.mollyapi.product.entity.Category;
 import org.example.mollyapi.product.entity.Product;
 import org.example.mollyapi.product.entity.ProductImage;
 import org.example.mollyapi.product.entity.ProductItem;
-import org.example.mollyapi.product.enums.ImageType;
+import org.example.mollyapi.common.enums.ImageType;
 import org.example.mollyapi.product.repository.CategoryRepository;
 import org.example.mollyapi.product.repository.ProductItemRepository;
 import org.example.mollyapi.product.repository.ProductRepository;
