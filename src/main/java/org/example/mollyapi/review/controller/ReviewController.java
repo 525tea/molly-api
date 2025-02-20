@@ -16,6 +16,7 @@ import org.example.mollyapi.review.dto.response.GetMyReviewResDto;
 import org.example.mollyapi.review.dto.response.GetReviewResDto;
 import org.example.mollyapi.review.service.ReviewService;
 import org.example.mollyapi.user.auth.annotation.Auth;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -50,6 +51,7 @@ public class ReviewController {
                 new CommonResDto("리뷰 등록에 성공했습니다."));
     }
 
+    @Auth
     @GetMapping("/{productId}")
     @Operation(summary = "상품별 리뷰 내역 조회 API", description = "상품의 리뷰를 조회할 수 있습니다.")
     @ApiResponses({
@@ -62,11 +64,14 @@ public class ReviewController {
     })
     public ResponseEntity<?> getReviewList(
             @PathVariable Long productId,
+            @RequestParam int page,
+            @RequestParam int size,
             HttpServletRequest request
     ) {
         Long userId = (Long) request.getAttribute("userId");
         if(userId == null) userId = 0L;
-        return reviewService.getReviewList(productId, userId);
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return reviewService.getReviewList(pageRequest, productId, userId);
     }
 
     @Auth
@@ -80,9 +85,14 @@ public class ReviewController {
             @ApiResponse(responseCode = "400", description = "리뷰 조회 실패",
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
     })
-    public ResponseEntity<?> getMyReviewList(HttpServletRequest request) {
+    public ResponseEntity<?> getMyReviewList(
+            @RequestParam int page,
+            @RequestParam int size,
+            HttpServletRequest request
+    ) {
         Long userId = (Long) request.getAttribute("userId");
-        return reviewService.getMyReviewList(userId);
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return reviewService.getMyReviewList(pageRequest, userId);
     }
 
     @Auth

@@ -5,20 +5,24 @@ import org.example.mollyapi.common.exception.CustomException;
 import org.example.mollyapi.order.entity.OrderDetail;
 import org.example.mollyapi.order.repository.OrderDetailRepository;
 import org.example.mollyapi.product.dto.UploadFile;
+import org.example.mollyapi.product.dto.response.ListResDto;
+import org.example.mollyapi.product.dto.response.PageResDto;
 import org.example.mollyapi.product.entity.Product;
 import org.example.mollyapi.product.file.FileStore;
 import org.example.mollyapi.product.repository.ProductRepository;
 import org.example.mollyapi.review.dto.request.AddReviewReqDto;
 import org.example.mollyapi.review.dto.response.GetMyReviewResDto;
 import org.example.mollyapi.review.dto.response.GetReviewResDto;
-import org.example.mollyapi.review.dto.response.MyReviewInfo;
-import org.example.mollyapi.review.dto.response.ReviewInfo;
+import org.example.mollyapi.review.dto.response.MyReviewInfoDto;
+import org.example.mollyapi.review.dto.response.ReviewInfoDto;
 import org.example.mollyapi.review.entity.Review;
 import org.example.mollyapi.review.entity.ReviewImage;
-import org.example.mollyapi.review.repository.ReviewImageRepository;
 import org.example.mollyapi.review.repository.ReviewRepository;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.SliceImpl;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,7 +44,6 @@ public class ReviewService {
     private final ProductRepository productRep;
     private final OrderDetailRepository orderDetailRep;
     private final ReviewRepository reviewRep;
-    private final ReviewImageRepository reviewImageRep;
 
     /**
      * 리뷰 작성 기능
@@ -100,56 +103,100 @@ public class ReviewService {
 
     /**
      * 상품별 리뷰 조회
+     * @param pageable 페이지 처리에 필요한 정보를 담는 인터페이스
      * @param productId 상품 PK
      * @param userId 사용자 PK
      * @return reviewResDtoList 리뷰 정보를 담은 DtoList
      * */
     @Transactional
-    public ResponseEntity<?> getReviewList(Long productId, Long userId) {
+    public ResponseEntity<?> getReviewList(Pageable pageable, Long productId, Long userId) {
         // 상품 존재 여부 체크
-        Product product = productRep.findById(productId)
-                .orElseThrow(() -> new CustomException(NOT_EXISTS_PRODUCT));
+        boolean existsProduct = productRep.existsById(productId);
+        if(!existsProduct) throw new CustomException(NOT_EXISTS_PRODUCT);
 
         // 해당 상품의 리뷰 정보 조회
-        List<ReviewInfo> reviewInfoList = reviewRep.getReviewInfo(productId, userId);
+        List<ReviewInfoDto> reviewInfoList = reviewRep.getReviewInfo(pageable, productId, userId);
         if(reviewInfoList.isEmpty()) throw new CustomException(NOT_EXIST_REVIEW);
 
         // Response로 전달할 상품 리뷰 정보 담기
         List<GetReviewResDto> reviewResDtoList = new ArrayList<>();
-        for(ReviewInfo info : reviewInfoList) {
+        for(ReviewInfoDto info : reviewInfoList) {
             List<String> images = reviewRep.getImageList(info.reviewId());
             if(images.isEmpty()) continue;
 
-            // 리스트에 리뷰 정보 담기
+            // 리뷰 정보를 DTO에 추가
             reviewResDtoList.add(new GetReviewResDto(info, images));
         }
-        return ResponseEntity.ok(reviewResDtoList);
+
+        // 페이지네이션을 위한 hasNext 플래그 설정
+        boolean hasNext = false;
+        if (reviewResDtoList.size() > pageable.getPageSize()) {
+            reviewResDtoList.remove(pageable.getPageSize());
+            hasNext = true;
+        }
+
+        // Slice 형태로 리뷰 리스트 생성
+        SliceImpl<GetReviewResDto> sliceList = new SliceImpl<>(reviewResDtoList, pageable, hasNext);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new ListResDto(
+                        new PageResDto(
+                                (long) sliceList.getNumberOfElements(), // 현재 페이지 요소 개수
+                                sliceList.hasNext(), // 다음 페이지 존재 여부
+                                sliceList.isFirst(), // 첫 번째 페이지 여부
+                                sliceList.isLast() //마지막 페이지 여부
+                        ),
+                        sliceList.getContent()
+                ));
     }
 
     /**
      * 사용자 본인이 작성한 리뷰 조회
+     * @param pageable 페이지 처리에 필요한 정보를 담는 인터페이스
      * @param userId 사용자 PK
      * @return myReviewResDtoList 사용자 본인이 작성한 리뷰 정보를 담은 DtoList
      * */
-    public ResponseEntity<?> getMyReviewList(Long userId) {
+    public ResponseEntity<?> getMyReviewList(Pageable pageable, Long userId) {
         // 가입된 사용자 여부 체크
         boolean existsUser = userRep.existsById(userId);
         if(!existsUser) throw new CustomException(NOT_EXISTS_USER);
 
         // 사용자 본인이 작성한 리뷰 정보 조회
-        List<MyReviewInfo> myReviewInfoList = reviewRep.getMyReviewInfo(userId);
+        List<MyReviewInfoDto> myReviewInfoList = reviewRep.getMyReviewInfo(pageable, userId);
         if(myReviewInfoList.isEmpty()) throw new CustomException(NOT_EXIST_REVIEW);
 
         // Response로 전달할 상품 리뷰 정보 담기
         List<GetMyReviewResDto> myReviewResDtoList = new ArrayList<>();
-        for(MyReviewInfo info : myReviewInfoList) {
+        for(MyReviewInfoDto info : myReviewInfoList) {
             List<String> images = reviewRep.getImageList(info.reviewId());
             if(images.isEmpty()) continue;
 
             // 리스트에 리뷰 정보 담기
             myReviewResDtoList.add(new GetMyReviewResDto(info, images));
         }
-        return ResponseEntity.ok(myReviewResDtoList);
+
+        // 페이지네이션을 위한 hasNext 플래그 설정
+        boolean hasNext = false;
+        if (myReviewResDtoList.size() > pageable.getPageSize()) {
+            myReviewResDtoList.remove(pageable.getPageSize());
+            hasNext = true;
+        }
+
+        // Slice 형태로 리뷰 리스트 생성
+        SliceImpl<GetMyReviewResDto> sliceList = new SliceImpl<>(myReviewResDtoList, pageable, hasNext);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new ListResDto(
+                        new PageResDto(
+                                (long) sliceList.getNumberOfElements(), // 현재 페이지 요소 개수
+                                sliceList.hasNext(), // 다음 페이지 존재 여부
+                                sliceList.isFirst(), // 첫 번째 페이지 여부
+                                sliceList.isLast() //마지막 페이지 여부
+                        ),
+                        sliceList.getContent()
+                ));
     }
 
     /**
