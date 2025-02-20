@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.mollyapi.search.dto.AutoWordResDto;
 import org.example.mollyapi.search.dto.ItemDto;
 import org.example.mollyapi.search.dto.SearchItemResDto;
+import org.example.mollyapi.search.entity.QSearch;
 import org.example.mollyapi.search.repository.SearchCustomRepository;
 
 
@@ -16,6 +17,7 @@ import java.util.List;
 
 import static org.example.mollyapi.product.entity.QProduct.product;
 import static org.example.mollyapi.product.entity.QProductImage.*;
+import static org.example.mollyapi.search.entity.QSearch.*;
 
 
 @RequiredArgsConstructor
@@ -25,9 +27,9 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository {
 
     @Override
     public SearchItemResDto search(String keyword,
-                                         Long cursorId,
-                                         LocalDateTime lastCreatedAt,
-                                         int pageSize) {
+                                   Long cursorId,
+                                   LocalDateTime lastCreatedAt,
+                                   int pageSize) {
 
         BooleanBuilder condition = new BooleanBuilder();
         String likeKeyword = "%" + keyword + "%";
@@ -62,7 +64,7 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository {
                                 product.productName,
                                 product.price,
                                 product.createdAt
-                                )
+                        )
                 ).from(product)
                 .innerJoin(productImage).on(
                         productImage.product.id.eq(product.id)
@@ -102,7 +104,15 @@ public class SearchCustomRepositoryImpl implements SearchCustomRepository {
 
     @Override
     public AutoWordResDto searchAutoWord(String keyword) {
-        return null;
+
+        String likeKeyword = "%" + keyword + "%";
+        List<String> fetch = jpaQueryFactory.select(
+                        search.keyword
+                ).from(search)
+                .where(search.keyword.like(likeKeyword))
+                .limit(10)
+                .fetch();
+        return new AutoWordResDto(fetch);
     }
 
 
