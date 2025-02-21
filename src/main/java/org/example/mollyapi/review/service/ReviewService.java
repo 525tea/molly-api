@@ -18,6 +18,8 @@ import org.example.mollyapi.review.dto.response.MyReviewInfoDto;
 import org.example.mollyapi.review.dto.response.ReviewInfoDto;
 import org.example.mollyapi.review.entity.Review;
 import org.example.mollyapi.review.entity.ReviewImage;
+import org.example.mollyapi.review.repository.ReviewImageRepository;
+import org.example.mollyapi.review.repository.ReviewLikeRepository;
 import org.example.mollyapi.review.repository.ReviewRepository;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
@@ -45,6 +47,8 @@ public class ReviewService {
     private final ProductRepository productRep;
     private final OrderDetailRepository orderDetailRep;
     private final ReviewRepository reviewRep;
+    private final ReviewImageRepository reviewImageRep;
+    private final ReviewLikeRepository reviewLikeRep;
 
     /**
      * 리뷰 작성 기능
@@ -238,8 +242,16 @@ public class ReviewService {
         Review review = reviewRep.findByIdAndUserUserId(reviewId, userId)
                 .orElseThrow(() -> new CustomException(NOT_EXIST_REVIEW));
 
+        // 리뷰 삭제 여부 변경
         boolean isUpdate = review.updateIsDeleted(Boolean.TRUE);
         if(!isUpdate) throw new CustomException(FAIL_UPDATE);
+
+        // 리뷰와 연결된 이미지 삭제 - 이미지 서버(구현 예정)
+        // 리뷰와 연결된 이미지 삭제 - 테이블
+        // reviewImageRep.deleteAllByReviewId(reviewId);
+
+        // 리뷰와 연결된 좋아요 삭제
+        reviewLikeRep.deleteAllByReviewId(reviewId);
 
         return ResponseEntity.ok().body("리뷰 삭제에 성공했습니다.");
     }
@@ -254,7 +266,7 @@ public class ReviewService {
 
         for (int i = 0; i < uploadFiles.size(); i++) {
             UploadFile uploadFile = uploadFiles.get(i);
-            ReviewImage reviewImage = ReviewImage.createReviewImage(review, uploadFile, (long) i);
+            ReviewImage reviewImage = ReviewImage.createReviewImage(review, uploadFile, i);
             review.addImage(reviewImage);  // 리뷰에 이미지 추가
         }
     }
