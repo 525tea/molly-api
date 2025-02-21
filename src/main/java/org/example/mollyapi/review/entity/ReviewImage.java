@@ -30,7 +30,7 @@ public class ReviewImage extends Base {
     private Boolean isVideo; //비디오 여부. 0: False, 1: True
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "review_id")
+    @JoinColumn(name = "review_id", nullable = false, foreignKey = @ForeignKey(name = "FK_LIKE_REVIEW"))
     private Review review;
 
     @Builder
