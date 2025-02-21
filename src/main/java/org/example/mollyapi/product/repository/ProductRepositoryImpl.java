@@ -75,7 +75,8 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
                         brandNameEq(condition.getBrandName()),
                         priceGoe(condition.getPriceGoe()),
                         priceLt(condition.getPriceLt()),
-                        sellerIdEq(condition.getSellerId())
+                        sellerIdEq(condition.getSellerId()),
+                        excludeSoldOut(condition.getExcludeSoldOut())
                 )
                 .orderBy(orderByCondition(condition.getOrderBy()))
                 .offset(pageable.getOffset())
@@ -115,6 +116,10 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
 
     private BooleanExpression sellerIdEq(Long sellerId) {
         return sellerId != null? product.user.userId.eq(sellerId) : null;
+    }
+
+    private BooleanExpression excludeSoldOut(Boolean excludeSoldOut) {
+        return excludeSoldOut != null && excludeSoldOut.equals(Boolean.TRUE) ? productItem.quantity.gt(0): null;
     }
 
     private OrderSpecifier<?> orderByCondition(OrderBy orderBy) {
