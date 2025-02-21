@@ -122,6 +122,9 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
             return switch (orderBy) {
                 case CREATED_AT -> product.category.createdAt.desc();
                 case VIEW_COUNT -> product.viewCount.desc();
+                case PURCHASE_COUNT -> product.purchaseCount.desc();
+                case PRICE_DESC ->  product.price.desc();
+                case PRICE_ASC -> product.price.asc();
             };
         }
         return product.createdAt.desc();
