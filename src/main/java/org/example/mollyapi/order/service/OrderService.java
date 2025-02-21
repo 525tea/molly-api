@@ -134,6 +134,7 @@ public class OrderService {
                     .quantity(req.getQuantity())
                     .brandName(product.getBrandName())
                     .productName(product.getProductName())
+                    .cartId(req.getCartId())
                     .build();
         }).collect(Collectors.toList());
 
