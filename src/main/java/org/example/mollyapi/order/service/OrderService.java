@@ -47,8 +47,8 @@ public class OrderService {
     private final PaymentRepository paymentRepository;
     private final DeliveryRepository deliveryRepository;
     private final AddressRepository addressRepository;
-    private final CartRepository cartRepository;
     private final ReviewRepository reviewRepository;
+    private final CartRepository cartRepository;
 
 
 
@@ -87,7 +87,7 @@ public class OrderService {
 
 
     // 주문 생성
-    public OrderResponseDto createOrder(Long userId, List<Long> cartIds) {
+    public OrderResponseDto createOrder(Long userId, List<OrderRequestDto> orderRequests) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다. userId=" + userId));
 
@@ -113,30 +113,50 @@ public class OrderService {
                 .build();
         orderRepository.save(order);
 
-        List<OrderDetail> orderDetails = cartIds.stream().map(cartId -> {
-            Cart cart = cartRepository.findById(cartId)
-                    .orElseThrow(() -> new IllegalArgumentException("장바구니를 찾을 수 없습니다. cartId=" + cartId));
+        List<OrderDetail> orderDetails = orderRequests.stream().map(req -> {
+            Long itemId;
+            Long quantity;
 
-            ProductItem productItem = cart.getProductItem();
-            Product product = productItem.getProduct();
+            // 장바구니 -> 주문일 경우. cartId를 받아서 DB에서 itemId, quantity 가져옴
+            if (req.getCartId() != null) {
+                Cart cart = cartRepository.findById(req.getCartId())
+                        .orElseThrow(() -> new IllegalArgumentException("장바구니 항목을 찾을 수 없습니다. cartId=" + req.getCartId()));
 
-            // 재고 체크 후 선차감
-            if (productItem.getQuantity() < cart.getQuantity()) {
-                order.markAsFailed();
-                throw new IllegalArgumentException("재고가 부족하여 주문이 불가능합니다. itemId=" + productItem.getId());
+                itemId = cart.getProductItem().getId();
+                quantity = cart.getQuantity();
+            } else {
+                // 상품 페이지에서의 바로 주문일 경우. cartId없이 itemId와 quantity 직접 사용
+                itemId = req.getItemId();
+                quantity = req.getQuantity();
             }
-            productItem.decreaseStock(Math.toIntExact(cart.getQuantity()));
+
+            if (itemId == null || quantity == null) {
+                throw new IllegalArgumentException("주문을 생성하기 위해 필요한 정보가 부족합니다.");
+            }
+
+            // 비관적 락을 걸어 Product 조회
+            ProductItem productItem = productItemRepository.findById(itemId)
+                    .orElseThrow(() -> new IllegalArgumentException("상품 아이템을 찾을 수 없습니다. itemId=" + itemId));
+
+            // 재고 체크
+            if (productItem.getQuantity() < quantity) {
+                order.markAsFailed();
+                throw new IllegalArgumentException("재고가 부족하여 주문이 불가능합니다. itemId=" + itemId);
+            }
+
+            // 재고 감소
+            productItem.decreaseStock(Math.toIntExact(quantity));
             productItemRepository.save(productItem);
 
             return OrderDetail.builder()
                     .order(order)
                     .productItem(productItem)
                     .size(productItem.getSize())
-                    .price(product.getPrice())
-                    .quantity(cart.getQuantity())
-                    .brandName(product.getBrandName())
-                    .productName(product.getProductName())
-                    .cartId(cartId)
+                    .price(productItem.getProduct().getPrice())
+                    .quantity(quantity)
+                    .brandName(productItem.getProduct().getBrandName())
+                    .productName(productItem.getProduct().getProductName())
+                    .cartId(req.getCartId())
                     .build();
         }).collect(Collectors.toList());
 
