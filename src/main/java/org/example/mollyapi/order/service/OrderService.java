@@ -22,6 +22,7 @@ import org.example.mollyapi.product.entity.Product;
 import org.example.mollyapi.product.entity.ProductItem;
 import org.example.mollyapi.product.repository.ProductItemRepository;
 import org.example.mollyapi.product.repository.ProductRepository;
+import org.example.mollyapi.review.repository.ReviewRepository;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -47,6 +48,8 @@ public class OrderService {
     private final DeliveryRepository deliveryRepository;
     private final AddressRepository addressRepository;
     private final CartRepository cartRepository;
+    private final ReviewRepository reviewRepository;
+
 
 
     // 사용자의 주문 내역 조회 (GET /orders/{userId})
@@ -58,7 +61,7 @@ public class OrderService {
                 user, List.of(OrderStatus.SUCCEEDED, OrderStatus.WITHDRAW)
         );
 
-        return new OrderHistoryResponseDto(userId, orders, paymentRepository);
+        return new OrderHistoryResponseDto(userId, orders, paymentRepository, reviewRepository);
     }
 
 
