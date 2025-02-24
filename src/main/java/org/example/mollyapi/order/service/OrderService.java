@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.mollyapi.address.dto.AddressResponseDto;
 import org.example.mollyapi.address.repository.AddressRepository;
+import org.example.mollyapi.cart.entity.Cart;
+import org.example.mollyapi.cart.repository.CartRepository;
 import org.example.mollyapi.delivery.entity.Delivery;
 import org.example.mollyapi.delivery.repository.DeliveryRepository;
 import org.example.mollyapi.delivery.type.DeliveryStatus;
@@ -44,6 +46,7 @@ public class OrderService {
     private final PaymentRepository paymentRepository;
     private final DeliveryRepository deliveryRepository;
     private final AddressRepository addressRepository;
+    private final CartRepository cartRepository;
 
 
     // 사용자의 주문 내역 조회 (GET /orders/{userId})
@@ -81,7 +84,7 @@ public class OrderService {
 
 
     // 주문 생성
-    public OrderResponseDto createOrder(Long userId, List<OrderRequestDto> orderRequests) {
+    public OrderResponseDto createOrder(Long userId, List<Long> cartIds) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다. userId=" + userId));
 
@@ -107,34 +110,30 @@ public class OrderService {
                 .build();
         orderRepository.save(order);
 
-        List<OrderDetail> orderDetails = orderRequests.stream().map(req -> {
-            // 비관적 락을 걸어 Product 조회
-            Product product = productRepository.findWithLockById(req.getProductId())
-                    .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다. productId=" + req.getProductId()));
+        List<OrderDetail> orderDetails = cartIds.stream().map(cartId -> {
+            Cart cart = cartRepository.findById(cartId)
+                    .orElseThrow(() -> new IllegalArgumentException("장바구니를 찾을 수 없습니다. cartId=" + cartId));
 
-            // ProductItem을 Repository에서 직접 조회
-            ProductItem productItem = productItemRepository.findById(req.getItemId())
-                    .orElseThrow(() -> new IllegalArgumentException("상품 아이템을 찾을 수 없습니다. itemId=" + req.getItemId()));
+            ProductItem productItem = cart.getProductItem();
+            Product product = productItem.getProduct();
 
-            // 재고 체크
-            if (productItem.getQuantity() < req.getQuantity()) {
-                order.markAsFailed();  // 주문 실패 처리
-                throw new IllegalArgumentException("재고가 부족하여 주문이 불가능합니다. itemId=" + req.getItemId());
+            // 재고 체크 후 선차감
+            if (productItem.getQuantity() < cart.getQuantity()) {
+                order.markAsFailed();
+                throw new IllegalArgumentException("재고가 부족하여 주문이 불가능합니다. itemId=" + productItem.getId());
             }
-
-            // 재고 감소
-            productItem.decreaseStock(Math.toIntExact(req.getQuantity()));
-            productItemRepository.save(productItem);  // 감소한 재고 저장
+            productItem.decreaseStock(Math.toIntExact(cart.getQuantity()));
+            productItemRepository.save(productItem);
 
             return OrderDetail.builder()
                     .order(order)
                     .productItem(productItem)
                     .size(productItem.getSize())
                     .price(product.getPrice())
-                    .quantity(req.getQuantity())
+                    .quantity(cart.getQuantity())
                     .brandName(product.getBrandName())
                     .productName(product.getProductName())
-                    .cartId(req.getCartId())
+                    .cartId(cartId)
                     .build();
         }).collect(Collectors.toList());
 
