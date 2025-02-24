@@ -24,10 +24,6 @@ public class MultipartJsonMessageConverter extends AbstractJackson2HttpMessageCo
         super(createObjectMapper(), MediaType.APPLICATION_OCTET_STREAM);
     }
 
-    public MultipartJsonMessageConverter(ObjectMapper objectMapper, MediaType supportedMediaType) {
-        super(createObjectMapper(), supportedMediaType);
-    }
-
     @Override
     public boolean canWrite(Class<?> clazz, MediaType mediaType) {
         return false;
