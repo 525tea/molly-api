@@ -19,6 +19,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/orders")
@@ -28,9 +30,10 @@ public class OrderController {
 
     @Auth
     @PostMapping(produces = "application/json")
-    public ResponseEntity<OrderResponseDto> createOrder(@Valid @RequestBody OrderCreateRequestDto request, HttpServletRequest httpRequest) {
+    public ResponseEntity<OrderResponseDto> createOrder(@Valid @RequestBody List<Long> cartIds, HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
-        OrderResponseDto response = orderService.createOrder(userId, request.getOrderRequests());
+        OrderResponseDto response = orderService.createOrder(userId, cartIds);
+
         return ResponseEntity.ok(response);
     }
 
