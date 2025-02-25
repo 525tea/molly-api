@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.mollyapi.common.exception.CustomErrorResponse;
 import org.example.mollyapi.order.dto.OrderCreateRequestDto;
 import org.example.mollyapi.order.dto.OrderHistoryResponseDto;
+import org.example.mollyapi.order.dto.OrderRequestDto;
 import org.example.mollyapi.order.dto.OrderResponseDto;
 import org.example.mollyapi.order.service.OrderService;
 import org.example.mollyapi.user.auth.annotation.Auth;
@@ -32,8 +33,12 @@ public class OrderController {
     @PostMapping(produces = "application/json")
     public ResponseEntity<OrderResponseDto> createOrder(@Valid @RequestBody List<Long> cartIds, HttpServletRequest httpRequest) {
         Long userId = (Long) httpRequest.getAttribute("userId");
-        OrderResponseDto response = orderService.createOrder(userId, cartIds);
 
+        List<OrderRequestDto> orderRequests = cartIds.stream()
+                .map(cartId -> new OrderRequestDto(cartId, null, null)) // itemId와 quantity는 null
+                .toList();
+
+        OrderResponseDto response = orderService.createOrder(userId, orderRequests);
         return ResponseEntity.ok(response);
     }
 
