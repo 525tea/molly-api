@@ -30,6 +30,8 @@ public class Review extends Base {
     @Column(name = "is_deleted", columnDefinition = "TINYINT(1) DEFAULT 0")
     private Boolean isDeleted; //삭제 여부. 0: False, 1: True
 
+    private Long count; //리뷰 누적 좋아요
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "FK_REVIEW_USER"))
     private User user;
