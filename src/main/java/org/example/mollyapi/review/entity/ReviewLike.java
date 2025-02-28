@@ -31,13 +31,7 @@ public class ReviewLike extends Base {
     @OnDelete(action= OnDeleteAction.CASCADE)
     private Review review;
 
-    public boolean updateIsLike(boolean isLike) {
-        boolean flag = false;
-        if(!this.isLike.equals(isLike)) {
-            this.isLike = isLike;
-            flag = true;
-        }
-
-        return flag;
+    public void updateIsLike(boolean isLike) {
+        this.isLike = isLike;
     }
 }
