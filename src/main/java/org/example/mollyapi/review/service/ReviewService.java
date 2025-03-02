@@ -222,13 +222,13 @@ public class ReviewService {
 
         // 리뷰 이미지 변경 여부 체크
         if(uploadImages != null) {
-            // 기존의 리뷰 이미지 삭제
-            // 추가 예정
+            // 리뷰 이미지 삭제
+            deleteReviewImage(reviewId);
 
             // 리뷰에 새로운 이미지 추가
             saveReviewImages(review, uploadImages);
-            reviewRep.save(review);
         }
+        reviewRep.save(review);
     }
 
     /**
@@ -246,9 +246,8 @@ public class ReviewService {
         boolean isUpdate = review.updateIsDeleted(Boolean.TRUE);
         if(!isUpdate) throw new CustomException(FAIL_UPDATE);
 
-        // 리뷰와 연결된 이미지 삭제 - 이미지 서버(구현 예정)
-        // 리뷰와 연결된 이미지 삭제 - 테이블
-        // reviewImageRep.deleteAllByReviewId(reviewId);
+        // 리뷰 이미지 삭제
+        deleteReviewImage(reviewId);
 
         // 리뷰와 연결된 좋아요 삭제
         reviewLikeRep.deleteAllByReviewId(reviewId);
@@ -269,5 +268,21 @@ public class ReviewService {
             ReviewImage reviewImage = ReviewImage.createReviewImage(review, uploadFile, i);
             review.addImage(reviewImage);  // 리뷰에 이미지 추가
         }
+    }
+
+    /**
+     * 업로드된 이미지 파일 삭제
+     * @param reviewId 리뷰 PK
+     * */
+    private void deleteReviewImage(Long reviewId) {
+        // 이미지 서버에 저장된 이미지 삭제
+        List<ReviewImage> reviewImageList = reviewImageRep.findAllByReviewId(reviewId);
+        for(ReviewImage image : reviewImageList) {
+            boolean isDeleted = imageClient.delete(ImageType.REVIEW, image.getUrl());
+            if(!isDeleted) throw new CustomException(FAIL_DELETE);
+        }
+
+        // 기존의 리뷰 이미지 삭제
+        reviewImageRep.deleteAllByReviewId(reviewId);
     }
 }
