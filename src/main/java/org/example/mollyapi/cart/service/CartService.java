@@ -8,6 +8,7 @@ import org.example.mollyapi.cart.dto.Request.UpdateCartReqDto;
 import org.example.mollyapi.cart.dto.Response.CartInfoResDto;
 import org.example.mollyapi.cart.entity.Cart;
 import org.example.mollyapi.cart.repository.CartRepository;
+import org.example.mollyapi.common.dto.CommonResDto;
 import org.example.mollyapi.common.exception.CustomException;
 import org.example.mollyapi.product.dto.response.ColorDetailDto;
 import org.example.mollyapi.product.entity.ProductItem;
@@ -73,7 +74,7 @@ public class CartService {
             }
         }
 
-        return ResponseEntity.ok().body("장바구니 등록에 성공했습니다.");
+        return ResponseEntity.ok(new CommonResDto("장바구니 등록에 성공했습니다."));
     }
 
     /**
@@ -131,7 +132,7 @@ public class CartService {
      * @param userId 사용자 PK
      * */
     @Transactional
-    public void updateItemOption(UpdateCartReqDto updateCartReqDto, Long userId) {
+    public ResponseEntity<?> updateItemOption(UpdateCartReqDto updateCartReqDto, Long userId) {
         // 1. 가입된 사용자 여부 체크
         getUserInfo(userId);
 
@@ -148,6 +149,8 @@ public class CartService {
         // 5. 재고가 부족할 경우
         if(item.getQuantity() < updateCartReqDto.quantity())
             throw new CustomException(OVER_QUANTITY);
+
+        return ResponseEntity.ok(new CommonResDto("옵션 변경에 성공했습니다."));
     }
 
     /**
@@ -156,7 +159,7 @@ public class CartService {
      * @param userId 사용자 PK
      * */
     @Transactional
-    public void deleteCartItem(List<Long> cartList, Long userId) {
+    public ResponseEntity<?> deleteCartItem(List<Long> cartList, Long userId) {
         // 1. 가입된 사용자 여부 체크
         getUserInfo(userId);
 
@@ -164,6 +167,8 @@ public class CartService {
         for (Long cartId : cartList) {
             cartRep.delete(getCartInfo(cartId, userId));
         }
+
+        return ResponseEntity.ok(new CommonResDto("장바구니 내역 삭제에 성공했습니다."));
     }
 
     /**
