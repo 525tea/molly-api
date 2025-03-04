@@ -1,6 +1,7 @@
 package org.example.mollyapi.common.client;
 
 import lombok.Data;
+import org.example.mollyapi.common.exception.CustomException;
 import org.example.mollyapi.product.dto.UploadFile;
 import org.example.mollyapi.common.enums.ImageType;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 import java.util.Optional;
+
+import static org.example.mollyapi.common.exception.error.impl.ReviewError.FAIL_DELETE;
 
 @Component
 public class ImageClientImpl implements ImageClient {
@@ -52,7 +55,7 @@ public class ImageClientImpl implements ImageClient {
     }
 
     @Override
-    public boolean delete(ImageType type, String url) {
+    public void delete(ImageType type, String url) {
         // 쿼리 파라미터 설정: URL을 쿼리 파라미터로 포함
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(storageUrl)
                 .queryParam("url", url);
@@ -67,7 +70,8 @@ public class ImageClientImpl implements ImageClient {
         ResponseEntity<Void> response = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.DELETE, httpEntity, Void.class);
 
         // 응답 상태가 OK일 경우 true 반환
-        return response.getStatusCode().equals(HttpStatus.OK);
+        if(!response.getStatusCode().equals(HttpStatus.OK))
+            throw new CustomException(FAIL_DELETE);
     }
 
 
