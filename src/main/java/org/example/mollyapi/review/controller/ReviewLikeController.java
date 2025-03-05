@@ -28,7 +28,7 @@ public class ReviewLikeController {
     @Operation(summary = "좋아요 기능", description = "리뷰에 좋아요를 누를 수 있습니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "좋아요 상태 변경 성공",
-                    content = @Content(schema = @Schema(implementation = UpdateReviewLikeReqDto.class))),
+                    content = @Content(schema = @Schema(implementation = String.class))),
             @ApiResponse(responseCode = "204", description = "변경사항 없음",
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class))),
             @ApiResponse(responseCode = "400", description = "좋아요 상태 변경 실패",
