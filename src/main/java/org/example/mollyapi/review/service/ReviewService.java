@@ -89,6 +89,7 @@ public class ReviewService {
                 .user(user)
                 .orderDetail(orderDetail)
                 .product(product)
+                .likeCount(0L)
                 .build();
 
         // 업로드된 이미지 파일 저장

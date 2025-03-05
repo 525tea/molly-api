@@ -30,7 +30,8 @@ public class Review extends Base {
     @Column(name = "is_deleted", columnDefinition = "BIT DEFAULT FALSE")
     private Boolean isDeleted; //삭제 여부. 0: False, 1: True
 
-    private Long count; //리뷰 누적 좋아요
+    @Column(name = "like_count")
+    private Long likeCount; //리뷰 누적 좋아요
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "FK_REVIEW_USER"))
@@ -60,6 +61,10 @@ public class Review extends Base {
 
     public void updateContent(String content) {
         this.content = content;
+    }
+
+    public void updateLikeCount(Long likeCount) {
+        this.likeCount = likeCount;
     }
 
     public boolean updateIsDeleted(Boolean isDeleted) {

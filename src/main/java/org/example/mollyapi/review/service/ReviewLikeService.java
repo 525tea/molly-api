@@ -1,6 +1,7 @@
 package org.example.mollyapi.review.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.mollyapi.common.dto.CommonResDto;
 import org.example.mollyapi.common.exception.CustomException;
 import org.example.mollyapi.review.dto.request.UpdateReviewLikeReqDto;
 import org.example.mollyapi.review.entity.Review;
@@ -9,7 +10,6 @@ import org.example.mollyapi.review.repository.ReviewLikeRepository;
 import org.example.mollyapi.review.repository.ReviewRepository;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,12 +24,11 @@ public class ReviewLikeService {
     private final ReviewRepository reviewRep;
     private final ReviewLikeRepository reviewLikeRep;
 
-
     /**
      * 좋아요 상태 변경
      * @param likeDto 리뷰 Pk, 좋아요 상태를 담은 Dto
      * @param userId 사용자 PK
-     * @return 좋아요 상태
+     * @return StatusCode&Message
      * */
     @Transactional
     public ResponseEntity<?> changeReviewLike(UpdateReviewLikeReqDto likeDto, Long userId) {
@@ -47,19 +46,20 @@ public class ReviewLikeService {
         // ReviewLike Entity에 데이터를 추가한 적이 없을 경우
         if(reviewLike == null) {
             // 좋아요 생성
-            reviewLike =  ReviewLike.builder()
-                    .isLike(true)
-                    .user(user)
-                    .review(review)
-                    .build();
+            reviewLikeRep.save(ReviewLike.builder()
+                            .isLike(Boolean.TRUE)
+                            .user(user)
+                            .review(review)
+                            .build());
 
-            reviewLikeRep.save(reviewLike);
+            review.updateLikeCount(review.getLikeCount()+1); //누적 좋아요수 업데이트
         } else { // 이미 좋아요를 눌렀던 적이 있을 경우
-            reviewLike.updateIsLike(likeDto.status());
+            boolean isUpdated = reviewLike.updateIsLike(likeDto.status());
+            if(isUpdated) {
+                review.updateLikeCount(review.getLikeCount() + (likeDto.status() ? 1 : -1));
+            }
         }
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(reviewLike.getIsLike());
+        return ResponseEntity.ok(new CommonResDto("좋아요 상태 변경를 변경했습니다."));
     }
 }
