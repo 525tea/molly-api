@@ -28,7 +28,12 @@ public class ReviewLike extends Base {
     @JoinColumn(name = "review_id", nullable = false, foreignKey = @ForeignKey(name = "FK_LIKE_REVIEW"))
     private Review review;
 
-    public void updateIsLike(boolean isLike) {
-        this.isLike = isLike;
+    public boolean updateIsLike(boolean isLike) {
+        boolean flag = false;
+        if(!this.isLike.equals(isLike)) {
+            this.isLike = isLike;
+            flag= true;
+        }
+        return flag;
     }
 }
