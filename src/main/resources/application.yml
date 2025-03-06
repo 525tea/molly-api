@@ -7,3 +7,9 @@ springdoc:
 spring:
   profiles:
     include: secret
+
+---
+spring:
+  config:
+    activate:
+      on-profile: test
