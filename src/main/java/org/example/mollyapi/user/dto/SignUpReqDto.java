@@ -46,6 +46,7 @@ public record SignUpReqDto(
 
         @Schema(description = "seller = true,  buyer = false", example = "true")
         Boolean isSeller
+
 ) {
         /***
          * Dto -> User 전환

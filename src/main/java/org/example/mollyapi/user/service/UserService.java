@@ -23,13 +23,14 @@ public class UserService {
 
     /***
      * 사용자 정보 조회1 - 마이페이지 프로필 수정 기능에 필요한 조회 데이터
-     * @param authId 인증 PK
+     * @param userId 인증 PK
      * @return GetUserInfoResDto
      */
-    public GetUserInfoResDto getUserInfo(Long authId) {
-        validUser(authId);
+    public GetUserInfoResDto getUserInfo(Long userId) {
+        validUser(userId);
 
-        return userRepository.getUserInfo(authId);
+        return userRepository.getUserInfo(userId)
+                .orElseThrow( () -> new CustomException(UserError.ALREADY_EXISTS_NICKNAME));
     }
 
 
@@ -41,14 +42,16 @@ public class UserService {
     public GetUserSummaryInfoWithPointResDto getUserSummaryWithPoint(Long userId) {
         validUser(userId);
 
-        return userRepository.getUserSummaryInfo(userId);
+        return userRepository.getUserSummaryInfo(userId)
+                .orElseThrow( () -> new CustomException(UserError.ALREADY_EXISTS_NICKNAME));
     }
 
     public GetUserSummaryInfoResDto getUserSummaryInfo(Long userId) {
+
         validUser(userId);
 
-        GetUserSummaryInfoWithPointResDto userSummaryInfo
-                = userRepository.getUserSummaryInfo(userId);
+        GetUserSummaryInfoWithPointResDto userSummaryInfo = userRepository.getUserSummaryInfo(userId)
+                .orElseThrow( () -> new CustomException(UserError.ALREADY_EXISTS_NICKNAME));
         return new GetUserSummaryInfoResDto(userSummaryInfo.name(), userSummaryInfo.email());
     }
 
