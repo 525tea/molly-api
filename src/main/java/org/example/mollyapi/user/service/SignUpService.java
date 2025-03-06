@@ -1,6 +1,7 @@
 package org.example.mollyapi.user.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.mollyapi.common.client.ImageClientImpl;
 import org.example.mollyapi.common.exception.CustomException;
 import org.example.mollyapi.common.exception.error.impl.AuthError;
 import org.example.mollyapi.user.auth.config.PasswordEncoder;
@@ -11,6 +12,7 @@ import org.example.mollyapi.user.auth.repository.AuthRepository;
 import org.example.mollyapi.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import static org.example.mollyapi.common.exception.error.impl.AuthError.ALREADY_EXISTS_AUTH;
 import static org.example.mollyapi.common.exception.error.impl.UserError.*;
@@ -22,6 +24,7 @@ public class SignUpService {
     private final UserRepository userRepository;
     private final AuthRepository authRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ImageClientImpl imageClientImpl;
 
     /***
      * 회원가입
