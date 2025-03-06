@@ -2,6 +2,7 @@ package org.example.mollyapi.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.mollyapi.common.exception.CustomException;
+import org.example.mollyapi.common.exception.error.impl.AuthError;
 import org.example.mollyapi.user.auth.config.PasswordEncoder;
 import org.example.mollyapi.user.dto.SignUpReqDto;
 import org.example.mollyapi.user.auth.entity.Password;
@@ -32,13 +33,13 @@ public class SignUpService {
         boolean existsByEmail = authRepository.existsByEmail(signUpReqDto.email());
         boolean existsByNickname = userRepository.existsByNickname(signUpReqDto.nickname());
 
-        if(existsByEmail) throw new CustomException(ALREADY_EXISTS_AUTH);
-        if(existsByNickname) throw new CustomException(ALREADY_EXISTS_NICKNAME);
+        if (existsByEmail) throw new CustomException(ALREADY_EXISTS_AUTH);
+        if (existsByNickname) throw new CustomException(ALREADY_EXISTS_NICKNAME);
 
-        Password password = passwordEncoder.encrypt(signUpReqDto.email(), signUpReqDto.password());
+        byte[] salt = passwordEncoder.getSalt();
+        String encryptedPassword = passwordEncoder.encrypt(signUpReqDto.password(), salt);
 
         User savedUser = userRepository.save(signUpReqDto.toUser());
-        authRepository.save(signUpReqDto.toAuth(password,savedUser));
-
+        authRepository.save(signUpReqDto.toAuth(Password.createPassword(encryptedPassword, salt), savedUser));
     }
 }

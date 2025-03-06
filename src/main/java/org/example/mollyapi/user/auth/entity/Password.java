@@ -1,17 +1,12 @@
 package org.example.mollyapi.user.auth.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
+import lombok.*;
 
 
 @Getter
 @Embeddable
 @NoArgsConstructor( access = AccessLevel.PROTECTED)
-@AllArgsConstructor
 public class Password {
 
     @Column(table = "password")
@@ -20,7 +15,16 @@ public class Password {
     @Column(columnDefinition = "BINARY(32)", table = "password")
     private byte[] salt;
 
-    public static Password of(String password, byte[] salt) {
-        return new Password(password, salt);
+    @Builder
+    public Password(String password, byte[] salt) {
+        this.password = password;
+        this.salt = salt;
+    }
+
+    public static Password createPassword(String password, byte[] salt) {
+        return Password.builder()
+                .password(password)
+                .salt(salt)
+                .build();
     }
 }

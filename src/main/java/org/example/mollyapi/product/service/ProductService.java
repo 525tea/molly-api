@@ -15,12 +15,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductService {
-    Slice<ProductResDto> getAllProducts(ProductFilterCondition condition, Pageable pageable);
-    Slice<ProductResDto> getProductsByCategory(List<String> categories, Pageable pageable);
-
-    Slice<BrandSummaryDto> getPopularBrand(Pageable pageable);
-
-    Optional<ProductResDto> getProductById(Long id);
     ProductResDto registerProduct(
             Long userId,
             ProductDto productDto,

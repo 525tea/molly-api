@@ -59,8 +59,6 @@ public record SignUpReqDto(
                         .cellPhone(cellPhone)
                         .birth(birth)
                         .name(name)
-                        .flag(false)
-                        .point(0)
                         .profileImage("Default Profile Image")
                         .sex(sex)
                         .build();

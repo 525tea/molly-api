@@ -36,24 +36,6 @@ public class ProductServiceImpl implements ProductService {
     private final ProductItemRepository productItemRepository;
     private final CategoryRepository categoryRepository;
 
-    @Override
-    @Transactional
-    public Slice<ProductResDto> getAllProducts(ProductFilterCondition condition, Pageable pageable) {
-        Slice<ProductAndThumbnailDto> page = productRepository.findByCondition(condition, pageable);
-
-        return page.map(this::convertToProductResDto);
-    }
-
-    @Override
-    @Transactional
-    public Slice<ProductResDto> getProductsByCategory(List<String> categories, Pageable pageable) {
-        Category category = categoryService.getCategory(categories);
-
-        List<Category> leafCategories = categoryService.getLeafCategories(category);
-        Slice<Product> allByCategory = productRepository.findAllByCategory(leafCategories, pageable);
-
-        return allByCategory.map(this::convertToProductResDto);
-    }
 
     @Override
     @Transactional
@@ -116,10 +98,6 @@ public class ProductServiceImpl implements ProductService {
         return convertToProductResDto(savedProduct);
     }
 
-    @Override
-    public Slice<BrandSummaryDto> getPopularBrand(Pageable pageable) {
-        return productRepository.getTotalViewGroupByBrandName(pageable);
-    }
 
     private Product registerThumbnail(Product product, MultipartFile thumbnailImage) {
 //        UploadFile uploadFile = fileStore.storeFile(thumbnailImage);
@@ -179,17 +157,6 @@ public class ProductServiceImpl implements ProductService {
                 .build();
     }
 
-    @Override
-    @Transactional
-    public Optional<ProductResDto> getProductById(Long id) {
-
-        Optional<Product> product = productRepository.findById(id);
-
-        // 조회수 증가
-        product.ifPresent(Product::increaseViewCount);
-
-        return product.map(this::convertToProductResDto);
-    }
 
     @Override
     @Transactional

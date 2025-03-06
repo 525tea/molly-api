@@ -10,7 +10,6 @@ import org.example.mollyapi.user.type.Sex;
 import java.time.LocalDate;
 
 @Entity
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
@@ -42,8 +41,17 @@ public class User extends Base {
 
     private String name;
 
-
-
+    @Builder
+    public User(String nickname, String cellPhone, Sex sex, String profileImage, LocalDate birth, String name) {
+        this.nickname = nickname;
+        this.cellPhone = cellPhone;
+        this.sex = sex;
+        this.flag = false;
+        this.profileImage = profileImage;
+        this.birth = birth;
+        this.point = 0;
+        this.name = name;
+    }
 
     public boolean updateUser(UpdateUserReqDto updateUserReqDto){
         boolean isUpdate = false;
@@ -53,6 +61,7 @@ public class User extends Base {
             this.name = updateUserReqDto.name();
             isUpdate = true;
         }
+
         if(!updateUserReqDto.cellPhone().isBlank()
                 && !this.cellPhone.equals(updateUserReqDto.cellPhone())){
             this.cellPhone = updateUserReqDto.cellPhone();
@@ -74,7 +83,6 @@ public class User extends Base {
             this.sex = updateUserReqDto.sex();
             isUpdate = true;
         }
-
         return isUpdate;
     }
 
