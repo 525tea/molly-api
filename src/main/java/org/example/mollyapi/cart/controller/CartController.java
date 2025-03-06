@@ -43,7 +43,8 @@ public class CartController {
             @Valid @RequestBody AddCartReqDto addCartReqDto,
             HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
-        return cartService.addCart(addCartReqDto, userId);
+        cartService.addCart(addCartReqDto, userId);
+        return ResponseEntity.ok(new CommonResDto("장바구니 등록에 성공했습니다."));
     }
 
     @Auth

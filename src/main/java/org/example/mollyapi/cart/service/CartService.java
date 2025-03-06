@@ -40,10 +40,9 @@ public class CartService {
      * 장바구니에 상품 담기 기능
      * @param addCartReqDto 추가하려는 데이터
      * @param userId 사용자 PK
-     * @return StatusCode & Message
      */
     @Transactional
-    public ResponseEntity<?> addCart(AddCartReqDto addCartReqDto, Long userId) {
+    public void addCart(AddCartReqDto addCartReqDto, Long userId) {
         // 1. 가입된 사용자 여부 체크
         User user = userRep.findById(userId)
                 .orElseThrow(() -> new CustomException(NOT_EXISTS_USER));
@@ -52,7 +51,8 @@ public class CartService {
         ProductItem item = getProductItemInfo(addCartReqDto.itemId());
 
         // 3. 상품의 재고가 남아 있는 지 체크
-        if(item.getQuantity() == 0 || item.getQuantity() < addCartReqDto.quantity())
+        Long itemQuantity = item.getQuantity(); // item.getQuantity()를 변수에 저장
+        if(itemQuantity == null || itemQuantity == 0 || itemQuantity < addCartReqDto.quantity())
             throw new CustomException(OVER_QUANTITY);
 
         // 4. 장바구니에 동일한 상품이 담겨 있는 지 체크
@@ -63,8 +63,7 @@ public class CartService {
         else {
             // 6. 초과 수량을 장바구니에 담는 지 체크
             long totalQuantity = cart.getQuantity() + addCartReqDto.quantity(); //기존에 담아둔 수량 + 추가 하려는 수량
-            if (totalQuantity > item.getQuantity()) //재고 수량을 초과할 경우
-                throw new CustomException(OVER_QUANTITY);
+            checkStock(item.getQuantity(), totalQuantity);
 
             // 6-1. 수량 업데이트
             try {
@@ -73,8 +72,6 @@ public class CartService {
                 throw new CustomException(FAIL_UPDATE); // 수량 업데이트 실패
             }
         }
-
-        return ResponseEntity.ok(new CommonResDto("장바구니 등록에 성공했습니다."));
     }
 
     /**
@@ -85,8 +82,8 @@ public class CartService {
      */
     public void insertNewCart(AddCartReqDto addCartReqDto, User user, ProductItem item) {
         // 장바구니 최대 수량(30개) 미만 체크
-        int count = cartRep.countByUserUserId(user.getUserId());
-        if(count > 30) throw new CustomException(MAX_CART);
+        boolean isMaxCart = cartRep.countByUserUserId(user.getUserId());
+        if(isMaxCart) throw new CustomException(MAX_CART);
 
         // 새로운 Cart 엔티티 생성
         Cart newCart = Cart.builder()
@@ -105,7 +102,7 @@ public class CartService {
     @Transactional(readOnly = true)
     public ResponseEntity<?> getCartDetail(Long userId) {
         // 1. 가입된 사용자 여부 체크
-        getUserInfo(userId);
+        existsUser(userId);
 
         // 2. 사용자 장바구니 조회
         List<CartInfoDto> cartInfoList = cartRep.getCartInfo(userId);
@@ -134,7 +131,7 @@ public class CartService {
     @Transactional
     public ResponseEntity<?> updateItemOption(UpdateCartReqDto updateCartReqDto, Long userId) {
         // 1. 가입된 사용자 여부 체크
-        getUserInfo(userId);
+        existsUser(userId);
 
         // 2. 해당 장바구니 내역 여부 체크
         Cart cart = getCartInfo(updateCartReqDto.cartId(), userId);
@@ -147,8 +144,7 @@ public class CartService {
         if(!isUpdate) throw new CustomException(NOT_CHANGED); //변경 사항이 없는 경우
 
         // 5. 재고가 부족할 경우
-        if(item.getQuantity() < updateCartReqDto.quantity())
-            throw new CustomException(OVER_QUANTITY);
+        checkStock(item.getQuantity(), updateCartReqDto.quantity());
 
         return ResponseEntity.ok(new CommonResDto("옵션 변경에 성공했습니다."));
     }
@@ -161,7 +157,7 @@ public class CartService {
     @Transactional
     public ResponseEntity<?> deleteCartItem(List<Long> cartList, Long userId) {
         // 1. 가입된 사용자 여부 체크
-        getUserInfo(userId);
+        existsUser(userId);
 
         // 2. 리스트에 담긴 cartId 순서대로 삭제
         for (Long cartId : cartList) {
@@ -175,7 +171,7 @@ public class CartService {
      * 가입된 사용자 여부 체크
      * @param userId 사용자 PK
      * */
-    public void getUserInfo(Long userId) {
+    public void existsUser(Long userId) {
         boolean existsUser = userRep.existsById(userId);
         if(!existsUser) throw new CustomException(NOT_EXISTS_USER);
     }
@@ -199,5 +195,14 @@ public class CartService {
     public Cart getCartInfo(Long cartId, Long userId) {
         return cartRep.findByCartIdAndUserUserId(cartId, userId)
                 .orElseThrow(() -> new CustomException(NOT_EXIST_CART));
+    }
+
+    /**
+     * 재고 수량을 초과 여부 계산
+     * @param itemQuantity 상품 현재 수량
+     * @param nowQuantity 변경할 수량
+     * */
+    public void checkStock(Long itemQuantity, Long nowQuantity) {
+        if (itemQuantity < nowQuantity) throw new CustomException(OVER_QUANTITY);
     }
 }
