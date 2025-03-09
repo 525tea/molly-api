@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductItemRepository extends JpaRepository<ProductItem, Long> {
-    Optional<List<ProductItem>> findAllByProductId(Long productId);
+    List<ProductItem> findAllByProductId(Long productId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<ProductItem> findById(Long id);
