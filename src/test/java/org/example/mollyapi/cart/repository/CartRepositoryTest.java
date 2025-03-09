@@ -31,9 +31,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-@SpringBootTest(classes = MollyApiApplication.class)
-@Transactional
 @ActiveProfiles("test")
+@SpringBootTest
+@Transactional
 public class CartRepositoryTest {
     @Autowired
     private CartRepository cartRepository;
@@ -65,7 +65,7 @@ public class CartRepositoryTest {
         testUser = createAndSaveUser();
         testProduct = createAndSaveProduct();
         testImage = createAndSaveProductImage(testProduct);
-        testItem = createAndSaveProductItem(31L, "S", testProduct);
+        testItem = createAndSaveProductItem("S", testProduct);
         testCart = createAndSaveCart(2L, testUser, testItem);
     }
 
@@ -77,7 +77,7 @@ public class CartRepositoryTest {
         Long itemId = testItem.getId();
 
         //when
-        Cart cart = cartRepository.findByProductItemIdAndUserUserId(userId, itemId);
+        Cart cart = cartRepository.findByProductItemIdAndUserUserId(itemId, userId);
 
         //then
         assertThat(cart).isNull();
@@ -140,12 +140,12 @@ public class CartRepositoryTest {
         assertThat(cart).isEmpty();
     }
 
-    @DisplayName("로그인한 사용자의 장바구니 전체 내역을 조회한다.")
+    @DisplayName("사용자의 장바구니 전체 내역을 조회한다.")
     @Test
     void findAllCartInfoByUserId() {
         //given
         Long userId = testUser.getUserId();
-        ProductItem secondItem = createAndSaveProductItem(32L, "L", testProduct);
+        ProductItem secondItem = createAndSaveProductItem("L", testProduct);
         Cart secondCart = createAndSaveCart(3L, testUser, secondItem);
 
         //when
@@ -180,9 +180,8 @@ public class CartRepositoryTest {
                 .build());
     }
 
-    private ProductItem createAndSaveProductItem(Long itemId, String size, Product product) {
+    private ProductItem createAndSaveProductItem(String size, Product product) {
         return productItemRepository.save(ProductItem.builder()
-                .id(itemId)
                 .color("WHITE")
                 .colorCode("#FFFFFF")
                 .size(size)
