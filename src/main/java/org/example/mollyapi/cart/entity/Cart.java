@@ -20,11 +20,11 @@ public class Cart extends Base {
 
     private Long quantity; //수량
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "FK_CART_USER"))
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "item_id", nullable = false, foreignKey = @ForeignKey(name = "FK_CART_PRODUCTITEM"))
     private ProductItem productItem;
 
