@@ -5,6 +5,8 @@ import lombok.*;
 import org.example.mollyapi.common.entity.Base;
 import org.example.mollyapi.product.entity.ProductItem;
 import org.example.mollyapi.user.entity.User;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Builder
@@ -20,12 +22,13 @@ public class Cart extends Base {
 
     private Long quantity; //수량
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "FK_CART_USER"))
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "item_id", nullable = false, foreignKey = @ForeignKey(name = "FK_CART_PRODUCTITEM"))
+    @OnDelete(action=OnDeleteAction.CASCADE)
     private ProductItem productItem;
 
     public void updateQuantity(Long totalQuantity) {
