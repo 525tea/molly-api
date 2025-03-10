@@ -3,16 +3,14 @@ package org.example.mollyapi.user.repository.impl;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.example.mollyapi.user.auth.entity.QAuth;
 import org.example.mollyapi.user.dto.GetUserInfoResDto;
 import org.example.mollyapi.user.dto.GetUserSummaryInfoWithPointResDto;
 import org.example.mollyapi.user.repository.UserCustomRepository;
 
 import java.util.Optional;
 
-import static org.example.mollyapi.user.auth.entity.QAuth.*;
 import static org.example.mollyapi.user.auth.entity.QAuth.auth;
-import static org.example.mollyapi.user.entity.QUser.*;
+import static org.example.mollyapi.user.entity.QUser.user;
 
 @RequiredArgsConstructor
 public class UserCustomRepositoryImpl implements UserCustomRepository {

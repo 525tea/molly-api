@@ -12,8 +12,6 @@ import org.example.mollyapi.common.dto.CommonResDto;
 import org.example.mollyapi.common.exception.CustomErrorResponse;
 import org.example.mollyapi.user.dto.SignUpReqDto;
 import org.example.mollyapi.user.service.SignUpService;
-
-
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

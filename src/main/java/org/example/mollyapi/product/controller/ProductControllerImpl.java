@@ -9,20 +9,19 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
 import lombok.extern.slf4j.Slf4j;
 import org.example.mollyapi.common.exception.CustomErrorResponse;
 import org.example.mollyapi.product.dto.BrandSummaryDto;
 import org.example.mollyapi.product.dto.ProductFilterCondition;
 import org.example.mollyapi.product.dto.request.ProductFilterConditionReqDto;
+import org.example.mollyapi.product.dto.request.ProductReqDto;
 import org.example.mollyapi.product.dto.response.ListResDto;
 import org.example.mollyapi.product.dto.response.PageResDto;
+import org.example.mollyapi.product.dto.response.ProductResDto;
 import org.example.mollyapi.product.entity.Category;
 import org.example.mollyapi.product.service.CategoryService;
 import org.example.mollyapi.product.service.ProductReadService;
 import org.example.mollyapi.product.service.ProductService;
-import org.example.mollyapi.product.dto.request.ProductReqDto;
-import org.example.mollyapi.product.dto.response.ProductResDto;
 import org.example.mollyapi.user.auth.annotation.Auth;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.PageRequest;
@@ -31,7 +30,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 
 import java.util.Arrays;
 import java.util.List;
