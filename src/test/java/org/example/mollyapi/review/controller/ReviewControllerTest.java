@@ -14,12 +14,15 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.SliceImpl;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,9 +34,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class ReviewControllerTest {
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @MockBean
     private ReviewService reviewService;
@@ -47,11 +47,11 @@ public class ReviewControllerTest {
         // given
         Long userId = 1L;
         AddReviewReqDto addReviewReqDto = new AddReviewReqDto(1L, "Test Content");
-        MockMultipartFile reviewFile = new MockMultipartFile(
-                "review", "review.json", "application/json", new ObjectMapper().writeValueAsBytes(addReviewReqDto)
+        MockMultipartFile mockAddReviewReqDto = new MockMultipartFile(
+                "review", "review.json", MediaType.APPLICATION_JSON_VALUE, new ObjectMapper().writeValueAsBytes(addReviewReqDto)
         );
         MockMultipartFile reviewImagesFile = new MockMultipartFile(
-                "reviewImages", "review_images.jpg", "image/jpeg", new byte[0]
+                "reviewImages", "review_images.jpg", MediaType.IMAGE_JPEG_VALUE, new byte[0]
         );
 
         when(mockRequest.getAttribute("userId")).thenReturn(userId);
@@ -59,9 +59,11 @@ public class ReviewControllerTest {
         // when & then
         mockMvc.perform(
                 multipart("/review")
-                        .file(reviewFile)
+                        .file(mockAddReviewReqDto)
                         .file(reviewImagesFile)
+                        .contentType(MediaType.MULTIPART_FORM_DATA)
                         .requestAttr("userId", userId))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("리뷰 등록에 성공했습니다."));
     }
@@ -86,6 +88,7 @@ public class ReviewControllerTest {
                         .param("page", String.valueOf(page))
                         .param("size", String.valueOf(size))
                         .requestAttr("userId", userId))
+                .andDo(print())
                 .andDo(print())
                 .andExpect(status().isOk());
     }
@@ -129,6 +132,7 @@ public class ReviewControllerTest {
                         .param("page", String.valueOf(page))
                         .param("size", String.valueOf(size))
                         .requestAttr("userId", userId))
+                .andDo(print())
                 .andExpect(status().isOk());
     }
 
@@ -137,24 +141,25 @@ public class ReviewControllerTest {
     void updateReview() throws Exception {
         // given
         Long userId = 1L;
+
         AddReviewReqDto addReviewReqDto = new AddReviewReqDto(1L, "Updated Content");
-        MockMultipartFile reviewFile = new MockMultipartFile(
-                "review", "review.json", "application/json", new ObjectMapper().writeValueAsBytes(addReviewReqDto)
+        MockMultipartFile mockAddReviewReqDto = new MockMultipartFile(
+                "review", "review.json", MediaType.APPLICATION_JSON_VALUE, new ObjectMapper().writeValueAsBytes(addReviewReqDto)
         );
         MockMultipartFile reviewImagesFile = new MockMultipartFile(
-                "updateImage", "update_image.jpg", "image/jpeg", new byte[0]
+                "updateImage", "update_image.jpg", MediaType.IMAGE_JPEG_VALUE, new byte[0]
         );
+
+        doNothing().when(reviewService).updateReview(any(), anyList(), anyLong());
+        when(mockRequest.getAttribute("userId")).thenReturn(userId);
 
         // when & then
         mockMvc.perform(
-                multipart("/review")
-                        .file(reviewFile)
+                multipart(HttpMethod.PUT, "/review")
+                        .file(mockAddReviewReqDto)
                         .file(reviewImagesFile)
-                        .with(mockHttpServletRequest -> {
-                            mockHttpServletRequest.setAttribute("userId", userId);
-                            mockHttpServletRequest.setMethod("PUT");
-                            return mockHttpServletRequest;
-                        }))
+                        .requestAttr("userId", userId))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("리뷰 수정에 성공했습니다."));
     }
@@ -172,6 +177,7 @@ public class ReviewControllerTest {
         mockMvc.perform(
                 delete("/review/{reviewId}", reviewId)
                         .requestAttr("userId", userId))
+                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.message").value("리뷰 삭제에 성공했습니다."));
     }
