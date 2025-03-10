@@ -1,6 +1,5 @@
 package org.example.mollyapi.review.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.mollyapi.review.dto.response.GetTrendingReviewResDto;
 import org.example.mollyapi.review.dto.response.TrendingReviewResDto;
 import org.example.mollyapi.review.service.TrendingReviewService;
@@ -23,9 +22,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TrendingReviewControllerTest {
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @MockBean
     private TrendingReviewService trendingReviewService;
