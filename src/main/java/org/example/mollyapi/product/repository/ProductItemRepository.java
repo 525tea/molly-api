@@ -1,8 +1,8 @@
 package org.example.mollyapi.product.repository;
 
+import jakarta.persistence.LockModeType;
 import org.example.mollyapi.product.entity.ProductItem;
 import org.springframework.data.jpa.repository.JpaRepository;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.Lock;
 
 import java.util.List;
