@@ -30,8 +30,7 @@ public class TrendingReviewService {
         List<GetTrendingReviewResDto> reviewResDtoList = new ArrayList<>();
         for(TrendingReviewResDto info : trendingReviewList) {
             List<String> images = reviewRep.getImageList(info.reviewId());
-            if (images.isEmpty()) continue;
-
+            
             // 리뷰 이미지 정보를 DTO에 추가
             reviewResDtoList.add(new GetTrendingReviewResDto(info, images));
         }
