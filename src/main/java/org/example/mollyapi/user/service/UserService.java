@@ -7,13 +7,12 @@ import org.example.mollyapi.common.exception.error.impl.UserError;
 import org.example.mollyapi.user.dto.*;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import static org.example.mollyapi.common.exception.error.impl.UserError.*;
+import static org.example.mollyapi.common.exception.error.impl.UserError.NOT_EXISTS_USER;
 
 @Service
 @RequiredArgsConstructor
