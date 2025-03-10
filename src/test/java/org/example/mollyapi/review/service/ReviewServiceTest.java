@@ -28,7 +28,6 @@ import org.example.mollyapi.review.repository.ReviewRepository;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
 import org.example.mollyapi.user.type.Sex;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -99,33 +98,19 @@ public class ReviewServiceTest {
 
     private UploadFile uploadFile;
 
-    private User testUser;
-    private Product testProduct;
-    private ProductItem testItem;
-    private Order testOrder;
-    private OrderDetail testOrderDetail;
-    private PageRequest pageable;
-
-    @BeforeEach
-    void setUp() {
-        testUser = createAndSaveUser("망고", "김망고");
-        testProduct = createAndSaveProduct();
-        ProductImage testImage = createAndSaveProductImage(testProduct);
-        testItem = createAndSaveProductItem("S", testProduct);
-        Cart testCart = createAndSaveCart(3L, testUser, testItem);
-        testOrder = createAndSaveOrder(testUser);
-        testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
-        pageable = PageRequest.of(0, 5);
-    }
-
     @DisplayName("배송 완료 상태인 상품의 리뷰를 등록한다.")
     @Test
     void registerReview() {
         // given
-        Long userId = testUser.getUserId();
-        Long orderDetailId = testOrderDetail.getId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
+
         String content = "Test Content";
-        AddReviewReqDto addReviewReqDto = new AddReviewReqDto(orderDetailId, content);
+        AddReviewReqDto addReviewReqDto = new AddReviewReqDto(testOrderDetail.getId(), content);
         List<MultipartFile> testFiles = List.of(new MockMultipartFile("file1", "test.jpg", "image/jpeg", "test content".getBytes()));
 
         List<UploadFile> mockUploadFile = testFiles.stream()
@@ -139,13 +124,13 @@ public class ReviewServiceTest {
         when(imageClient.upload(ImageType.REVIEW, testFiles)).thenReturn(mockUploadFile);
 
         // when
-        reviewService.registerReview(addReviewReqDto, testFiles, userId);
-        Review newReview = reviewRepository.findByIsDeletedAndOrderDetailIdAndUserUserId(false, orderDetailId, userId);
+        reviewService.registerReview(addReviewReqDto, testFiles, testUser.getUserId());
+        Review newReview = reviewRepository.findByIsDeletedAndOrderDetailIdAndUserUserId(false, testOrderDetail.getId(), testUser.getUserId());
 
         // then
         assertThat(newReview).isNotNull();
         assertThat(newReview.getContent()).isEqualTo(content);
-        assertThat(newReview.getUser().getUserId()).isEqualTo(userId);
+        assertThat(newReview.getUser().getUserId()).isEqualTo(testUser.getUserId());
         assertThat(reviewImageRepository.findAllByReviewId(newReview.getId()))
                 .hasSize(1)
                 .extracting(ReviewImage::getFilename)
@@ -157,7 +142,7 @@ public class ReviewServiceTest {
     void shouldThrowExceptionWhenUserNotFoundOnRegisterReview() {
         // given
         Long userId = 999L;
-        Long orderDetailId = testOrderDetail.getId();
+        Long orderDetailId = 2L;
         AddReviewReqDto addReviewReqDto = new AddReviewReqDto(orderDetailId, "Test content");
         List<MultipartFile> testFiles = List.of(new MockMultipartFile("file1", "test.jpg", "image/jpeg", "test content".getBytes()));
 
@@ -171,13 +156,13 @@ public class ReviewServiceTest {
     @Test
     void shouldThrowExceptionWhenOrderDetailNotFoundOnRegisterReview() {
         // given
-        Long userId = testUser.getUserId();
+        User testUser = createAndSaveUser("망고", "김망고");
         Long orderDetailId = 999L;
         AddReviewReqDto addReviewReqDto = new AddReviewReqDto(orderDetailId, "Test content");
         List<MultipartFile> uploadImages = List.of(new MockMultipartFile("file1", "test.jpg", "image/jpeg", "test content".getBytes()));
 
         // when & then
-        assertThatThrownBy(() -> reviewService.registerReview(addReviewReqDto, uploadImages, userId))
+        assertThatThrownBy(() -> reviewService.registerReview(addReviewReqDto, uploadImages, testUser.getUserId()))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(NOT_EXIST_ORDERDETIAL.getMessage());
     }
@@ -186,16 +171,20 @@ public class ReviewServiceTest {
     @Test
     void shouldThrowExceptionWhenUserHasNoPermissionOnRegisterReview() {
         // given
-        Long userId = testUser.getUserId();
-        Long orderDetailId = testOrderDetail.getId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
         Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "Test content");
-        testReview.updateIsDeleted(true);
 
-        AddReviewReqDto addReviewReqDto = new AddReviewReqDto(orderDetailId, "리뷰 텍스트");
+        testReview.updateIsDeleted(true);
+        AddReviewReqDto addReviewReqDto = new AddReviewReqDto(testOrderDetail.getId(), "리뷰 텍스트");
         List<MultipartFile> uploadImages = List.of(new MockMultipartFile("file1", "test.jpg", "image/jpeg", "test content".getBytes()));
 
         // when & then
-        assertThatThrownBy(() -> reviewService.registerReview(addReviewReqDto, uploadImages, userId))
+        assertThatThrownBy(() -> reviewService.registerReview(addReviewReqDto, uploadImages, testUser.getUserId()))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(NOT_ACCESS_REVIEW.getMessage());
     }
@@ -204,25 +193,31 @@ public class ReviewServiceTest {
     @Test
     void findReviewListByProduct() {
         // given
-        Long userId = testUser.getUserId();
-        Long productId = testProduct.getId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
         ProductItem testItem2 = createAndSaveProductItem("M", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
         Cart testCart2 = createAndSaveCart(3L, testUser, testItem2);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
         OrderDetail testOrderDetail2 = createAndSaveOrderDetail(testOrder, testItem2, testCart2.getQuantity(), testCart2.getCartId());
 
         Review testReview1 = createAndSaveReview(testUser, testOrderDetail, testProduct, "Test content 1");
         Review testReview2 = createAndSaveReview(testUser, testOrderDetail2, testProduct, "Test content 2");
-        ReviewImage testImage = createAndSaveReviewImage(testReview1, 0L, UploadFile.builder()
+        ReviewImage testReviewImage1 = createAndSaveReviewImage(testReview1, 0L, UploadFile.builder()
                 .storedFileName("/images/review/test_1.jpg")
                 .uploadFileName("test_1.jpg")
                 .build());
-        ReviewImage testImage2 = createAndSaveReviewImage(testReview2, 0L, UploadFile.builder()
+        ReviewImage testReviewImage2 = createAndSaveReviewImage(testReview2, 0L, UploadFile.builder()
                 .storedFileName("/images/review/test_2.jpg")
                 .uploadFileName("test_2.jpg")
                 .build());
 
+        PageRequest pageable = PageRequest.of(0, 5);
+
         // when
-        SliceImpl<GetReviewResDto> reviewList = reviewService.getReviewList(pageable, productId, userId);
+        SliceImpl<GetReviewResDto> reviewList = reviewService.getReviewList(pageable, testProduct.getId(), testUser.getUserId());
 
         // then
         assertThat(reviewList).isNotNull();
@@ -234,8 +229,8 @@ public class ReviewServiceTest {
                         GetReviewResDto -> GetReviewResDto.images().get(0)
                 )
                 .contains(
-                        tuple(testReview1.getId(), testReview1.getContent(), testImage.getUrl()),
-                        tuple(testReview2.getId(), testReview2.getContent(), testImage2.getUrl())
+                        tuple(testReview1.getId(), testReview1.getContent(), testReviewImage1.getUrl()),
+                        tuple(testReview2.getId(), testReview2.getContent(), testReviewImage2.getUrl())
                 );
     }
 
@@ -243,11 +238,12 @@ public class ReviewServiceTest {
     @Test
     void shouldThrowExceptionWhenProductDoesNotExist() {
         // given
-        Long userId = testUser.getUserId();
+        User testUser = createAndSaveUser("망고", "김망고");
         Long productId = 999L;
+        PageRequest pageable = PageRequest.of(0, 5);
 
         // when & then
-        assertThatThrownBy(() -> reviewService.getReviewList(pageable, productId, userId))
+        assertThatThrownBy(() -> reviewService.getReviewList(pageable, productId, testUser.getUserId()))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(NOT_EXISTS_PRODUCT.getMessage());
     }
@@ -256,11 +252,12 @@ public class ReviewServiceTest {
     @Test
     void shouldThrowExceptionWhenReviewNotExist() {
         // given
-        Long userId = testUser.getUserId();
-        Long productId = testProduct.getId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        PageRequest pageable = PageRequest.of(0, 5);
 
         // when & then
-        assertThatThrownBy(() -> reviewService.getReviewList(pageable, productId, userId))
+        assertThatThrownBy(() -> reviewService.getReviewList(pageable, testProduct.getId(), testUser.getUserId()))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(NOT_EXIST_REVIEW.getMessage());
     }
@@ -269,9 +266,15 @@ public class ReviewServiceTest {
     @Test
     void findMyReviewList() {
         // given
-        Long userId = testUser.getUserId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
         ProductItem testItem2 = createAndSaveProductItem("M", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
         Cart testCart2 = createAndSaveCart(3L, testUser, testItem2);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
         OrderDetail testOrderDetail2 = createAndSaveOrderDetail(testOrder, testItem2, testCart2.getQuantity(), testCart2.getCartId());
 
         Review testReview1 = createAndSaveReview(testUser, testOrderDetail, testProduct, "Test review 1");
@@ -286,8 +289,10 @@ public class ReviewServiceTest {
                 .uploadFileName("review_2.jpg")
                 .build());
 
+        PageRequest pageable = PageRequest.of(0, 5);
+
         // when
-        SliceImpl<GetMyReviewResDto> reviewList = reviewService.getMyReviewList(pageable, userId);
+        SliceImpl<GetMyReviewResDto> reviewList = reviewService.getMyReviewList(pageable, testUser.getUserId());
 
         // then
         assertThat(reviewList).isNotNull();
@@ -309,10 +314,11 @@ public class ReviewServiceTest {
     @Test
     void shouldThrowExceptionWhenMyReviewNotExist() {
         // given
-        Long userId = testUser.getUserId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        PageRequest pageable = PageRequest.of(0, 5);
 
         // when & then
-        assertThatThrownBy(() -> reviewService.getMyReviewList(pageable, userId))
+        assertThatThrownBy(() -> reviewService.getMyReviewList(pageable, testUser.getUserId()))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(NOT_EXIST_REVIEW.getMessage());
     }
@@ -321,14 +327,19 @@ public class ReviewServiceTest {
     @Test
     void updateMyReviewContent() {
         // given
-        Long userId = testUser.getUserId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
         Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "Test content");
+
         String updateContent = "Update Content";
         AddReviewReqDto addReviewReqDto = new AddReviewReqDto(testReview.getId(), updateContent);
-        List<MultipartFile> testFiles = null;
 
         // when
-        reviewService.updateReview(addReviewReqDto, testFiles, userId);
+        reviewService.updateReview(addReviewReqDto, null, testUser.getUserId());
         Optional<Review> updateReview = reviewRepository.findById(testReview.getId());
 
         // then
@@ -340,8 +351,14 @@ public class ReviewServiceTest {
     @Test
     void updateReviewImage() {
         // given
-        Long userId = testUser.getUserId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
         Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "Test content");
+
         AddReviewReqDto addReviewReqDto = new AddReviewReqDto(testReview.getId(), null);
         List<MultipartFile> updateFiles = List.of(
                 new MockMultipartFile("updateImage", "updateImage.jpg", "image/jpeg", "update image".getBytes()),
@@ -364,14 +381,14 @@ public class ReviewServiceTest {
                         0L,
                         false,
                         testReview))
-                .collect(Collectors.toList());
+                .toList();
 
         // 이미지 저장을 Stub 처리
         doNothing().when(imageClient).delete(eq(ImageType.REVIEW), anyString());
         when(imageClient.upload(eq(ImageType.REVIEW), anyList())).thenReturn(mockUploadFile);
 
         // when
-        reviewService.updateReview(addReviewReqDto, updateFiles, userId);
+        reviewService.updateReview(addReviewReqDto, updateFiles, testUser.getUserId());
         Optional<Review> updateReview = reviewRepository.findById(testReview.getId());
         List<ReviewImage> imageList = reviewImageRepository.findAllByReviewId(updateReview.get().getId());
 
@@ -390,8 +407,14 @@ public class ReviewServiceTest {
     @Test
     void updateReviewContentAndImage() {
         // given
-        Long userId = testUser.getUserId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
         Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "Test content");
+
         String updateContent = "Update Content";
         AddReviewReqDto addReviewReqDto = new AddReviewReqDto(testReview.getId(), updateContent);
 
@@ -416,13 +439,13 @@ public class ReviewServiceTest {
                         0L,
                         false,
                         testReview))
-                .collect(Collectors.toList());
+                .toList();
 
         doNothing().when(imageClient).delete(eq(ImageType.REVIEW), anyString());
         when(imageClient.upload(eq(ImageType.REVIEW), anyList())).thenReturn(mockUploadFile);
 
         // when
-        reviewService.updateReview(addReviewReqDto, testFiles, userId);
+        reviewService.updateReview(addReviewReqDto, testFiles, testUser.getUserId());
         Optional<Review> updateReview = reviewRepository.findById(testReview.getId());
         List<ReviewImage> imageList = reviewImageRepository.findAllByReviewId(updateReview.get().getId());
 
@@ -441,9 +464,15 @@ public class ReviewServiceTest {
     @Test
     void shouldThrowExceptionUpdateReviewNotExist() {
         // given
-        Long userId = testUser.getUserId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
         Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "Test content");
-        ReviewImage testImage = createAndSaveReviewImage(testReview, 0L, UploadFile.builder()
+
+        ReviewImage testReviewImages = createAndSaveReviewImage(testReview, 0L, UploadFile.builder()
                 .storedFileName("/images/review/review_1.jpg")
                 .uploadFileName("review_1.jpg")
                 .build());
@@ -451,7 +480,7 @@ public class ReviewServiceTest {
         testReview.updateIsDeleted(true); //리뷰 삭제
 
         // when & then
-        assertThatThrownBy(() -> reviewService.updateReview(addReviewReqDto, null, userId))
+        assertThatThrownBy(() -> reviewService.updateReview(addReviewReqDto, null, testUser.getUserId()))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(NOT_ACCESS_REVIEW.getMessage());
     }
@@ -460,9 +489,15 @@ public class ReviewServiceTest {
     @Test
     void shouldThrowExceptionWithoutChangesOnUpdateReview() {
         // given
-        Long userId = testUser.getUserId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
         Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "Test content");
-        ReviewImage testImage = createAndSaveReviewImage(testReview, 0L, UploadFile.builder()
+
+        ReviewImage testReviewImage = createAndSaveReviewImage(testReview, 0L, UploadFile.builder()
                 .storedFileName("/images/review/review_1.jpg")
                 .uploadFileName("review_1.jpg")
                 .build());
@@ -472,7 +507,7 @@ public class ReviewServiceTest {
         List<MultipartFile> testFiles = null;
 
         // when & then
-        assertThatThrownBy(() -> reviewService.updateReview(addReviewReqDto, testFiles, userId))
+        assertThatThrownBy(() -> reviewService.updateReview(addReviewReqDto, testFiles, testUser.getUserId()))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(NOT_CHANGED.getMessage());
     }
@@ -481,9 +516,16 @@ public class ReviewServiceTest {
     @Test
     void deleteReview() {
         // given
-        Long userId = testUser.getUserId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
         Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "Test content");
-        ReviewImage testImage = createAndSaveReviewImage(testReview, 0L, UploadFile.builder()
+
+        ReviewImage testReviewImages = createAndSaveReviewImage(testReview, 0L, UploadFile.builder()
                 .storedFileName("/images/review/review_1.jpg")
                 .uploadFileName("review_1.jpg")
                 .build());
@@ -492,7 +534,7 @@ public class ReviewServiceTest {
         doNothing().when(imageClient).delete(eq(ImageType.REVIEW), anyString());
 
         // when
-        reviewService.deleteReview(testReview.getId(), userId);
+        reviewService.deleteReview(testReview.getId(), testUser.getUserId());
         Optional<Review> deleteReview = reviewRepository.findById(testReview.getId());
         boolean existImage = reviewImageRepository.existsById(testImage.getId());
         boolean existLike = reviewLikeRepository.existsById(testLike.getId());
@@ -508,11 +550,11 @@ public class ReviewServiceTest {
     @Test
     void shouldThrowExceptionWhenReviewNotFoundOnDeleteReview() {
         // given
-        Long userId = testUser.getUserId();
+        User testUser = createAndSaveUser("망고", "김망고");
         Long reviewId = 999L; // 존재하지 않는 리뷰 ID
 
         // when & then
-        assertThatThrownBy(() -> reviewService.deleteReview(reviewId, userId))
+        assertThatThrownBy(() -> reviewService.deleteReview(reviewId, testUser.getUserId()))
                 .isInstanceOf(CustomException.class)
                 .hasMessage(NOT_EXIST_REVIEW.getMessage());
     }
@@ -522,6 +564,12 @@ public class ReviewServiceTest {
     void shouldThrowExceptionWhenDeleteOtherUsersReview() {
         // given
         User anotherUser = createAndSaveUser("뉴비", "최뉴비");
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
         Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "Test content");
 
         // when & then
