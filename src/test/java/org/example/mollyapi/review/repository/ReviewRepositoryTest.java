@@ -17,7 +17,6 @@ import org.example.mollyapi.review.entity.Review;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
 import org.example.mollyapi.user.type.Sex;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
@@ -61,17 +60,6 @@ public class ReviewRepositoryTest {
     @Autowired
     private CartRepository cartRepository;
 
-    private Product testProduct;
-    private ProductImage testImage;
-    private ProductItem testItem;
-
-    @BeforeEach
-    void setUp() {
-        testProduct = createAndSaveProduct();
-        testImage = createAndSaveProductImage(testProduct);
-        testItem = createAndSaveProductItem("S", testProduct);
-    }
-
     @DisplayName("작성 권한이 있는 리뷰를 조회한다.")
     @Test
     void findReviewWhenUserHasPermission() {
@@ -93,6 +81,9 @@ public class ReviewRepositoryTest {
         // given
         User testUser = createAndSaveUser();
         Order testOrder = createAndSaveOrder(testUser);
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
         Cart testCart = createAndSaveCart(3L, testUser, testItem);
         OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
         Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "test 1");
@@ -115,6 +106,9 @@ public class ReviewRepositoryTest {
         // given
         User testUser = createAndSaveUser();
         Order testOrder = createAndSaveOrder(testUser);
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
         Cart testCart = createAndSaveCart(3L, testUser, testItem);
         OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
         Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "test 1");

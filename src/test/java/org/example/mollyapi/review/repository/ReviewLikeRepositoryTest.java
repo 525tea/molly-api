@@ -6,11 +6,8 @@ import org.example.mollyapi.order.entity.Order;
 import org.example.mollyapi.order.entity.OrderDetail;
 import org.example.mollyapi.order.repository.OrderDetailRepository;
 import org.example.mollyapi.order.repository.OrderRepository;
-import org.example.mollyapi.product.dto.UploadFile;
 import org.example.mollyapi.product.entity.Product;
-import org.example.mollyapi.product.entity.ProductImage;
 import org.example.mollyapi.product.entity.ProductItem;
-import org.example.mollyapi.product.repository.ProductImageRepository;
 import org.example.mollyapi.product.repository.ProductItemRepository;
 import org.example.mollyapi.product.repository.ProductRepository;
 import org.example.mollyapi.review.dto.request.UpdateReviewLikeReqDto;
@@ -19,7 +16,6 @@ import org.example.mollyapi.review.entity.ReviewLike;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
 import org.example.mollyapi.user.type.Sex;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
@@ -57,33 +53,23 @@ public class ReviewLikeRepositoryTest {
     private ProductRepository productRepository;
 
     @Autowired
-    private ProductImageRepository productImageRepository;
-
-    @Autowired
     private ProductItemRepository productItemRepository;
 
     @Autowired
     private CartRepository cartRepository;
 
-    private User testUser;
-    private Review testReview;
-
-    @BeforeEach
-    void setUp() {
-        testUser = createAndSaveUser("망고", "김망고");
-        Product testProduct = createAndSaveProduct();
-        ProductImage testImage = createAndSaveProductImage(testProduct);
-        ProductItem testItem = createAndSaveProductItem("S", testProduct);
-        Cart testCart = createAndSaveCart(3L, testUser, testItem);
-        Order testOrder = createAndSaveOrder(testUser);
-        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
-        testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "test 1");
-    }
-
     @DisplayName("특정 리뷰에 대한 사용자의 좋아요 여부를 조회할 때, 좋아요가 존재하는 경우")
     @Test
     void findReviewLikeWhenLikeExist() {
         // given
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
+        Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "test 1");
+
         Long userId = testUser.getUserId();
         Long reviewId = testReview.getId();
         ReviewLike testReviewLike = createAndSaveReviewLike(true, testUser, testReview);
@@ -94,19 +80,24 @@ public class ReviewLikeRepositoryTest {
 
         // then
         assertThat(reviewLike).isNotNull();
-        assertThat(reviewLike.getIsLike()).isTrue();
+        assertThat(reviewLike.getIsLike()).isEqualTo(testReviewLike.getIsLike());
     }
 
     @DisplayName("특정 리뷰에 대한 사용자의 좋아요 여부를 조회할 때, 좋아요가 존재하지 않는 경우")
     @Test
     void findReviewLikeWhenLikeNotExist() {
         // given
-        Long userId = testUser.getUserId();
-        Long reviewId = testReview.getId();
-        UpdateReviewLikeReqDto likeDto = new UpdateReviewLikeReqDto(reviewId, true);
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
+        Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "test 1");
+        UpdateReviewLikeReqDto likeDto = new UpdateReviewLikeReqDto(testReview.getId(), true);
 
         // when
-        ReviewLike reviewLike = reviewLikeRepository.findByReviewIdAndUserUserId(likeDto.reviewId(), userId);
+        ReviewLike reviewLike = reviewLikeRepository.findByReviewIdAndUserUserId(likeDto.reviewId(), testUser.getUserId());
 
         // then
         assertThat(reviewLike).isNull();
@@ -116,13 +107,20 @@ public class ReviewLikeRepositoryTest {
     @Test
     void deleteAllLikeByReview() {
         // given
-        Long reviewId = testReview.getId();
+        User testUser = createAndSaveUser("망고", "김망고");
         User testUser2 = createAndSaveUser("사과", "이사과");
+        Product testProduct = createAndSaveProduct();
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
+        Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "test 1");
+
         ReviewLike testReviewLike1 = createAndSaveReviewLike(true, testUser, testReview);
         ReviewLike testReviewLike2 = createAndSaveReviewLike(true, testUser2, testReview);
 
         // when
-        reviewLikeRepository.deleteAllByReviewId(reviewId);
+        reviewLikeRepository.deleteAllByReviewId(testReview.getId());
 
         // then
         assertThat(reviewLikeRepository.existsById(testReviewLike1.getId())).isFalse();
@@ -179,18 +177,6 @@ public class ReviewLikeRepositoryTest {
                 .colorCode("#FFFFFF")
                 .size(size)
                 .quantity(30L)
-                .product(product)
-                .build());
-    }
-
-    private ProductImage createAndSaveProductImage(Product product) {
-        return productImageRepository.save(ProductImage.builder()
-                .uploadFile(UploadFile.builder()
-                        .storedFileName("/images/product/coolfit_bra_volumefit_1.jpg")
-                        .uploadFileName("coolfit_bra_volumefit_1.jpg")
-                        .build())
-                .isRepresentative(true)
-                .imageIndex(0L)
                 .product(product)
                 .build());
     }
