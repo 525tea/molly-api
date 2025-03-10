@@ -8,9 +8,7 @@ import org.example.mollyapi.order.repository.OrderDetailRepository;
 import org.example.mollyapi.order.repository.OrderRepository;
 import org.example.mollyapi.product.dto.UploadFile;
 import org.example.mollyapi.product.entity.Product;
-import org.example.mollyapi.product.entity.ProductImage;
 import org.example.mollyapi.product.entity.ProductItem;
-import org.example.mollyapi.product.repository.ProductImageRepository;
 import org.example.mollyapi.product.repository.ProductItemRepository;
 import org.example.mollyapi.product.repository.ProductRepository;
 import org.example.mollyapi.review.entity.Review;
@@ -18,7 +16,6 @@ import org.example.mollyapi.review.entity.ReviewImage;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
 import org.example.mollyapi.user.type.Sex;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
@@ -58,60 +55,33 @@ public class ReviewImageRepositoryTest {
     private ProductRepository productRepository;
 
     @Autowired
-    private ProductImageRepository productImageRepository;
-
-    @Autowired
     private ProductItemRepository productItemRepository;
 
     @Autowired
     private CartRepository cartRepository;
 
-    private Review testReview;
-    private ReviewImage testImage1;
-    private ReviewImage testImage2;
-
-    @BeforeEach
-    void setUp() {
-        User testUser = createAndSaveUser("망고", "김망고");
-        Product testProduct = createAndSaveProduct();
-        ProductImage testImage = createAndSaveProductImage(testProduct);
-        ProductItem testItem = createAndSaveProductItem("S", testProduct);
-        Cart testCart = createAndSaveCart(3L, testUser, testItem);
-        Order testOrder = createAndSaveOrder(testUser);
-        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
-        testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "test 1");
-        testImage1 = createAndSaveReviewImage(testReview, 0L, UploadFile.builder()
-                .storedFileName("/images/review/test_1.jpg")
-                .uploadFileName("test_1.jpg")
-                .build());
-        testImage2 = createAndSaveReviewImage(testReview, 1L, UploadFile.builder()
-                .storedFileName("/images/review/test_2.jpg")
-                .uploadFileName("test_2.jpg")
-                .build());
-    }
-
-    @DisplayName("특정 리뷰에 해당하는 모든 이미지들을 삭제한다.")
-    @Test
-    void deleteAllImageByReview() {
-        // given
-        Long reviewId = testReview.getId();
-
-        // when
-        reviewImageRepository.deleteAllByReviewId(reviewId);
-
-        // then
-        assertThat(reviewImageRepository.existsById(testImage1.getId())).isFalse();
-        assertThat(reviewImageRepository.existsById(testImage2.getId())).isFalse();
-    }
-
     @DisplayName("특정 리뷰에 해당하는 모든 이미지들을 조회한다.")
     @Test
     void findAllImageByReview() {
         // given
-        Long reviewId = testReview.getId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
+        Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "test 1");
+        ReviewImage testImage1 = createAndSaveReviewImage(testReview, 0L, UploadFile.builder()
+                .storedFileName("/images/review/test_1.jpg")
+                .uploadFileName("test_1.jpg")
+                .build());
+        ReviewImage testImage2 = createAndSaveReviewImage(testReview, 1L, UploadFile.builder()
+                .storedFileName("/images/review/test_2.jpg")
+                .uploadFileName("test_2.jpg")
+                .build());
 
         // when
-        List<ReviewImage> reviewImageList = reviewImageRepository.findAllByReviewId(reviewId);
+        List<ReviewImage> reviewImageList = reviewImageRepository.findAllByReviewId(testReview.getId());
 
         // then
         assertThat(reviewImageList).hasSize(2);
@@ -121,6 +91,34 @@ public class ReviewImageRepositoryTest {
                         tuple(testImage1.getFilename(), testImage1.getImageIndex()),
                         tuple(testImage2.getFilename(), testImage2.getImageIndex())
                 );
+    }
+
+    @DisplayName("특정 리뷰에 해당하는 모든 이미지들을 삭제한다.")
+    @Test
+    void deleteAllImageByReview() {
+        // given
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
+        Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "test 1");
+        ReviewImage testImage1 = createAndSaveReviewImage(testReview, 0L, UploadFile.builder()
+                .storedFileName("/images/review/test_1.jpg")
+                .uploadFileName("test_1.jpg")
+                .build());
+        ReviewImage testImage2 = createAndSaveReviewImage(testReview, 1L, UploadFile.builder()
+                .storedFileName("/images/review/test_2.jpg")
+                .uploadFileName("test_2.jpg")
+                .build());
+
+        // when
+        reviewImageRepository.deleteAllByReviewId(testReview.getId());
+
+        // then
+        assertThat(reviewImageRepository.existsById(testImage1.getId())).isFalse();
+        assertThat(reviewImageRepository.existsById(testImage2.getId())).isFalse();
     }
 
     private User createAndSaveUser(String nickname, String name) {
@@ -173,18 +171,6 @@ public class ReviewImageRepositoryTest {
                 .colorCode("#FFFFFF")
                 .size(size)
                 .quantity(30L)
-                .product(product)
-                .build());
-    }
-
-    private ProductImage createAndSaveProductImage(Product product) {
-        return productImageRepository.save(ProductImage.builder()
-                .uploadFile(UploadFile.builder()
-                        .storedFileName("/images/product/coolfit_bra_volumefit_1.jpg")
-                        .uploadFileName("coolfit_bra_volumefit_1.jpg")
-                        .build())
-                .isRepresentative(true)
-                .imageIndex(0L)
                 .product(product)
                 .build());
     }

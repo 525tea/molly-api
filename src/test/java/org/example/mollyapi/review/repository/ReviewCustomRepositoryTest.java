@@ -22,7 +22,6 @@ import org.example.mollyapi.review.entity.ReviewLike;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
 import org.example.mollyapi.user.type.Sex;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.*;
@@ -73,41 +72,28 @@ public class ReviewCustomRepositoryTest {
     @Autowired
     private CartRepository cartRepository;
 
-    private User testUser;
-    private Product testProduct;
-    private Order testOrder;
-    private OrderDetail testOrderDetail;
-    private Review testReview;
-
-    @BeforeEach
-    void setUp() {
-        testUser = createAndSaveUser("망고", "김망고");
-        testProduct = createAndSaveProduct();
-        ProductImage testImage = createAndSaveProductImage(testProduct);
-        ProductItem testItem = createAndSaveProductItem("S", testProduct);
-        Cart testCart = createAndSaveCart(3L, testUser, testItem);
-        testOrder = createAndSaveOrder(testUser);
-        testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
-        testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "test 1");
-    }
-
     @DisplayName("특정 상품의 리뷰 리스트를 조회한다.")
     @Test
     void findReviewInfoByProduct() {
         // given
-        // 테스트용으로 데이터 추가
+        User testUser = createAndSaveUser("망고", "김망고");
         User testUser2 = createAndSaveUser("사과", "이사과");
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
         ProductItem testItem2 = createAndSaveProductItem("M", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
         Cart testCart2 = createAndSaveCart(3L, testUser2, testItem2);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
         OrderDetail testOrderDetail2 = createAndSaveOrderDetail(testOrder, testItem2, testCart2.getQuantity(), testCart2.getCartId());
+        Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "test 1");
         Review testReview2 = createAndSaveReview(testUser2, testOrderDetail2, testProduct, "test 2");
 
-        Long userId = 0L;
-        Long productId = testProduct.getId();
         PageRequest pageable = PageRequest.of(0, 5);
 
         // when
-        List<ReviewInfoDto> reviewInfoList = reviewRepository.getReviewInfo(pageable, productId, userId);
+        List<ReviewInfoDto> reviewInfoList = reviewRepository.getReviewInfo(pageable, testProduct.getId(), testUser.getUserId());
 
         // then
         assertThat(reviewInfoList).hasSize(2);
@@ -123,7 +109,14 @@ public class ReviewCustomRepositoryTest {
     @Test
     void findImageListByReview() {
         // given
-        Long reviewId = testReview.getId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
+        Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "test 1");
         ReviewImage testImage1 = createAndSaveReviewImage(testReview, 0L, UploadFile.builder()
                 .storedFileName("/images/review/test_1.jpg")
                 .uploadFileName("test_1.jpg")
@@ -134,7 +127,7 @@ public class ReviewCustomRepositoryTest {
                 .build());
 
         // when
-        List<String> imageList = reviewRepository.getImageList(reviewId);
+        List<String> imageList = reviewRepository.getImageList(testReview.getId());
 
         // then
         assertThat(imageList).hasSize(2);
@@ -145,31 +138,41 @@ public class ReviewCustomRepositoryTest {
     @Test
     void findMyReviewInfo() {
         // given
-        Long userId = testUser.getUserId();
-        Long reviewId = testReview.getId();
-        String content = testReview.getContent();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
+        Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "test 1");
+
         PageRequest pageable = PageRequest.of(0, 5);
 
         // when
-        List<MyReviewInfoDto> myReviewInfoList = reviewRepository.getMyReviewInfo(pageable, userId);
+        List<MyReviewInfoDto> myReviewInfoList = reviewRepository.getMyReviewInfo(pageable, testUser.getUserId());
 
         // then
         assertThat(myReviewInfoList).hasSize(1);
-        assertThat(myReviewInfoList.get(0).reviewId()).isEqualTo(reviewId);
-        assertThat(myReviewInfoList.get(0).content()).isEqualTo(content);
+        assertThat(myReviewInfoList.get(0).reviewId()).isEqualTo(testReview.getId());
+        assertThat(myReviewInfoList.get(0).content()).isEqualTo(testReview.getContent());
     }
 
     @DisplayName("리뷰 작성 가능 상태를 조회한다.(OPEN)")
     @Test
     void findReviewStatusAsOpen() {
         // given
-        Long userId = testUser.getUserId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
         ProductItem testItem2 = createAndSaveProductItem("M", testProduct);
-        Cart testCart2 = createAndSaveCart(3L, testUser, testItem2);
-        OrderDetail testOrderDetail2 = createAndSaveOrderDetail(testOrder, testItem2, testCart2.getQuantity(), testCart2.getCartId());
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
 
         // when
-        String reviewStatus = reviewRepository.getReviewStatus(testOrderDetail2.getId(), userId);
+        String reviewStatus = reviewRepository.getReviewStatus(testOrderDetail.getId(), testUser.getUserId());
 
         // then
         assertThat(reviewStatus).isEqualTo("OPEN");
@@ -179,11 +182,17 @@ public class ReviewCustomRepositoryTest {
     @Test
     void findReviewStatusAsModify() {
         // given
-        Long userId = testUser.getUserId();
-        Long orderDetailId = testOrderDetail.getId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
+        Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "test 1");
 
         // when
-        String reviewStatus = reviewRepository.getReviewStatus(orderDetailId, userId);
+        String reviewStatus = reviewRepository.getReviewStatus(testOrderDetail.getId(), testUser.getUserId());
 
         // then
         assertThat(reviewStatus).isEqualTo("MODIFY");
@@ -193,12 +202,18 @@ public class ReviewCustomRepositoryTest {
     @Test
     void findReviewStatusAsLocked() {
         // given
-        Long userId = testUser.getUserId();
-        Long orderDetailId = testOrderDetail.getId();
+        User testUser = createAndSaveUser("망고", "김망고");
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
+        Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "test 1");
         testReview.updateIsDeleted(true);
 
         // when
-        String reviewStatus = reviewRepository.getReviewStatus(orderDetailId, userId);
+        String reviewStatus = reviewRepository.getReviewStatus(testOrderDetail.getId(), testUser.getUserId());
 
         // then
         assertThat(reviewStatus).isEqualTo("LOCKED");
@@ -208,15 +223,23 @@ public class ReviewCustomRepositoryTest {
     @Test
     void findTrendingReviewInfo() {
         // given
+        User testUser = createAndSaveUser("망고", "김망고");
         User testUser2 = createAndSaveUser("감자", "최감자");
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
+        ProductItem testItem = createAndSaveProductItem("S", testProduct);
         ProductItem testItem2 = createAndSaveProductItem("M", testProduct);
+        Cart testCart = createAndSaveCart(3L, testUser, testItem);
         Cart testCart2 = createAndSaveCart(3L, testUser, testItem2);
+        Order testOrder = createAndSaveOrder(testUser);
+        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
         OrderDetail testOrderDetail2 = createAndSaveOrderDetail(testOrder, testItem2, testCart2.getQuantity(), testCart2.getCartId());
+        Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "test 1");
         Review testReview2 = createAndSaveReview(testUser, testOrderDetail2, testProduct, "test 2");
 
-        ReviewLike testReviewLike1 = createAndSaveReviewLike(true, testUser, testReview);
-        ReviewLike testReviewLike2 = createAndSaveReviewLike(true, testUser2, testReview);
-        ReviewLike testReviewLike3 = createAndSaveReviewLike(true, testUser2, testReview2);
+        createAndSaveReviewLike(true, testUser, testReview);
+        createAndSaveReviewLike(true, testUser2, testReview);
+        createAndSaveReviewLike(true, testUser2, testReview2);
 
         // when
         List<TrendingReviewResDto> trendingReviewList = reviewRepository.getTrendingReviewInfo();
@@ -272,16 +295,6 @@ public class ReviewCustomRepositoryTest {
                 .build());
     }
 
-    private ProductItem createAndSaveProductItem(String size, Product product) {
-        return productItemRepository.save(ProductItem.builder()
-                .color("WHITE")
-                .colorCode("#FFFFFF")
-                .size(size)
-                .quantity(30L)
-                .product(product)
-                .build());
-    }
-
     private ProductImage createAndSaveProductImage(Product product) {
         return productImageRepository.save(ProductImage.builder()
                 .uploadFile(UploadFile.builder()
@@ -290,6 +303,16 @@ public class ReviewCustomRepositoryTest {
                         .build())
                 .isRepresentative(true)
                 .imageIndex(0L)
+                .product(product)
+                .build());
+    }
+
+    private ProductItem createAndSaveProductItem(String size, Product product) {
+        return productItemRepository.save(ProductItem.builder()
+                .color("WHITE")
+                .colorCode("#FFFFFF")
+                .size(size)
+                .quantity(30L)
                 .product(product)
                 .build());
     }
@@ -322,8 +345,8 @@ public class ReviewCustomRepositoryTest {
                 .build());
     }
 
-    private ReviewLike createAndSaveReviewLike(boolean status, User user, Review review) {
-        return reviewLikeRepository.save(ReviewLike.builder()
+    private void createAndSaveReviewLike(boolean status, User user, Review review) {
+        reviewLikeRepository.save(ReviewLike.builder()
                 .isLike(status)
                 .user(user)
                 .review(review)
