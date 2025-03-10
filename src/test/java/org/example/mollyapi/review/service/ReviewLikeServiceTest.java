@@ -141,13 +141,6 @@ public class ReviewLikeServiceTest {
     void shouldThrowExceptionWhenReviewNotFoundOnChangeReviewLike() {
         // given
         User testUser = createAndSaveUser("망고", "김망고");
-        Product testProduct = createAndSaveProduct();
-        ProductItem testItem = createAndSaveProductItem("S", testProduct);
-        Cart testCart = createAndSaveCart(3L, testUser, testItem);
-        Order testOrder = createAndSaveOrder(testUser);
-        OrderDetail testOrderDetail = createAndSaveOrderDetail(testOrder, testItem, testCart.getQuantity(), testCart.getCartId());
-        Review testReview = createAndSaveReview(testUser, testOrderDetail, testProduct, "Test content");
-
         Long reviewId = 999L;
         UpdateReviewLikeReqDto likeReqDto = new UpdateReviewLikeReqDto(reviewId, true);
 
