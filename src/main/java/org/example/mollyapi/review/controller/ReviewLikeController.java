@@ -14,7 +14,10 @@ import org.example.mollyapi.review.dto.request.UpdateReviewLikeReqDto;
 import org.example.mollyapi.review.service.ReviewLikeService;
 import org.example.mollyapi.user.auth.annotation.Auth;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "좋아요 Controller", description = "리뷰 좋아요 기능을 담당")
 @RestController
