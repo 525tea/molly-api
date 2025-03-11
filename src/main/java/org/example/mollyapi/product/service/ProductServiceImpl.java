@@ -3,26 +3,29 @@ package org.example.mollyapi.product.service;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.mollyapi.common.client.ImageClient;
-import org.example.mollyapi.product.dto.*;
-import org.example.mollyapi.product.dto.response.*;
+import org.example.mollyapi.common.enums.ImageType;
+import org.example.mollyapi.product.dto.ProductAndThumbnailDto;
+import org.example.mollyapi.product.dto.ProductDto;
+import org.example.mollyapi.product.dto.ProductItemDto;
+import org.example.mollyapi.product.dto.UploadFile;
+import org.example.mollyapi.product.dto.response.ColorDetailDto;
+import org.example.mollyapi.product.dto.response.FileInfoDto;
+import org.example.mollyapi.product.dto.response.ProductResDto;
+import org.example.mollyapi.product.dto.response.SizeDetailDto;
 import org.example.mollyapi.product.entity.Category;
 import org.example.mollyapi.product.entity.Product;
 import org.example.mollyapi.product.entity.ProductImage;
 import org.example.mollyapi.product.entity.ProductItem;
-import org.example.mollyapi.common.enums.ImageType;
 import org.example.mollyapi.product.repository.CategoryRepository;
 import org.example.mollyapi.product.repository.ProductItemRepository;
 import org.example.mollyapi.product.repository.ProductRepository;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
