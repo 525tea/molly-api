@@ -68,16 +68,15 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
                         product.productName,
                         product.price,
                         product.description,
-                        productItem.colorCode,
-                        productItem.size,
-                        productItem.quantity,
-                        productImage.url,
-                        productImage.filename,
+                        productItem.colorCode.max().as("colorCode"),
+                        productItem.size.max().as("size"),
+                        productItem.quantity.max().as("quantity"),
+                        productImage.url.max().as("url"),
+                        productImage.filename.max().as("filename"),
                         product.createdAt,
                         product.viewCount,
                         product.purchaseCount
                 ))
-                .distinct()
                 .from(productItem)
                 .join(productItem.product, product)
                 .leftJoin(productImage).on(productImage.product.eq(product).and(productImage.isRepresentative.eq(true)))
@@ -91,7 +90,8 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
                         condition != null ? sellerIdEq(condition.sellerId()) : null,
                         condition != null ? excludeSoldOut(condition.excludeSoldOut()) : null
                 )
-                .orderBy(orderByCondition(condition != null ? condition.orderBy() : null));
+                .orderBy(orderByCondition(condition != null ? condition.orderBy() : null))
+                .groupBy(product.id);
 
         if (pageable.isPaged()) {
             query.offset(pageable.getOffset());
