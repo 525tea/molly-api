@@ -23,7 +23,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.stream.Stream;
 
@@ -118,22 +120,47 @@ class ProductRepositoryImplTest {
     @MethodSource("provideSearchConditionsForSingleFilter")
     void findByCondition_singleFilter(ProductFilterCondition condition) {
         //given
-        // 색상 필터 (RED) 테스트
-        createTestProduct("RED", "Red", "M", 1L, "Nike", 60000L, 100L, 50L, 200L);  // RED 색상 필터
-        // 사이즈 필터 (M) 테스트
-        createTestProduct("BLUE", "Blue", "M", 1L, "Nike", 80000L, 200L, 150L, 300L);  // M 사이즈, Blue 색상, Nike 브랜드 필터
-        // 카테고리 필터 (1번 카테고리) 테스트
-        createTestProduct("GREEN", "Green", "L", 1L, "Puma", 70000L, 300L, 200L, 400L);  // 카테고리 1번 필터
-        // 브랜드 필터 (Nike) 테스트
-        createTestProduct("BLACK", "Black", "XL", 1L, "Nike", 50000L, 150L, 75L, 100L);  // Nike 브랜드 필터
-        // 가격 최소값 필터 (50000L) 테스트
-        createTestProduct("YELLOW", "Yellow", "S", 1L, "Reebok", 55000L, 180L, 120L, 350L);  // 가격 최소값 필터
-        // 가격 최대값 필터 (100000L) 테스트
-        createTestProduct("WHITE", "White", "M", 2L, "Adidas", 90000L, 250L, 200L, 500L);  // 가격 최대값 필터
-        // 품절 제외 필터 테스트 (품절이 아닌 상품 추가)
-        createTestProduct("GRAY", "Gray", "M", 3L, "Nike", 75000L, 200L, 130L, 100L);  // 품절 상태가 아닌 상품
+// 색상 필터 (RED) 테스트
+        createTestProduct(1L, "Nike", 60000L, 100L, 50L, List.of(
+                new ProductItemOption("#FF0000", "Red", "M", 200L),
+                new ProductItemOption("#FF0000", "Red", "L", 150L)
+        ));
 
-        // when
+// 사이즈 필터 (M) 테스트
+        createTestProduct(1L, "Nike", 80000L, 200L, 150L, List.of(
+                new ProductItemOption("#0000FF", "Blue", "M", 300L),
+                new ProductItemOption("#00FF00", "Green", "M", 250L)
+        ));
+
+// 카테고리 필터 (1번 카테고리) 테스트
+        createTestProduct(1L, "Puma", 70000L, 300L, 200L, List.of(
+                new ProductItemOption("#00FF00", "Green", "L", 400L),
+                new ProductItemOption("#00AA00", "Dark Green", "XL", 350L)
+        ));
+
+// 브랜드 필터 (Nike) 테스트
+        createTestProduct(1L, "Nike", 50000L, 150L, 75L, List.of(
+                new ProductItemOption("#000000", "Black", "XL", 100L),
+                new ProductItemOption("#222222", "Dark Black", "L", 120L)
+        ));
+
+// 가격 최소값 필터 (50000L) 테스트
+        createTestProduct(1L, "Reebok", 55000L, 180L, 120L, List.of(
+                new ProductItemOption("#FFFF00", "Yellow", "S", 350L),
+                new ProductItemOption("#FFD700", "Gold", "M", 200L)
+        ));
+
+// 가격 최대값 필터 (100000L) 테스트
+        createTestProduct(2L, "Adidas", 90000L, 250L, 200L, List.of(
+                new ProductItemOption("#FFFFFF", "White", "M", 500L),
+                new ProductItemOption("#F5F5F5", "Off White", "L", 450L)
+        ));
+
+// 품절 제외 필터 테스트 (품절이 아닌 상품 추가)
+        createTestProduct(3L, "Nike", 75000L, 200L, 130L, List.of(
+                new ProductItemOption("#808080", "Gray", "M", 100L),
+                new ProductItemOption("#A9A9A9", "Dark Gray", "S", 50L)
+        ));        // when
         PageRequest pageable = PageRequest.of(0, 10);
         List<ProductAndThumbnailDto> content = productRepository.findByCondition(condition, pageable).getContent();
 
@@ -339,6 +366,9 @@ class ProductRepositoryImplTest {
             });
         }
 
+        // 중복된 productId가 없는지 검증
+        assertNoDuplicateProductId(content);
+
         // 정렬 조건 검증
         if (condition.orderBy() != null) {
             assertSortCondition(content, condition.orderBy());
@@ -401,6 +431,15 @@ class ProductRepositoryImplTest {
         }
     }
 
+    private void assertNoDuplicateProductId(List<ProductAndThumbnailDto> content) {
+        Set<Long> uniqueIds = new HashSet<>();
+        for (ProductAndThumbnailDto product : content) {
+            assertThat(uniqueIds.add(product.getId()))
+                    .as("중복된 productId가 존재합니다: " + product.getId())
+                    .isTrue();
+        }
+    }
+
 
     private Product createTestProduct(
             String colorCode,  String color, String size, Long categoryId, String brandName,
@@ -459,5 +498,65 @@ class ProductRepositoryImplTest {
                 .quantity(quantity)
                 .product(product)
                 .build();
+    }
+
+    private Product createTestProduct(
+            Long categoryId, String brandName, Long price, Long viewCount, Long purchaseCount,
+            List<ProductItemOption> itemOptions // 변경: Tuple → ProductItemOption 리스트
+    ) {
+        // 카테고리 조회
+        Category category = categoryRepository.findById(categoryId).orElseThrow();
+
+        // 상품 생성
+        Product product = Product.builder()
+                .category(category)
+                .brandName(brandName)
+                .productName("TestProduct")
+                .price(price)
+                .description("Test description")
+                .user(testUser)
+                .build();
+
+        // 상품 대표 이미지 추가
+        ProductImage image = createTestProductImage(product);
+        product.addImage(image);
+
+        // 여러 개의 상품 아이템 추가
+        for (ProductItemOption option : itemOptions) {
+            ProductItem item = createTestProductItem(
+                    option.getColorCode(),
+                    option.getColor(),
+                    option.getSize(),
+                    option.getStock(),
+                    product
+            );
+            product.addItem(item);
+        }
+
+        // 조회수 및 구매수 설정
+        product.setPurchaseCount(purchaseCount);
+        for (long i = 0; i < viewCount; i++) {
+            product.increaseViewCount();
+        }
+
+        return productRepository.save(product);
+    }
+    public class ProductItemOption {
+        private final String colorCode;
+        private final String color;
+        private final String size;
+        private final Long stock;
+
+        public ProductItemOption(String colorCode, String color, String size, Long stock) {
+            this.colorCode = colorCode;
+            this.color = color;
+            this.size = size;
+            this.stock = stock;
+        }
+
+        public String getColorCode() { return colorCode; }
+        public String getColor() { return color; }
+        public String getSize() { return size; }
+        public Long getStock() { return stock; }
     }
 }
