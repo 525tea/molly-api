@@ -1,6 +1,7 @@
 package org.example.mollyapi.product.repository;
 
 import jakarta.transaction.Transactional;
+import lombok.Getter;
 import org.example.mollyapi.product.dto.BrandSummaryDto;
 import org.example.mollyapi.product.dto.ProductAndThumbnailDto;
 import org.example.mollyapi.product.dto.ProductFilterCondition;
@@ -120,46 +121,29 @@ class ProductRepositoryImplTest {
     @MethodSource("provideSearchConditionsForSingleFilter")
     void findByCondition_singleFilter(ProductFilterCondition condition) {
         //given
-// 색상 필터 (RED) 테스트
         createTestProduct(1L, "Nike", 60000L, 100L, 50L, List.of(
-                new ProductItemOption("#FF0000", "Red", "M", 200L),
-                new ProductItemOption("#FF0000", "Red", "L", 150L)
+                new ProductItemOption("RED", "Red", "M", 200L),
+                new ProductItemOption("BLUE", "Blue", "L", 150L)
         ));
 
-// 사이즈 필터 (M) 테스트
-        createTestProduct(1L, "Nike", 80000L, 200L, 150L, List.of(
-                new ProductItemOption("#0000FF", "Blue", "M", 300L),
-                new ProductItemOption("#00FF00", "Green", "M", 250L)
+        createTestProduct(2L, "Adidas", 80000L, 120L, 70L, List.of(
+                new ProductItemOption("RED", "Red", "S", 180L),
+                new ProductItemOption("GREEN", "Green", "M", 140L)
         ));
 
-// 카테고리 필터 (1번 카테고리) 테스트
-        createTestProduct(1L, "Puma", 70000L, 300L, 200L, List.of(
-                new ProductItemOption("#00FF00", "Green", "L", 400L),
-                new ProductItemOption("#00AA00", "Dark Green", "XL", 350L)
+        createTestProduct(1L, "Nike", 40000L, 90L, 30L, List.of(
+                new ProductItemOption("RED", "Red", "M", 100L),
+                new ProductItemOption("BLUE", "Blue", "L", 120L)
         ));
 
-// 브랜드 필터 (Nike) 테스트
-        createTestProduct(1L, "Nike", 50000L, 150L, 75L, List.of(
-                new ProductItemOption("#000000", "Black", "XL", 100L),
-                new ProductItemOption("#222222", "Dark Black", "L", 120L)
+        createTestProduct(3L, "Puma", 75000L, 200L, 100L, List.of(
+                new ProductItemOption("CYAN", "Cyan", "L", 50L),
+                new ProductItemOption("MAGENTA", "Magenta", "XL", 80L)
         ));
 
-// 가격 최소값 필터 (50000L) 테스트
-        createTestProduct(1L, "Reebok", 55000L, 180L, 120L, List.of(
-                new ProductItemOption("#FFFF00", "Yellow", "S", 350L),
-                new ProductItemOption("#FFD700", "Gold", "M", 200L)
-        ));
-
-// 가격 최대값 필터 (100000L) 테스트
-        createTestProduct(2L, "Adidas", 90000L, 250L, 200L, List.of(
-                new ProductItemOption("#FFFFFF", "White", "M", 500L),
-                new ProductItemOption("#F5F5F5", "Off White", "L", 450L)
-        ));
-
-// 품절 제외 필터 테스트 (품절이 아닌 상품 추가)
-        createTestProduct(3L, "Nike", 75000L, 200L, 130L, List.of(
-                new ProductItemOption("#808080", "Gray", "M", 100L),
-                new ProductItemOption("#A9A9A9", "Dark Gray", "S", 50L)
+        createTestProduct(2L, "Nike", 90000L, 10L, 5L, List.of(
+                new ProductItemOption("RED", "Red", "M", 0L),
+                new ProductItemOption("BLACK", "Black", "S", 100L)
         ));        // when
         PageRequest pageable = PageRequest.of(0, 10);
         List<ProductAndThumbnailDto> content = productRepository.findByCondition(condition, pageable).getContent();
@@ -188,19 +172,19 @@ class ProductRepositoryImplTest {
     void findByCondition_twoFilters(ProductFilterCondition condition) {
         // given
         // 색상 필터 (RED) 테스트
-        createTestProduct("RED", "Red", "M", 1L, "Nike", 60000L, 100L, 50L, 200L);  // RED 색상 필터
+        createTestProduct("RED", "Red", "M", 1L, "Nike", 60000L, 100L, 50L, 200L);
         // 사이즈 필터 (M) 테스트
-        createTestProduct("BLUE", "Blue", "M", 1L, "Nike", 80000L, 200L, 150L, 300L);  // M 사이즈, Blue 색상, Nike 브랜드 필터
+        createTestProduct("BLUE", "Blue", "M", 1L, "Nike", 80000L, 200L, 150L, 300L);
         // 카테고리 필터 (1번 카테고리) 테스트
-        createTestProduct("GREEN", "Green", "L", 1L, "Puma", 70000L, 300L, 200L, 400L);  // 카테고리 1번 필터
+        createTestProduct("GREEN", "Green", "L", 1L, "Puma", 70000L, 300L, 200L, 400L);
         // 브랜드 필터 (Nike) 테스트
-        createTestProduct("BLACK", "Black", "XL", 1L, "Nike", 50000L, 150L, 75L, 100L);  // Nike 브랜드 필터
+        createTestProduct("BLACK", "Black", "XL", 1L, "Nike", 50000L, 150L, 75L, 100L);
         // 가격 최소값 필터 (50000L) 테스트
-        createTestProduct("YELLOW", "Yellow", "S", 1L, "Reebok", 55000L, 180L, 120L, 350L);  // 가격 최소값 필터
+        createTestProduct("YELLOW", "Yellow", "S", 1L, "Reebok", 55000L, 180L, 120L, 350L);
         // 가격 최대값 필터 (100000L) 테스트
-        createTestProduct("WHITE", "White", "M", 2L, "Adidas", 90000L, 250L, 200L, 500L);  // 가격 최대값 필터
+        createTestProduct("WHITE", "White", "M", 2L, "Adidas", 90000L, 250L, 200L, 500L);
         // 품절 제외 필터 테스트 (품절이 아닌 상품 추가)
-        createTestProduct("GRAY", "Gray", "M", 3L, "Nike", 75000L, 200L, 130L, 100L);  // 품절 상태가 아닌 상품
+        createTestProduct("GRAY", "Gray", "M", 3L, "Nike", 75000L, 200L, 130L, 100L);
 
 
         // when
@@ -218,11 +202,11 @@ class ProductRepositoryImplTest {
         // given
         ProductFilterCondition condition = new ProductFilterCondition(null, null, null, null, 100000L, 50000L, null, null, null);
         // 최소값보다 비싼 상품
-        createTestProduct("WHITE", "White", "M", 2L, "Adidas", 110000L, 250L, 200L, 500L);  // 가격 최대값 필터
+        createTestProduct("WHITE", "White", "M", 2L, "Adidas", 110000L, 250L, 200L, 500L);
         // 최소값과 최대값 사이
-        createTestProduct("BLUE", "Blue", "M", 1L, "Nike", 80000L, 200L, 150L, 300L);  // M 사이즈, Blue 색상, Nike 브랜드 필터
+        createTestProduct("BLUE", "Blue", "M", 1L, "Nike", 80000L, 200L, 150L, 300L);
         // 최대값보다 저렴한 상품
-        createTestProduct("GRAY", "Gray", "M", 3L, "Nike", 30000L, 200L, 130L, 100L);  // 품절 상태가 아닌 상품
+        createTestProduct("GRAY", "Gray", "M", 3L, "Nike", 30000L, 200L, 130L, 100L);
 
 
         // when
@@ -237,9 +221,9 @@ class ProductRepositoryImplTest {
     @Test
     void findByCondition_ConditionNull() {
         // given
-        createTestProduct("WHITE", "White", "M", 2L, "Adidas", 110000L, 250L, 200L, 500L);  // 가격 최대값 필터
-        createTestProduct("BLUE", "Blue", "M", 1L, "Nike", 80000L, 200L, 150L, 300L);  // M 사이즈, Blue 색상, Nike 브랜드 필터
-        createTestProduct("GRAY", "Gray", "M", 3L, "Nike", 30000L, 200L, 130L, 100L);  // 품절 상태가 아닌 상품
+        createTestProduct("WHITE", "White", "M", 2L, "Adidas", 110000L, 250L, 200L, 500L);
+        createTestProduct("BLUE", "Blue", "M", 1L, "Nike", 80000L, 200L, 150L, 300L);
+        createTestProduct("GRAY", "Gray", "M", 3L, "Nike", 30000L, 200L, 130L, 100L);
 
         // when
         PageRequest pageable = PageRequest.of(0, 10);
@@ -256,10 +240,10 @@ class ProductRepositoryImplTest {
         // given
         ProductFilterCondition condition = new ProductFilterCondition(List.of("WHITE"), null, null, null, null, null, null, null, null);
         // 최소값보다 비싼 상품
-        createTestProduct("WHITE", "White", "M", 2L, "Adidas", 110000L, 250L, 200L, 500L);  // 가격 최대값 필터
-        createTestProduct("WHITE", "Blue", "M", 1L, "Nike", 80000L, 200L, 150L, 300L);  // M 사이즈, Blue 색상, Nike 브랜드 필터
-        createTestProduct("WHITE", "Gray", "M", 3L, "Nike", 30000L, 200L, 130L, 100L);  // 품절 상태가 아닌 상품
-        createTestProduct("BLUE", "Gray", "M", 3L, "Nike", 30000L, 200L, 130L, 100L);  // 품절 상태가 아닌 상품
+        createTestProduct("WHITE", "White", "M", 2L, "Adidas", 110000L, 250L, 200L, 500L);
+        createTestProduct("WHITE", "Blue", "M", 1L, "Nike", 80000L, 200L, 150L, 300L);
+        createTestProduct("WHITE", "Gray", "M", 3L, "Nike", 30000L, 200L, 130L, 100L);
+        createTestProduct("BLUE", "Gray", "M", 3L, "Nike", 30000L, 200L, 130L, 100L);
 
         // when
         List<ProductAndThumbnailDto> content = productRepository.findByCondition(condition, null).getContent();
@@ -541,6 +525,8 @@ class ProductRepositoryImplTest {
 
         return productRepository.save(product);
     }
+
+    @Getter
     public class ProductItemOption {
         private final String colorCode;
         private final String color;
@@ -553,10 +539,5 @@ class ProductRepositoryImplTest {
             this.size = size;
             this.stock = stock;
         }
-
-        public String getColorCode() { return colorCode; }
-        public String getColor() { return color; }
-        public String getSize() { return size; }
-        public Long getStock() { return stock; }
     }
 }
