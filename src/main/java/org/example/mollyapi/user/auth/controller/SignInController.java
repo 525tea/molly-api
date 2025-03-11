@@ -14,14 +14,13 @@ import org.example.mollyapi.user.auth.dto.SignInReqDto;
 import org.example.mollyapi.user.auth.dto.SignInResDto;
 import org.example.mollyapi.user.auth.service.SignInService;
 import org.example.mollyapi.user.type.Role;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.List;
 
 

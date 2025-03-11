@@ -1,15 +1,11 @@
 package org.example.mollyapi.user.auth.config;
 
 import org.example.mollyapi.common.exception.CustomException;
-import org.example.mollyapi.common.exception.error.impl.AuthError;
-import org.example.mollyapi.user.auth.entity.Auth;
-import org.example.mollyapi.user.auth.entity.Password;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
