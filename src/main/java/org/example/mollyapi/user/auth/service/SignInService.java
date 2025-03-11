@@ -11,10 +11,7 @@ import org.example.mollyapi.user.auth.entity.Password;
 import org.example.mollyapi.user.auth.repository.AuthRepository;
 import org.springframework.stereotype.Service;
 
-
-import java.time.LocalDateTime;
-
-import static org.example.mollyapi.common.exception.error.impl.AuthError.*;
+import static org.example.mollyapi.common.exception.error.impl.AuthError.NOT_MATCH_AUTH;
 
 @Service
 @RequiredArgsConstructor
