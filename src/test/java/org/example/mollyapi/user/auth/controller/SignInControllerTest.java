@@ -37,7 +37,7 @@ class SignInControllerTest {
     private SignInService signInService;
 
     @Test
-    @DisplayName("사용자의 권한 인증한다.")
+    @DisplayName("사용자의 권한을 인증한다.")
     void signIn() throws Exception {
         //given
         String inputPassword = "qwer1234";
