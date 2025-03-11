@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.mollyapi.common.dto.CommonResDto;
 import org.example.mollyapi.common.exception.CustomErrorResponse;
 import org.example.mollyapi.review.dto.request.UpdateReviewLikeReqDto;
 import org.example.mollyapi.review.service.ReviewLikeService;
@@ -32,16 +33,15 @@ public class ReviewLikeController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "좋아요 상태 변경 성공",
                     content = @Content(schema = @Schema(implementation = UpdateReviewLikeReqDto.class))),
-            @ApiResponse(responseCode = "204", description = "변경사항 없음",
-                    content = @Content(schema = @Schema(implementation = CustomErrorResponse.class))),
             @ApiResponse(responseCode = "400", description = "좋아요 상태 변경 실패",
                     content = @Content(schema = @Schema(implementation = CustomErrorResponse.class)))
     })
-    public ResponseEntity<?> addReviewLike(
+    public ResponseEntity<?> changeReviewLike(
         @Valid @RequestBody UpdateReviewLikeReqDto updateReviewLikeReqDto,
         HttpServletRequest request
     ) {
         Long userId = (Long) request.getAttribute("userId");
-        return reviewLikeService.changeReviewLike(updateReviewLikeReqDto, userId);
+        reviewLikeService.changeReviewLike(updateReviewLikeReqDto, userId);
+        return ResponseEntity.ok(new CommonResDto("좋아요 상태 변경에 성공했습니다."));
     }
 }
