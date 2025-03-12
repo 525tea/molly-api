@@ -39,7 +39,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/product")
-public class ProductControllerImpl {
+public class ProductController {
 
     private final ProductService productService;
     private final CategoryService categoryService;
@@ -257,4 +257,6 @@ public class ProductControllerImpl {
         productService.deleteProduct(userId, productId);
         return ResponseEntity.noContent().build();
     }
+
 }
+

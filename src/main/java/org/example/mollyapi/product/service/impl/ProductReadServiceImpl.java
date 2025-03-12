@@ -1,9 +1,10 @@
-package org.example.mollyapi.product.service;
+package org.example.mollyapi.product.service.impl;
 
 import jakarta.transaction.Transactional;
 import org.example.mollyapi.product.dto.BrandSummaryDto;
 import org.example.mollyapi.product.dto.ProductFilterCondition;
 import org.example.mollyapi.product.dto.response.ProductResDto;
+import org.example.mollyapi.product.service.ProductReadService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;

@@ -12,7 +12,7 @@ import org.example.mollyapi.common.exception.CustomException;
 import org.example.mollyapi.product.dto.response.ColorDetailDto;
 import org.example.mollyapi.product.entity.ProductItem;
 import org.example.mollyapi.product.repository.ProductItemRepository;
-import org.example.mollyapi.product.service.ProductServiceImpl;
+import org.example.mollyapi.product.service.impl.ProductServiceImpl;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
