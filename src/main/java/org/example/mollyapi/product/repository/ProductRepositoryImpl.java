@@ -227,12 +227,11 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
                 }
             }
             if (condition.priceGoe() != null) {
-                jpql.append("AND p.price >= :priceGoe ");
-//                if (jpql.toString().contains("WHERE")) {
-
-//                } else {
-//                    jpql.append("WHERE p.price >= :priceGoe ");
-//                }
+                if (jpql.toString().contains("WHERE")) {
+                    jpql.append("AND p.price >= :priceGoe ");
+                } else {
+                    jpql.append("WHERE p.price >= :priceGoe ");
+                }
             }
             if (condition.priceLt() != null) {
                 if (jpql.toString().contains("WHERE")) {
@@ -284,11 +283,11 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
 
 // 파라미터 설정
         if (condition != null) {
-            // colorCode가 null이 아니면 설정
+            // colorCode가 비어있지 않으면 설정
             if (condition.colorCode() != null && !condition.colorCode().isEmpty()) {
                 query.setParameter("colorCode", condition.colorCode());
             }
-            // size가 null이 아니면 설정
+            // size가 비어있지 않으면 설정
             if (condition.size() != null && !condition.size().isEmpty()) {
                 query.setParameter("size", condition.size());
             }
