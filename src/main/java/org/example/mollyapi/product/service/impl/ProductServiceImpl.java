@@ -1,5 +1,6 @@
-package org.example.mollyapi.product.service;
+package org.example.mollyapi.product.service.impl;
 
+import com.github.f4b6a3.tsid.TsidCreator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.mollyapi.common.client.ImageClient;
@@ -19,6 +20,8 @@ import org.example.mollyapi.product.entity.ProductItem;
 import org.example.mollyapi.product.repository.CategoryRepository;
 import org.example.mollyapi.product.repository.ProductItemRepository;
 import org.example.mollyapi.product.repository.ProductRepository;
+import org.example.mollyapi.product.service.CategoryService;
+import org.example.mollyapi.product.service.ProductService;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
