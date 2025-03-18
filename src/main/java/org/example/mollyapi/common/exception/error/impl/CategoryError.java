@@ -1,14 +1,14 @@
 package org.example.mollyapi.common.exception.error.impl;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.example.mollyapi.common.exception.error.CustomError;
 import org.springframework.http.HttpStatus;
 
 @Getter
-@RequiredArgsConstructor
+@AllArgsConstructor
 public enum CategoryError implements CustomError {
-    INVALID_CATEGORY(HttpStatus.FORBIDDEN, "해당 카테고리는 존재하지 않습니다.")
+    NOT_EXIST_CATEGORY(HttpStatus.BAD_REQUEST, "존재하지 않는 카테고리입니다"),
     ;
 
     private final HttpStatus status;

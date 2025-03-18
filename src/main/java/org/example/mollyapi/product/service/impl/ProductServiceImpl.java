@@ -226,7 +226,7 @@ public class ProductServiceImpl implements ProductService {
                 productAndThumbnailDto.getBrandName(),
                 productAndThumbnailDto.getProductName(),
                 productAndThumbnailDto.getPrice(),
-                productAndThumbnailDto.getDescription(),
+                null,
                 thumbnail,
                 null,
                 null,

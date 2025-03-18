@@ -25,7 +25,7 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.regex.Pattern;
 
-import static org.example.mollyapi.common.exception.error.impl.CategoryError.INVALID_CATEGORY;
+import static org.example.mollyapi.common.exception.error.impl.CategoryError.NOT_EXIST_CATEGORY;
 import static org.example.mollyapi.common.exception.error.impl.ProductItemError.PROBLEM_REGISTERING_BULK_PRODUCTS;
 import static org.example.mollyapi.common.exception.error.impl.UserError.NOT_EXISTS_USER;
 
@@ -99,7 +99,7 @@ public class BulkProductServiceImpl implements BulkProductService {
 
 
                 Category category = categoryRepository.findById(categoryId)
-                        .orElseThrow(() -> new CustomException(INVALID_CATEGORY));
+                        .orElseThrow(() -> new CustomException(NOT_EXIST_CATEGORY));
 
 
                 for (BulkProductReqDto bulkProductReqDto : passedProduct) {

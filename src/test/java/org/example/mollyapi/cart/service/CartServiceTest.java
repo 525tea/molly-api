@@ -41,7 +41,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-//@ExtendWith(MockitoExtension.class)
 @ActiveProfiles("test")
 @SpringBootTest
 @Transactional
@@ -64,32 +63,25 @@ public class CartServiceTest {
     @Autowired
     private ProductItemRepository productItemRepository;
 
-    private Product testProduct;
-    private ProductImage testImage;
-
-    @BeforeEach
-    void setUp() {
-        testProduct = createAndSaveProduct();
-        testImage = createAndSaveProductImage(testProduct);
-    }
-
     @DisplayName("장바구니에 새로운 상품을 담는다.")
     @Test
     void shouldAddNewProductItemToCart() {
         // given
-        Long userId = 2L;
-        Long itemId = 1L;
+        Long userId = 1000000L;
         Long quantity = 3L;
-        AddCartReqDto addCartReqDto = new AddCartReqDto(itemId, quantity);
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
+        ProductItem testItem = createAndSaveProductItem("M", testProduct);
+        AddCartReqDto addCartReqDto = new AddCartReqDto(testItem.getId(), quantity);
 
         //when
-        Cart cart = cartRepository.findByProductItemIdAndUserUserId(itemId, userId);
+        Cart cart = cartRepository.findByProductItemIdAndUserUserId(testItem.getId(), userId);
         cartService.addCart(addCartReqDto, userId);
-        Cart newCart = cartRepository.findByProductItemIdAndUserUserId(itemId, userId);
+        Cart newCart = cartRepository.findByProductItemIdAndUserUserId(testItem.getId(), userId);
 
         //then
         assertThat(cart).isNull();
-        assertThat(newCart.getProductItem().getId()).isEqualTo(itemId);
+        assertThat(newCart.getProductItem().getId()).isEqualTo(testItem.getId());
         assertThat(newCart.getQuantity()).isEqualTo(quantity);
     }
 
@@ -98,6 +90,8 @@ public class CartServiceTest {
     void shouldUpdateProductItemQuantityInCart() {
         // given
         User testUser = createAndSaveUser();
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
         ProductItem testItem = createAndSaveProductItem("M", testProduct);
         Cart testCart = createAndSaveCart(2L, testUser, testItem);
 
@@ -120,7 +114,7 @@ public class CartServiceTest {
     @Test
     void shouldThrowExceptionWhenUserNotFoundOnAddCart() {
         // given
-        Long userId = 999L;
+        Long userId = 0L;
         AddCartReqDto addCartReqDto = new AddCartReqDto(1L, 2L);
 
         // when & then
@@ -135,7 +129,7 @@ public class CartServiceTest {
     void shouldThrowExceptionWhenProductItemNotFoundOnAddCart() {
         // given
         Long userId = 1L;
-        Long itemId = 999L;
+        Long itemId = 0L;
         AddCartReqDto addCartReqDto = new AddCartReqDto(itemId, 2L);
 
         // when & then
@@ -149,6 +143,8 @@ public class CartServiceTest {
     void shouldThrowExceptionWhenProductItemOutOfStock() {
         // given
         Long userId = 1L;
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
         ProductItem testItem = createAndSaveProductItem("M", testProduct);
         AddCartReqDto addCartReqDto = new AddCartReqDto(testItem.getId(), testItem.getQuantity() + 2L);
 
@@ -163,6 +159,8 @@ public class CartServiceTest {
     void shouldThrowExceptionWhenProductItemSoldOut() {
         // given
         Long userId = 2L;
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
         ProductItem testItem = createAndSaveProductItem("M", testProduct);
         testItem.updateQuantity(0L); //재고 0개로 변경
         productItemRepository.save(testItem);
@@ -179,6 +177,8 @@ public class CartServiceTest {
     void shouldThrowExceptionWhenCartExceedsMaxLimit() {
         // given
         Long userId = 1L;
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
         ProductItem testItem = createAndSaveProductItem("M", testProduct);
         AddCartReqDto addCartReqDto = new AddCartReqDto(testItem.getId(), 3L);
 
@@ -188,37 +188,13 @@ public class CartServiceTest {
                 .hasMessage("장바구니 최대 수량을 초과했습니다.");
     }
 
-    /*
-    DB 업데이트 실패시 발생하는 오류라 수정 필요
-    @DisplayName("상품 수량 업데이트에 실패하면 예외가 발생한다.")
-    @Test
-    void shouldThrowExceptionWhenFailToUpdateQuantity() {
-        // given
-        User testUser = createAndSaveUser();
-        ProductItem testItem = createAndSaveProductItem("M", testProduct);
-        Long quantity = 5L;
-        AddCartReqDto addCartReqDto = new AddCartReqDto(testItem.getId(), quantity);
-
-        //장바구니에 기존의 상품이 있다고 가정
-        Cart existingCart = createAndSaveCart(2L, testUser, testItem);
-
-        // when
-        assertThatThrownBy(() -> cartService.addCart(addCartReqDto, testUser.getUserId()))
-                .isInstanceOf(CustomException.class)
-                .hasMessage("변경 사항 업데이트에 실패했습니다.");
-
-        //then
-        Cart updateCart = cartRepository.findByProductItemIdAndUserUserId(testItem.getId(), testUser.getUserId());
-        Long totalQuantity = existingCart.getQuantity() + quantity;
-        assertThat(updateCart.getQuantity()).isNotEqualTo(totalQuantity);
-    }
-     */
-
     @DisplayName("사용자가 장바구니를 조회할 때, 장바구니 정보가 반환된다.")
     @Test
     void shouldReturnCartDetailWhenCartExist() {
         // given
         User testUser = createAndSaveUser();
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
         ProductItem firstItem = createAndSaveProductItem("M", testProduct);
         ProductItem secondItem = createAndSaveProductItem("L", testProduct);
         Cart firstCart = createAndSaveCart(3L, testUser, firstItem);
@@ -258,6 +234,8 @@ public class CartServiceTest {
     void shouldUpdateItemOptionSuccessfully() {
         // given
         User testUser = createAndSaveUser();
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
         ProductItem testItem = createAndSaveProductItem("M", testProduct);
         ProductItem secondItem = createAndSaveProductItem("L", testProduct);
         Cart testCart = createAndSaveCart(3L, testUser, testItem);
@@ -279,8 +257,10 @@ public class CartServiceTest {
     @Test
     void shouldThrowExceptionWhenUserNotFoundOnUpdateCart() {
         //given
-        Long userId = 999L;
+        Long userId = 9999999L;
         User testUser = createAndSaveUser();
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
         ProductItem testItem = createAndSaveProductItem("M", testProduct);
         Cart testCart = createAndSaveCart(3L, testUser, testItem);
         UpdateCartReqDto updateCartReqDto = new UpdateCartReqDto(testCart.getCartId(), testItem.getId(), 2L);
@@ -296,8 +276,10 @@ public class CartServiceTest {
     void shouldThrowExceptionWhenCartNotFound() {
         // given
         User testUser = createAndSaveUser();
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
         ProductItem testItem = createAndSaveProductItem("M", testProduct);
-        Long cartId = 999L; // 존재하지 않는 장바구니 ID
+        Long cartId = 9999999999L; // 존재하지 않는 장바구니 ID
         UpdateCartReqDto updateCartReqDto = new UpdateCartReqDto(cartId, testItem.getId(),3L);
 
         // when & then
@@ -311,9 +293,11 @@ public class CartServiceTest {
     void shouldThrowExceptionWhenProductItemNotFoundOnUpdateCart() {
         // given
         User testUser = createAndSaveUser();
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
         ProductItem testItem = createAndSaveProductItem("M", testProduct);
         Cart testCart = createAndSaveCart(3L, testUser, testItem);
-        Long nonExistentItemId = 999L; // 존재하지 않는 상품 아이템 ID
+        Long nonExistentItemId = 0L; // 존재하지 않는 상품 아이템 ID
         Long newQuantity = 3L;
         UpdateCartReqDto updateCartReqDto = new UpdateCartReqDto(testCart.getCartId(), nonExistentItemId, newQuantity);
 
@@ -328,6 +312,8 @@ public class CartServiceTest {
     void shouldThrowExceptionWhenOptionNotChanged() {
         // given
         User testUser = createAndSaveUser();
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
         ProductItem testItem = createAndSaveProductItem("M", testProduct);
         Long quantity = 3L;
         Cart testCart = createAndSaveCart(quantity, testUser, testItem);
@@ -344,6 +330,8 @@ public class CartServiceTest {
     void shouldThrowExceptionWheStockIsNotEnough() {
         // given
         User testUser = createAndSaveUser();
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
         ProductItem testItem = createAndSaveProductItem("M", testProduct);
         Cart testCart = createAndSaveCart(3L, testUser, testItem);
         Long chageQuantity = 31L;
@@ -360,6 +348,8 @@ public class CartServiceTest {
     void shouldDeleteCartSussfully() {
         // given
         User testUser = createAndSaveUser();
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
         ProductItem testItem1 = createAndSaveProductItem("M", testProduct);
         ProductItem testItem2 = createAndSaveProductItem("L", testProduct);
         Cart testCart1 = createAndSaveCart(3L, testUser, testItem1);
@@ -379,8 +369,10 @@ public class CartServiceTest {
     @Test
     void shouldThrowExceptionWhenUserNotFoundOnDeleteCart() {
         //given
-        Long userId = 999L;
+        Long userId = 0L;
         User testUser = createAndSaveUser();
+        Product testProduct = createAndSaveProduct();
+        ProductImage testImage = createAndSaveProductImage(testProduct);
         ProductItem testItem = createAndSaveProductItem("M", testProduct);
         Cart testCart = createAndSaveCart(3L, testUser, testItem);
 
@@ -395,11 +387,11 @@ public class CartServiceTest {
     private User createAndSaveUser() {
         return userRepository.save(User.builder()
                 .sex(Sex.FEMALE)
-                .nickname("망고")
+                .nickname("사과")
                 .cellPhone("01011112222")
                 .birth(LocalDate.of(2000, 1, 2))
                 .profileImage("default.jpg")
-                .name("김망고")
+                .name("김사과")
                 .build());
     }
 
