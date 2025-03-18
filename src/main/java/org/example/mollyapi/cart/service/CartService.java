@@ -12,7 +12,6 @@ import org.example.mollyapi.common.exception.CustomException;
 import org.example.mollyapi.product.dto.response.ColorDetailDto;
 import org.example.mollyapi.product.entity.ProductItem;
 import org.example.mollyapi.product.repository.ProductItemRepository;
-import org.example.mollyapi.product.repository.ProductRepository;
 import org.example.mollyapi.product.service.ProductServiceImpl;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
@@ -31,7 +30,6 @@ import static org.example.mollyapi.common.exception.error.impl.UserError.NOT_EXI
 public class CartService {
     private final ProductServiceImpl productService;
     private final UserRepository userRep;
-    private final ProductRepository productRep;
     private final ProductItemRepository productItemRep;
     private final CartRepository cartRep;
 
@@ -205,5 +203,18 @@ public class CartService {
      * */
     public void checkStock(Long itemQuantity, Long nowQuantity) {
         if (itemQuantity < nowQuantity) throw new CustomException(OVER_QUANTITY);
+    }
+
+    /**
+     * 장바구니 보관기간이 365일은 넘긴 상품 삭제
+     * */
+    public void deleteExpiredCarts() {
+        List<Long> expiredCartIdList = cartRep.getExpiredCartId();
+        if(expiredCartIdList.isEmpty())
+            log.info("만료된 장바구니 내역이 존재하지 않습니다.");
+
+        for(Long cartId : expiredCartIdList) {
+            cartRep.deleteById(cartId);
+        }
     }
 }
