@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.example.mollyapi.product.service.BulkProductService;
+import org.example.mollyapi.product.service.ProductBulkService;
 import org.example.mollyapi.user.auth.annotation.Auth;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,9 +22,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/products")
 @RequiredArgsConstructor
-public class BulkProductController {
+public class ProductBulkController {
 
-    private final BulkProductService bulkProductService;
+    private final ProductBulkService productBulkService;
 
     @Auth
     @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
@@ -34,8 +34,8 @@ public class BulkProductController {
                                        HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
 
-        List<Map<String, String>> result = bulkProductService.saveBulkProducts(productFile, userId);
-
+//        List<Map<String, String>> result = productBulkService.saveBulkProducts(productFile, userId);
+        List<Map<String, String>> result = productBulkService.saveChunkOfBulkProducts(productFile, userId);
         if (result.isEmpty()){
             return ResponseEntity.status(HttpStatus.CREATED).build();
         } else {
