@@ -2,7 +2,6 @@ package org.example.mollyapi.product.repository;
 
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
@@ -37,20 +36,20 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
         if (pageable == null) { pageable  = Pageable.unpaged(); }
 
         JPAQuery<BrandSummaryDto> query = queryFactory.select(
-                        new QBrandSummaryDto(
-                                productImage.url.max().as("brandThumbnail"),
-                                product.brandName,
-                                product.count(),
-                                product.viewCount.sum().as("viewCount")))
-                .from(productImage)
-                .join(productImage.product, product)
-                .on(productImage.isRepresentative.isTrue())
-                .groupBy(product.brandName)
-                .orderBy(product.viewCount.sum().desc());
+                new QBrandSummaryDto(
+                    productImage.url.max().as("brandThumbnail"),
+                    product.brandName,
+                    product.count(),
+                    product.viewCount.sum().as("viewCount")))
+            .from(productImage)
+            .join(productImage.product, product)
+            .on(productImage.isRepresentative.isTrue())
+            .groupBy(product.brandName)
+            .orderBy(product.viewCount.sum().desc());
 
         if (pageable.isPaged()) {
             query.offset(pageable.getOffset())
-                    .limit(pageable.getPageSize() + 1);
+                .limit(pageable.getPageSize() + 1);
         }
         List<BrandSummaryDto> content = query.fetch();
 
@@ -62,7 +61,7 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
         return new SliceImpl<>(content, pageable, hasNext);
     }
 
-//    @Override
+    //    @Override
 //    public Slice<ProductAndThumbnailDto> findByCondition(ProductFilterCondition condition, Pageable pageable) {
 //        if (pageable == null) pageable = Pageable.unpaged();
 //
@@ -171,10 +170,10 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
         if (pageable == null) pageable = Pageable.unpaged();
 
         StringBuilder jpql = new StringBuilder("SELECT new org.example.mollyapi.product.dto.ProductAndThumbnailDto(" +
-                "p.id, p.category.id, p.brandName, p.productName, p.price, p.createdAt, " +
-                "p.viewCount, p.purchaseCount, pi.url, pi.filename) " +
-                "FROM Product p " +
-                "JOIN ProductImage pi ON pi.product = p AND pi.isRepresentative = true ");
+            "p.id, p.category.id, p.brandName, p.productName, p.price, p.createdAt, " +
+            "p.viewCount, p.purchaseCount, pi.url, pi.filename) " +
+            "FROM Product p " +
+            "JOIN ProductImage pi ON pi.product = p AND pi.isRepresentative = true ");
 
         // 조건이 있을 경우 서브쿼리 추가
         if (condition != null) {
@@ -182,7 +181,7 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
             // colorCode 조건이 있을 경우
             if (condition.colorCode() != null && !condition.colorCode().isEmpty()) {
                 jpql.append("WHERE p.id IN (SELECT pi.product.id FROM ProductItem pi " +
-                        "WHERE pi.colorCode IN :colorCode ");
+                    "WHERE pi.colorCode IN :colorCode ");
             }
 
             // size 조건이 있을 경우
@@ -191,7 +190,7 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
                     jpql.append("AND pi.size IN :size ");
                 } else {
                     jpql.append("WHERE p.id IN (SELECT pi.product.id FROM ProductItem pi " +
-                            "WHERE pi.size IN :size ");
+                        "WHERE pi.size IN :size ");
                 }
             }
 
@@ -201,7 +200,7 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
                     jpql.append("AND pi.quantity > 0 ");
                 } else {
                     jpql.append("WHERE p.id IN (SELECT pi.product.id FROM ProductItem pi " +
-                            "WHERE pi.quantity > 0 ");
+                        "WHERE pi.quantity > 0 ");
                 }
             }
 

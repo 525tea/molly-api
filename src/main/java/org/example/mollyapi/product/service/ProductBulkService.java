@@ -6,7 +6,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 
-public interface BulkProductService {
+public interface ProductBulkService {
 
-    List<Map<String,String>> saveBulkProducts(MultipartFile file, Long userId);
+    List<Map<String, String>> saveChunkOfBulkProducts(MultipartFile file, Long userId);
 }
