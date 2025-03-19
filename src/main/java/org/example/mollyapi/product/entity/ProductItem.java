@@ -1,5 +1,6 @@
 package org.example.mollyapi.product.entity;
 
+import com.github.f4b6a3.tsid.TsidCreator;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,6 @@ import java.util.List;
 public class ProductItem extends Base {
 
         @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
         @Column(name = "item_id")
         Long id;
 
@@ -33,7 +33,7 @@ public class ProductItem extends Base {
         List<OrderDetail> orderDetails;
 
         @Builder
-        ProductItem(
+        public ProductItem(
                 Long id,
                 String color,
                 String colorCode,

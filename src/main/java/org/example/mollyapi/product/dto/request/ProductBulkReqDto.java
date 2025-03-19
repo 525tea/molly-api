@@ -11,7 +11,7 @@ import org.example.mollyapi.user.entity.User;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class BulkProductReqDto {
+public class ProductBulkReqDto {
 
     private Long id;
 
@@ -23,27 +23,41 @@ public class BulkProductReqDto {
 
     private String brandName;
 
-    private Category category;
+//    private Category category;
+    private Long categoryId;
 
     @Builder
-    public BulkProductReqDto(String productName, String description, Long price, String brandName, Category category) {
+    public ProductBulkReqDto(String productName, String description, Long price, String brandName, long categoryId) {
         this.id = TsidCreator.getTsid().toLong();
         this.productName = productName;
         this.description = description;
         this.price = price;
         this.brandName = brandName;
-        this.category = category;
+//        this.category = category;
+        this.categoryId = categoryId;
     }
 
-    public Product toProduct(User user) {
+    public Product toProduct(User user, Category category) {
         return Product.builder()
                 .id(this.id)
                 .productName(this.productName)
                 .description(this.description)
                 .brandName(this.brandName)
-                .category(this.category)
+                .category(category)
                 .user(user)
                 .price(this.price)
                 .build();
     }
+
+//    public Product toProduct(User user) {
+//        return Product.builder()
+//                .id(this.id)
+//                .productName(this.productName)
+//                .description(this.description)
+//                .brandName(this.brandName)
+//                .category(this.category)
+//                .user(user)
+//                .price(this.price)
+//                .build();
+//    }
 }
