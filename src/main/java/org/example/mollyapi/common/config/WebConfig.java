@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
@@ -16,14 +17,26 @@ public class WebConfig implements WebMvcConfigurer {
 
     private final MultipartJsonMessageConverter multipartJsonMessageConverter;
 
+    private final LoggingInterceptor loggingInterceptor;
+
+
     @Autowired
-    public WebConfig(MultipartJsonMessageConverter multipartJsonMessageConverter) {
+    public WebConfig(MultipartJsonMessageConverter multipartJsonMessageConverter, LoggingInterceptor loggingInterceptor) {
         this.multipartJsonMessageConverter = multipartJsonMessageConverter;
+        this.loggingInterceptor = loggingInterceptor;
     }
 
     @Override
     public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
         converters.add(multipartJsonMessageConverter);
+    }
+
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(loggingInterceptor)
+                .addPathPatterns("/**")
+                .excludePathPatterns("/actuator/prometheus", "/error");
     }
 
     @Override

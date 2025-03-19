@@ -2,7 +2,6 @@ package org.example.mollyapi.product.repository;
 
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.example.mollyapi.product.dto.*;
@@ -31,20 +30,20 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
         if (pageable == null) { pageable  = Pageable.unpaged(); }
 
         JPAQuery<BrandSummaryDto> query = queryFactory.select(
-                        new QBrandSummaryDto(
-                                productImage.url.max().as("brandThumbnail"),
-                                product.brandName,
-                                product.count(),
-                                product.viewCount.sum().as("viewCount")))
-                .from(productImage)
-                .join(productImage.product, product)
-                .on(productImage.isRepresentative.isTrue())
-                .groupBy(product.brandName)
-                .orderBy(product.viewCount.sum().desc());
+                new QBrandSummaryDto(
+                    productImage.url.max().as("brandThumbnail"),
+                    product.brandName,
+                    product.count(),
+                    product.viewCount.sum().as("viewCount")))
+            .from(productImage)
+            .join(productImage.product, product)
+            .on(productImage.isRepresentative.isTrue())
+            .groupBy(product.brandName)
+            .orderBy(product.viewCount.sum().desc());
 
         if (pageable.isPaged()) {
             query.offset(pageable.getOffset())
-                    .limit(pageable.getPageSize() + 1);
+                .limit(pageable.getPageSize() + 1);
         }
         List<BrandSummaryDto> content = query.fetch();
 
@@ -55,6 +54,7 @@ public class ProductRepositoryImpl implements ProductRepositoryCustom {
         }
         return new SliceImpl<>(content, pageable, hasNext);
     }
+
 
     @Override
     public Slice<ProductAndThumbnailDto> findByCondition(ProductFilterCondition condition, Pageable pageable) {
