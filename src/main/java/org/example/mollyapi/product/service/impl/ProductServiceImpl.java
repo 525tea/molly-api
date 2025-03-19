@@ -1,6 +1,5 @@
 package org.example.mollyapi.product.service.impl;
 
-import com.github.f4b6a3.tsid.TsidCreator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.mollyapi.common.client.ImageClient;
