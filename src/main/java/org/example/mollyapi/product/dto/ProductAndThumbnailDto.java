@@ -19,12 +19,7 @@ public class ProductAndThumbnailDto {
     LocalDateTime createdAt;
     Long viewCount;
     Long purchaseCount;
-//    String description;
-//    String colorCode;
-//    String size;
-//    Long quantity;
-//    Boolean excludeSoldOut;
-
+    Long sellerId;
 
     @QueryProjection
     public ProductAndThumbnailDto(
@@ -37,21 +32,19 @@ public class ProductAndThumbnailDto {
             Long viewCount,
             Long purchaseCount,
             String url,
-            String filename
+            String filename,
+            Long sellerId
     ) {
         this.id = id;
         this.categoryId = categoryId;
         this.brandName = brandName;
         this.productName = productName;
         this.price = price;
-//        this.description = description;
-//        this.colorCode = colorCode;
-//        this.size = size;
-//        this.quantity = quantity;
         this.createdAt = createdAt;
         this.viewCount = viewCount;
         this.purchaseCount = purchaseCount;
         this.url = url;
         this.filename = filename;
+        this.sellerId = sellerId;
     }
 }
