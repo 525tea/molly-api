@@ -111,11 +111,11 @@ class ProductReadServiceImplTest {
         when(categoryService.getCategoryPath(104L)).thenReturn(List.of("category", "4"));
         when(categoryService.getCategoryPath(105L)).thenReturn(List.of("category", "5"));
         List<ProductAndThumbnailDto> content = List.of(
-                createProductAndThumbnailDto(1L, 101L, "BrandA", "ProductA", 10000L, "Description for Product A", "http://example.com/product-a.jpg", "product-a.jpg"),
-                createProductAndThumbnailDto(2L, 102L, "BrandB", "ProductB", 15000L, "Description for Product B", "http://example.com/product-b.jpg", "product-b.jpg"),
-                createProductAndThumbnailDto(3L, 103L, "BrandC", "ProductC", 20000L, "Description for Product C", "http://example.com/product-c.jpg", "product-c.jpg"),
-                createProductAndThumbnailDto(4L, 104L, "BrandD", "ProductD", 25000L, "Description for Product D", "http://example.com/product-d.jpg", "product-d.jpg"),
-                createProductAndThumbnailDto(5L, 105L, "BrandE", "ProductE", 30000L, "Description for Product E", "http://example.com/product-e.jpg", "product-e.jpg")
+                createProductAndThumbnailDto(1L, 101L, "BrandA", "ProductA", 10000L, "http://example.com/product-a.jpg", "product-a.jpg"),
+                createProductAndThumbnailDto(2L, 102L, "BrandB", "ProductB", 15000L, "http://example.com/product-b.jpg", "product-b.jpg"),
+                createProductAndThumbnailDto(3L, 103L, "BrandC", "ProductC", 20000L, "http://example.com/product-c.jpg", "product-c.jpg"),
+                createProductAndThumbnailDto(4L, 104L, "BrandD", "ProductD", 25000L, "http://example.com/product-d.jpg", "product-d.jpg"),
+                createProductAndThumbnailDto(5L, 105L, "BrandE", "ProductE", 30000L, "http://example.com/product-e.jpg", "product-e.jpg")
         );
 
         SliceImpl<ProductAndThumbnailDto> result = new SliceImpl<>(content, Pageable.unpaged(), false);
@@ -263,7 +263,6 @@ class ProductReadServiceImplTest {
             String brandName,
             String productName,
             Long price,
-            String description,
             String url,
             String filename
     ) {
@@ -276,13 +275,10 @@ class ProductReadServiceImplTest {
                 LocalDateTime.now(),
                 150L,
                 200L,
-//                description,
-//                "ColorCode",
-//                "Size",
-//                50L,
+
                 url,
-                filename
-//                false
+                filename,
+                1L
         );
     }
 
@@ -296,12 +292,9 @@ class ProductReadServiceImplTest {
                 LocalDateTime.now(),
                 150L,
                 200L,
-//                "RED",
-//                "M",
-//                50L,
                 "http://example.com/product-a.jpg",
-                "product-a.jpg"
-//                false
+                "product-a.jpg",
+                1L
         );
     }
 }
