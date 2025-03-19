@@ -1,5 +1,7 @@
 package org.example.mollyapi.product.repository;
 
+import com.github.f4b6a3.tsid.Tsid;
+import com.github.f4b6a3.tsid.TsidCreator;
 import jakarta.transaction.Transactional;
 import lombok.Getter;
 import org.example.mollyapi.product.dto.BrandSummaryDto;
@@ -64,6 +66,7 @@ class ProductRepositoryImplTest {
         categoryRepository.save(new Category("의류" + 2, null));
         categoryRepository.save(new Category("의류" + 3, null));
 
+
         testUser = userRepository.save(
                 User.builder()
                         .nickname("testUser")
@@ -112,6 +115,7 @@ class ProductRepositoryImplTest {
                 ProductFilterCondition.of(null, null, null, "Nike", null, null, null, null, null), // 브랜드 필터
                 ProductFilterCondition.of(null, null, null, null, 50000L, null, null, null, null), // 가격 최소값 필터
                 ProductFilterCondition.of(null, null, null, null, null, 100000L, null, null, null), // 가격 최대값 필터
+                ProductFilterCondition.of(null, null, null, null, null, null, testUser.getUserId(), null, true), // 판매자 필터
                 ProductFilterCondition.of(null, null, null, null, null, null, null, null, true) // 품절 제외 필터
         );
     }
@@ -314,15 +318,6 @@ class ProductRepositoryImplTest {
 
 
     private void assertCondition(List<ProductAndThumbnailDto> content, ProductFilterCondition condition) {
-        // 기존 필터 검증
-        // 색상 필터
-//        assertFilterCondition(content, condition.colorCode(),
-//                (BiPredicate<ProductAndThumbnailDto, String>) (product, value) -> product.getColorCode().equals(value), "ColorCode");
-
-        // 사이즈 필터
-//        assertFilterCondition(content, condition.size(),
-//                (BiPredicate<ProductAndThumbnailDto, String>) (product, value) -> product.getSize().equals(value), "Size");
-
         // 카테고리 필터
         assertFilterCondition(content, condition.categoryId(),
                 (BiPredicate<ProductAndThumbnailDto, List<Long>>) (product, value) -> value.contains(product.getCategoryId()), "CategoryId");
@@ -339,16 +334,9 @@ class ProductRepositoryImplTest {
         assertFilterCondition(content, condition.priceLt(),
                 (product, value) -> product.getPrice() <= value, "PriceLt");
 
-        // 품절 제외 필터
-//        if (condition.excludeSoldOut() != null) {
-//            content.forEach(product -> {
-//                if (condition.excludeSoldOut()) {
-//                    assertThat(product.getQuantity()).isGreaterThan(0);
-//                } else {
-//                    assertThat(product.getQuantity()).isGreaterThanOrEqualTo(0);
-//                }
-//            });
-//        }
+        // 판매자 검증
+        assertFilterCondition(content, condition.sellerId(),
+                (prodcut, value) -> prodcut.getSellerId().equals(value), "UserId");
 
         // 중복된 productId가 없는지 검증
         assertNoDuplicateProductId(content);
@@ -434,6 +422,7 @@ class ProductRepositoryImplTest {
 
         // 상품 생성
         Product product = Product.builder()
+                .id(TsidCreator.getTsid().toLong())
                 .category(category)
                 .brandName(brandName)
                 .productName("TestProduct")
@@ -493,6 +482,7 @@ class ProductRepositoryImplTest {
 
         // 상품 생성
         Product product = Product.builder()
+                .id(TsidCreator.getTsid().toLong())
                 .category(category)
                 .brandName(brandName)
                 .productName("TestProduct")
