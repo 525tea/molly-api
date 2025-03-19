@@ -12,7 +12,7 @@ import org.example.mollyapi.common.exception.CustomException;
 import org.example.mollyapi.product.dto.response.ColorDetailDto;
 import org.example.mollyapi.product.entity.ProductItem;
 import org.example.mollyapi.product.repository.ProductItemRepository;
-import org.example.mollyapi.product.service.ProductServiceImpl;
+import org.example.mollyapi.product.service.impl.ProductServiceImpl;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -142,12 +142,17 @@ public class CartService {
         // 3. 변경하려는 아이템 여부 체크
         ProductItem item = getProductItemInfo(updateCartReqDto.itemId());
 
-        // 4. 변경 사항 체크
-        boolean isUpdate = cart.updateCart(item, updateCartReqDto.quantity());
-        if(!isUpdate) throw new CustomException(NOT_CHANGED); //변경 사항이 없는 경우
+        // 4. 해당 상품이 장바구니에 담겨있는 지 체크
+        if(!cart.getProductItem().getId().equals(item.getId())) {
+            Cart checkCart = cartRep.findByProductItemIdAndUserUserId(updateCartReqDto.itemId(), userId);
+            if(checkCart != null) throw new CustomException(EXIST_CART);
+        }
 
-        // 5. 재고가 부족할 경우
+        // 5. 재고 검증
         checkStock(item.getQuantity(), updateCartReqDto.quantity());
+
+        // 6. 변경 사항 반영
+        cart.updateCart(item, updateCartReqDto.quantity());
     }
 
     /**
