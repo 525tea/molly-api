@@ -1,7 +1,8 @@
-package org.example.mollyapi.product.service;
+package org.example.mollyapi.product.service.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.mollyapi.common.client.ImageClient;
 import org.example.mollyapi.common.enums.ImageType;
 import org.example.mollyapi.product.dto.ProductAndThumbnailDto;
@@ -19,6 +20,8 @@ import org.example.mollyapi.product.entity.ProductItem;
 import org.example.mollyapi.product.repository.CategoryRepository;
 import org.example.mollyapi.product.repository.ProductItemRepository;
 import org.example.mollyapi.product.repository.ProductRepository;
+import org.example.mollyapi.product.service.CategoryService;
+import org.example.mollyapi.product.service.ProductService;
 import org.example.mollyapi.user.entity.User;
 import org.example.mollyapi.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ProductServiceImpl implements ProductService {
 
     private final CategoryService categoryService;
@@ -110,7 +114,7 @@ public class ProductServiceImpl implements ProductService {
         return product;
     }
 
-    private Product registerProductImages(Product product, List<MultipartFile> productImages) {
+    public Product registerProductImages(Product product, List<MultipartFile> productImages) {
 //        List<UploadFile> uploadFiles = fileStore.storeFiles(productImages);
         List<UploadFile> uploadFiles = imageClient.upload(ImageType.PRODUCT ,productImages);
         for (int i = 0; i < uploadFiles.size(); i++) {

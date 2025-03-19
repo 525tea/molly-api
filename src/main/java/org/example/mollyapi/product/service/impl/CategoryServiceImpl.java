@@ -1,10 +1,11 @@
-package org.example.mollyapi.product.service;
+package org.example.mollyapi.product.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.example.mollyapi.common.exception.CustomException;
 import org.example.mollyapi.common.exception.error.impl.CategoryError;
 import org.example.mollyapi.product.entity.Category;
 import org.example.mollyapi.product.repository.CategoryRepository;
+import org.example.mollyapi.product.service.CategoryService;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
