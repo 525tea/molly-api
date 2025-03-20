@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.example.mollyapi.common.exception.error.impl.CartError.*;
 import static org.example.mollyapi.common.exception.error.impl.ProductItemError.*;
@@ -103,25 +104,20 @@ public class CartServiceImpl implements CartService {
         List<CartInfoDto> cartInfoList = cartRep.getCartInfo(userId);
         if(cartInfoList.isEmpty()) throw new CustomException(EMPTY_CART);
 
-        List<CartInfoResDto> responseDtoList = new ArrayList<>();
         Map<Long, List<ColorDetailDto>> colorMap = new HashMap<>();  //상품의 옵션 정보를 저장
-        for(CartInfoDto cartInfoDto : cartInfoList) {
-            Long productId = cartInfoDto.productId();
-            List<ColorDetailDto> colorDetails;
+        return cartInfoList.stream()
+                .map(cartInfoDto -> {
+                    Long productId = cartInfoDto.productId();
 
-            if(colorMap.containsKey(productId)) { //이미 조회한 적이 있는 상품일 때
-                colorDetails = colorMap.get(productId);
-            } else {
-                //상품에 해당하는 제품 리스트
-                List<ProductItem> itemList = productItemRep.findAllByProductId(productId);
+                    // 해당 상품의 옵션을 조회한 적이 없을 경우
+                    List<ColorDetailDto> colorDetailDtoList = colorMap.computeIfAbsent(productId, id -> {
+                        List<ProductItem> itemList = productItemRep.findAllByProductId(id); //상품에 해당하는 제품 리스트
+                        return productService.groupItemByColor(itemList); //해당 제품의 컬러 및 사이즈
+                    });
 
-                //해당 제품의 컬러 및 사이즈
-                colorDetails = productService.groupItemByColor(itemList);
-                colorMap.put(productId, colorDetails);
-            }
-            responseDtoList.add(new CartInfoResDto(cartInfoDto, colorDetails));
-        }
-        return responseDtoList;
+                    return new CartInfoResDto(cartInfoDto, colorDetailDtoList);
+                })
+                .collect(Collectors.toList());
     }
 
     /**
@@ -143,8 +139,8 @@ public class CartServiceImpl implements CartService {
 
         // 4. 해당 상품이 장바구니에 담겨있는 지 체크
         if(!cart.getProductItem().getId().equals(item.getId())) {
-            Cart checkCart = cartRep.findByProductItemIdAndUserUserId(updateCartReqDto.itemId(), userId);
-            if(checkCart != null) throw new CustomException(EXIST_CART);
+            boolean existCart = cartRep.existsByProductItemIdAndUserUserId(updateCartReqDto.itemId(), userId);
+            if(existCart) throw new CustomException(EXIST_CART);
         }
 
         // 5. 재고 검증
