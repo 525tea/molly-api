@@ -5,7 +5,8 @@ import org.example.mollyapi.cart.dto.Request.AddCartReqDto;
 import org.example.mollyapi.cart.dto.Request.UpdateCartReqDto;
 import org.example.mollyapi.cart.dto.Response.CartInfoDto;
 import org.example.mollyapi.cart.dto.Response.CartInfoResDto;
-import org.example.mollyapi.cart.service.CartService;
+import org.example.mollyapi.cart.service.impl.CartServiceImpl;
+import org.example.mollyapi.common.config.ApiQueryCounter;
 import org.example.mollyapi.product.dto.response.ColorDetailDto;
 import org.example.mollyapi.product.dto.response.SizeDetailDto;
 import org.junit.jupiter.api.DisplayName;
@@ -29,17 +30,20 @@ public class CartControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @MockBean
+    private ApiQueryCounter apiQueryCounter;
+
     @Autowired
     private ObjectMapper objectMapper;
 
     @MockBean
-    private CartService cartService;
+    private CartServiceImpl cartService;
 
     @DisplayName("장바구니에 상품을 등록한다.")
     @Test
     void addCart() throws Exception {
         // given
-        Long userId = 2L;
+        Long userId = 1L;
         Long itemId = 1L;
         Long quantity = 3L;
         AddCartReqDto addCartReqDto = new AddCartReqDto(itemId, quantity);

@@ -1,5 +1,6 @@
 package org.example.mollyapi.cart.repository;
 
+import com.github.f4b6a3.tsid.TsidCreator;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
 import org.example.mollyapi.cart.dto.Response.CartInfoDto;
@@ -89,11 +90,14 @@ public class CartRepositoryTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"1, true", "1000000, false"})
+    @CsvSource({"0, true", "1, false"})
     @DisplayName("장바구니에 담긴 수량을 조회할 때, 장바구니 최대수량에 따라 상태값을 반환한다.")
-    void checkMaxCart(Long userId, boolean status) {
+    void checkMaxCart(int flag, boolean status) {
+        User testUser = createAndSaveUser();
+        if(flag == 0) create30Carts(testUser);
+
         //given //when
-        boolean isMaxCount = cartRepository.countByUserUserId(userId);
+        boolean isMaxCount = cartRepository.countByUserUserId(testUser.getUserId());
 
         //then
         assertEquals(isMaxCount, status);
@@ -170,6 +174,7 @@ public class CartRepositoryTest {
 
     private Product createAndSaveProduct() {
         return productRepository.save(Product.builder()
+                .id(TsidCreator.getTsid().toLong())
                 .productName("테스트 상품")
                 .brandName("테스트 브랜드")
                 .price(50000L)
@@ -178,6 +183,7 @@ public class CartRepositoryTest {
 
     private ProductItem createAndSaveProductItem(String size, Product product) {
         return productItemRepository.save(ProductItem.builder()
+                .id(TsidCreator.getTsid().toLong())
                 .color("WHITE")
                 .colorCode("#FFFFFF")
                 .size(size)
@@ -204,5 +210,43 @@ public class CartRepositoryTest {
                 .user(user)
                 .productItem(productItem)
                 .build());
+    }
+
+    private void create30Carts(User user) {
+        Product testProduct = createAndSaveProduct();
+        createAndSaveCart(1L, user, createAndSaveProductItem("KID", testProduct));
+        createAndSaveCart(2L, user, createAndSaveProductItem("XS", testProduct));
+        createAndSaveCart(3L, user, createAndSaveProductItem("S", testProduct));
+        createAndSaveCart(1L, user, createAndSaveProductItem("M", testProduct));
+        createAndSaveCart(2L, user, createAndSaveProductItem("L", testProduct));
+        createAndSaveCart(3L, user, createAndSaveProductItem("XL", testProduct));
+        createAndSaveCart(1L, user, createAndSaveProductItem("2XL", testProduct));
+        createAndSaveCart(2L, user, createAndSaveProductItem("3XL", testProduct));
+        createAndSaveCart(3L, user, createAndSaveProductItem("4XL", testProduct));
+        createAndSaveCart(1L, user, createAndSaveProductItem("FREE", testProduct));
+
+        Product testProduct2 = createAndSaveProduct();
+        createAndSaveCart(1L, user, createAndSaveProductItem("KID", testProduct2));
+        createAndSaveCart(2L, user, createAndSaveProductItem("XS", testProduct2));
+        createAndSaveCart(3L, user, createAndSaveProductItem("S", testProduct2));
+        createAndSaveCart(1L, user, createAndSaveProductItem("M", testProduct2));
+        createAndSaveCart(2L, user, createAndSaveProductItem("L", testProduct2));
+        createAndSaveCart(3L, user, createAndSaveProductItem("XL", testProduct2));
+        createAndSaveCart(1L, user, createAndSaveProductItem("2XL", testProduct2));
+        createAndSaveCart(2L, user, createAndSaveProductItem("3XL", testProduct2));
+        createAndSaveCart(3L, user, createAndSaveProductItem("4XL", testProduct2));
+        createAndSaveCart(1L, user, createAndSaveProductItem("FREE", testProduct2));
+
+        Product testProduct3 = createAndSaveProduct();
+        createAndSaveCart(1L, user, createAndSaveProductItem("KID", testProduct3));
+        createAndSaveCart(2L, user, createAndSaveProductItem("XS", testProduct3));
+        createAndSaveCart(3L, user, createAndSaveProductItem("S", testProduct3));
+        createAndSaveCart(1L, user, createAndSaveProductItem("M", testProduct3));
+        createAndSaveCart(2L, user, createAndSaveProductItem("L", testProduct3));
+        createAndSaveCart(3L, user, createAndSaveProductItem("XL", testProduct3));
+        createAndSaveCart(1L, user, createAndSaveProductItem("2XL", testProduct3));
+        createAndSaveCart(2L, user, createAndSaveProductItem("3XL", testProduct3));
+        createAndSaveCart(3L, user, createAndSaveProductItem("4XL", testProduct3));
+        createAndSaveCart(1L, user, createAndSaveProductItem("FREE", testProduct3));
     }
 }
