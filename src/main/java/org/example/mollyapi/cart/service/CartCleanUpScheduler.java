@@ -2,6 +2,7 @@ package org.example.mollyapi.cart.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.mollyapi.cart.service.impl.CartServiceImpl;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -9,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class CartCleanUpScheduler {
-    private final CartService cartService;
+    private final CartServiceImpl cartService;
 
     //매일 정각에 장바구니 만료된 데이터 삭제
     @Scheduled(cron = "0 0 0 * * *")
