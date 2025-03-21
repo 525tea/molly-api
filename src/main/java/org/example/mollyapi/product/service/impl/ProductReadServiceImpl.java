@@ -1,8 +1,7 @@
-package org.example.mollyapi.product.service;
+package org.example.mollyapi.product.service.impl;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.example.mollyapi.product.dto.BrandSummaryDto;
 import org.example.mollyapi.product.dto.ProductAndThumbnailDto;
 import org.example.mollyapi.product.dto.ProductFilterCondition;
 import org.example.mollyapi.product.dto.ProductItemDto;
@@ -10,11 +9,11 @@ import org.example.mollyapi.product.dto.response.ColorDetailDto;
 import org.example.mollyapi.product.dto.response.FileInfoDto;
 import org.example.mollyapi.product.dto.response.ProductResDto;
 import org.example.mollyapi.product.dto.response.SizeDetailDto;
-import org.example.mollyapi.product.entity.Category;
 import org.example.mollyapi.product.entity.Product;
 import org.example.mollyapi.product.entity.ProductItem;
-import org.example.mollyapi.product.enums.OrderBy;
 import org.example.mollyapi.product.repository.ProductRepository;
+import org.example.mollyapi.product.service.CategoryService;
+import org.example.mollyapi.product.service.ProductReadService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -25,7 +24,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.example.mollyapi.product.enums.OrderBy.*;
 
 @Service
 @RequiredArgsConstructor
